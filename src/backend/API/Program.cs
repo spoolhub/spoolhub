@@ -124,8 +124,50 @@ var app = builder.Build();
 
 var printerStatusService = app.Services.GetRequiredService<IPrinterStatusService>();
 
-using (var scope = app.Services.CreateScope())
+await InitializeDatabaseAsync(app, builder);
+
+if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseCors("DevPolicy");
+}
+else
+{
+    app.UseCors("ProdPolicy");
+}
+
+app.UseExceptionHandler();
+var frontendDist = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "frontend", "web", "dist");
+if (!Directory.Exists(frontendDist))
+    frontendDist = Path.Combine(AppContext.BaseDirectory, "dist");
+if (!Directory.Exists(frontendDist))
+    frontendDist = Path.Combine(Directory.GetCurrentDirectory(), "dist");
+
+app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
+app.UseStaticFiles();
+app.MapControllers();
+app.MapHub<NfcScanHub>("/hubs/nfc");
+app.MapHub<PrinterHub>("/hubs/printer");
+app.MapHub<LogHub>("/hubs/logs");
+if (Directory.Exists(frontendDist))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(frontendDist),
+        RequestPath = ""
+    });
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(frontendDist)
+    });
+}
+
+app.Run();
+
+static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicationBuilder builder)
+{
+    using var scope = app.ApplicationServices.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<FilamentDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -160,12 +202,12 @@ using (var scope = app.Services.CreateScope())
                 }
                 if (historyExists == 0)
                 {
-                    db.Database.ExecuteSqlRaw("""
-                        CREATE TABLE "__EFMigrationsHistory" (
-                            "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
-                            "ProductVersion" TEXT NOT NULL
+                    db.Database.ExecuteSqlRaw(@"
+                        CREATE TABLE ""__EFMigrationsHistory"" (
+                            ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
+                            ""ProductVersion"" TEXT NOT NULL
                         )
-                        """);
+                        ");
 
                     // Discover which tables actually exist so we don't seed migrations
                     // for tables that haven't been created yet — let Migrate() do that.
@@ -209,6 +251,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         db.Database.Migrate();
+        logger.LogInformation("Database initialized.");
     }
     catch (Exception ex) when (ex is InvalidOperationException or IOException)
     {
@@ -219,44 +262,5 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred applying migrations. The application will continue but the database may be out of date.");
     }
 }
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseCors("DevPolicy");
-}
-else
-{
-    app.UseCors("ProdPolicy");
-}
-
-app.UseExceptionHandler();
-var frontendDist = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "frontend", "web", "dist");
-if (!Directory.Exists(frontendDist))
-    frontendDist = Path.Combine(AppContext.BaseDirectory, "dist");
-if (!Directory.Exists(frontendDist))
-    frontendDist = Path.Combine(Directory.GetCurrentDirectory(), "dist");
-
-app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
-app.UseStaticFiles();
-app.MapControllers();
-app.MapHub<NfcScanHub>("/hubs/nfc");
-app.MapHub<PrinterHub>("/hubs/printer");
-app.MapHub<LogHub>("/hubs/logs");
-if (Directory.Exists(frontendDist))
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(frontendDist),
-        RequestPath = ""
-    });
-    app.MapFallbackToFile("index.html", new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(frontendDist)
-    });
-}
-
-app.Run();
 
 public partial class Program { }
