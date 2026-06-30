@@ -1,0 +1,66 @@
+/* ── Brand card (matches handoff .bcard) ── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+  padding: 18px;
+  transition: .2s var(--ease);
+  cursor: pointer; position: relative;
+  min-width: 0;
+}
+.card:hover { border-color: var(--accent); box-shadow: 0 8px 24px -14px var(--accent) }
+
+.topRow { display: flex; align-items: center; gap: 13px }
+
+.logo {
+  width: 46px; height: 46px;
+  object-fit: contain;
+  border-radius: var(--r-xs);
+  flex-shrink: none;
+  background: var(--surface);
+  padding: 4px;
+}
+.logoFallback {
+  width: 46px; height: 46px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 18px; color: var(--muted);
+  flex-shrink: 0;
+}
+
+.brandName { font-weight: 700; font-size: 16px; letter-spacing: -.01em }
+
+.spoolCount {
+  margin-left: auto;
+  font-family: var(--font-num);
+  font-weight: 700; font-size: 13px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  padding: 4px 11px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+[data-theme="dark"] .spoolCount { color: var(--accent) }
+[data-dir="b"] .spoolCount { border-radius: 5px }
+
+.materials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-2);
+}
+
+.pill {
+  font-family: var(--font-num);
+  font-weight: 700; font-size: 19px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.pill small { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 1px }
+
+/* ── Skeleton / misc ── */
+@keyframes pulse { 50% { opacity: 0.5 } }

@@ -1,0 +1,245 @@
+.scrim {
+  position: fixed; inset: 0;
+  background: oklch(0.2 0.02 60 / .42);
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease);
+  z-index: 60;
+}
+.scrimOn { opacity: 1; pointer-events: auto }
+
+.drawer {
+  position: fixed; top: 0; right: 0;
+  height: 100vh; width: 440px; max-width: 94vw;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 60px -30px oklch(0 0 0 / .5);
+  transform: translateX(100%);
+  z-index: 61;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  transition: transform .3s var(--ease);
+}
+.drawerOn { transform: translateX(0) }
+
+.dwtop {
+  position: sticky; top: 0;
+  background: var(--surface);
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-2);
+  z-index: 2;
+}
+.dwtop h2 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; flex: 1; color: var(--text-primary) }
+[data-dir="b"] .dwtop h2 { font-weight: 600 }
+.dwclose {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: .15s var(--ease);
+  flex-shrink: 0;
+}
+.dwclose:hover { background: var(--surface-alt); color: var(--text-primary) }
+.dwclose svg { width: 17px; height: 17px }
+
+.dwhero { display: flex; gap: 18px; align-items: center; padding: 24px 22px }
+.dwhero .dwdisc { width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center }
+.dwid .b { font-family: var(--font-display); font-size: 21px; font-weight: 700; letter-spacing: -.02em; color: var(--text-primary) }
+[data-dir="b"] .dwid .b { font-weight: 600 }
+.dwid .c { font-size: 14px; color: var(--muted); margin-top: 1px }
+.dwid .tags { margin-top: 10px }
+
+.dwbar { padding: 0 22px 22px }
+.dwbar .meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px }
+.dwbar .g { font-family: var(--font-num); font-weight: 700; font-size: 17px; color: var(--text-primary) }
+.dwbar .g small { color: var(--faint); font-weight: 500; font-size: 13px }
+.dwbar .pct { font-family: var(--font-num); font-weight: 700; font-size: 15px; color: var(--accent-ink) }
+[data-theme="dark"] .dwbar .pct { color: var(--accent) }
+.dwbar .track { height: 10px; border-radius: 20px; background: var(--track); overflow: hidden }
+[data-dir="b"] .dwbar .track { border-radius: 4px }
+.dwbar .track i { display: block; height: 100%; border-radius: inherit; background: var(--accent) }
+.dwbar .track i.low { background: oklch(0.65 0.17 30) }
+
+.dwgrid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border-2);
+  border-top: 1px solid var(--border-2);
+  border-bottom: 1px solid var(--border-2);
+}
+.dwstat { background: var(--surface); padding: 15px 22px }
+.dwstat .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 700 }
+.dwstat .v { font-family: var(--font-num); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-top: 5px }
+
+.dwsec { padding: 18px 22px }
+.dwsec h3 { margin: 0 0 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700 }
+.dwline { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1px solid var(--border-2); font-size: 13.5px }
+.dwline:first-of-type { border-top: 0 }
+.dwline .lk { color: var(--muted) }
+.dwline .lv { font-weight: 600; color: var(--text-primary) }
+
+.chipdot { display: inline-flex; align-items: center; gap: 7px }
+.chipdot i { width: 12px; height: 12px; border-radius: 4px; box-shadow: inset 0 0 0 1px oklch(0 0 0 / .18) }
+[data-dir="b"] .chipdot i { border-radius: 3px }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 17px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600;
+  font-size: 13.5px; cursor: pointer; transition: .16s var(--ease); white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2) }
+.btn svg { width: 16px; height: 16px }
+.btn.primary { background: var(--accent); border-color: transparent; color: #fff }
+.btn.primary:hover { filter: brightness(1.06) }
+.btn.danger { background: oklch(0.55 0.15 25); border-color: transparent; color: #fff }
+.btn.danger:hover { filter: brightness(1.06) }
+
+.dwact { display: flex; gap: 10px; padding: 18px 22px; margin-top: auto; position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border-2) }
+.dwact .btn { flex: 1; justify-content: center }
+
+/* ── Edit form ── */
+.dwform { padding: 18px 22px; display: flex; flex-direction: column; gap: 16px }
+.ff { display: flex; flex-direction: column; gap: 6px }
+.ff label { font-size: 12px; font-weight: 600; color: var(--muted) }
+.ff input, .ff select, .ff textarea {
+  height: 40px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  border-radius: var(--r-sm); padding: 0 12px;
+  font: inherit; font-size: 13.5px; width: 100%;
+}
+.ff input:focus, .ff select:focus {
+  outline: 0; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ff2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.fsec { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700; margin: 4px 0 -4px }
+[data-dir="b"] .fsec { font-family: var(--font-num); font-weight: 500 }
+
+/* ── Delete confirmation modal ── */
+.modalScrim {
+  position: fixed; inset: 0;
+  background: oklch(0 0 0 / .5);
+  backdrop-filter: blur(2px);
+  z-index: 70;
+}
+.modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  width: 380px;
+  max-width: 90vw;
+  text-align: center;
+  z-index: 71;
+}
+.modalIcon {
+  width: 48px; height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: oklch(0.55 0.15 25 / .15);
+  color: oklch(0.55 0.15 25);
+  display: grid; place-items: center;
+}
+.modalIcon svg { width: 24px; height: 24px }
+.modalTitle { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--text-primary) }
+.modalDesc { margin: 0 0 24px; font-size: 14px; color: var(--muted); line-height: 1.5 }
+.modalActions { display: flex; gap: 12px }
+.modalActions .btn { flex: 1 }
+
+/* ── Inline add location ── */
+.addNew { font-style: italic; color: var(--accent) }
+.addWrap { display: flex; gap: 8px; align-items: center }
+.addWrap input { flex: 1 }
+.btnCancel {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  display: grid; place-items: center;
+}
+.btnCancel:hover { background: var(--surface-alt); color: var(--text-primary) }
+.btnAdd {
+  height: 36px; padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font: inherit; font-weight: 600; font-size: 13px;
+  cursor: pointer; margin-top: 8px;
+}
+.btnAdd:hover { background: var(--accent); color: #fff }
+.btnAdd:disabled { opacity: 0.5; cursor: not-allowed }
+.btnAdd:disabled:hover { background: var(--accent-soft); color: var(--accent-ink) }
+
+/* ── Placement section ── */
+.placementSection { display: flex; flex-direction: column; gap: 12px }
+.placementToggle { display: flex; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden }
+.placementBtn {
+  flex: 1; padding: 9px; font-weight: 600;
+  border: 0; background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: .15s var(--ease);
+}
+.placementBtn:hover { background: var(--surface-alt) }
+.placementBtnOn { background: var(--accent); color: #fff }
+
+/* ── AMS slot layout ── */
+.amsLayout { display: grid; grid-template-columns: 80px 1fr; gap: 10px; align-items: start; margin-top: 4px; }
+
+.pcardThumb {
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); overflow: hidden; display: flex; flex-direction: column;
+}
+.pcardPic { width: 100%; aspect-ratio: 1 / 1; position: relative; display: grid; place-items: center; background: var(--surface-2); }
+.pcardImg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.pcardMeta { padding: 5px 7px; border-top: 1px solid var(--border); }
+.pcardName { font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.pcardDesc { font-size: 9px; color: var(--muted); margin-top: 1px; }
+
+.amsRight { min-width: 0; }
+.slotLabel { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+.slotPick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.slotTile {
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: var(--surface); padding: 5px 2px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; transition: border-color .15s, box-shadow .15s;
+  position: relative; min-width: 0;
+}
+.slotTile:hover { border-color: var(--accent); }
+.slotTileEmpty { border-style: dashed; }
+.slotTileSel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+
+.slotNum { font-size: 8px; font-weight: 600; color: var(--muted); line-height: 1; }
+.slotIc { width: 22px; height: 22px; display: grid; place-items: center; color: var(--muted); }
+.slotPlus { width: 100%; height: 100%; }
+.slotCn { font-size: 8px; color: var(--muted); line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; padding: 0 2px; }
+.slotHere {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #fff; border-radius: 20px;
+  font-size: 7px; font-weight: 700; letter-spacing: .03em;
+  padding: 1px 5px; white-space: nowrap; pointer-events: none;
+}
+
+.slotNote { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 6px; align-items: flex-start; line-height: 1.4; }
+.slotNoteIcon { width: 13px; height: 13px; flex: none; margin-top: 1px; color: #d97706; }
+
+.singleSlot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: var(--surface); margin-top: 4px;
+}
+.singleSlotIc { width: 28px; height: 28px; display: grid; place-items: center; flex: none; }
+.singleSlotTitle { font-size: 13px; font-weight: 600; color: var(--text); }
+.singleSlotDesc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.tags { display: flex; gap: 6px; margin-top: 8px }
+.tag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); text-transform: uppercase }
+[data-theme="dark"] .tag { color: var(--accent) }
+[data-dir="b"] .tag { font-family: var(--font-num); border-radius: 4px; font-weight: 500 }

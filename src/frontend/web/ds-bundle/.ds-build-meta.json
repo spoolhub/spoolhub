@@ -1,0 +1,12 @@
+{
+  "namespace": "SpoolHub",
+  "source": "web@0.0.0",
+  "shape": "package",
+  "provider": "PreviewProvider",
+  "componentCount": 51,
+  "skippedStoryIds": [],
+  "runtimeFontPrefixes": [
+    "JetBrains Mono",
+    "Space Grotesk"
+  ]
+}

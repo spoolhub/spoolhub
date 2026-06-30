@@ -1,0 +1,108 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: .15s var(--ease);
+  cursor: pointer;
+}
+.row:hover { background: var(--surface-alt); }
+
+.mini {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+.text .brand {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.text .detail {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.amt {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 13px;
+  color: oklch(0.65 0.17 30);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* skeleton */
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px;
+}
+.skeletonIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  background: var(--track);
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.skeletonContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+  background: var(--track);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.skeletonLine.short { width: 40%; }
+.skeletonBadge {
+  width: 40px;
+  height: 18px;
+  border-radius: var(--r-xs);
+  background: var(--track);
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2rem 0.25rem;
+}
+.emptyIcon { color: var(--faint); }
+.emptyText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

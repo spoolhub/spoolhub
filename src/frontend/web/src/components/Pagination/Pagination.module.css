@@ -1,0 +1,81 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+@media (min-width: 640px) {
+  .wrap { flex-direction: row; }
+}
+
+.info {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.perPageWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-right: 0.5rem;
+}
+.perPageLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.perPageSelect {
+  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.25rem 0.375rem;
+}
+.perPageSelect:focus { outline: none; box-shadow: 0 0 0 1px var(--accent); }
+
+.btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.btn:hover:not(:disabled) { background: var(--bg-tertiary); }
+.btn:disabled { opacity: 0.3; cursor: default; }
+
+.btnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btnActive:hover { background: var(--accent); }
+
+.ellipsis {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0 0.25rem;
+}
+
+.pagesDesktop { display: none; }
+.pagesMobile  { display: flex; align-items: center; gap: 0.5rem; }
+
+@media (min-width: 640px) {
+  .pagesDesktop { display: flex; align-items: center; gap: 0.5rem; }
+  .pagesMobile  { display: none; }
+}

@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+  --spool-holder:     #27272a;
+  --spool-holder-dim: #52525b;
+  --spool-axle:       #09090b;
+  --spool-bg:         #f4f4f5;
+}
+html.dark {
+  color-scheme: dark;
+  --spool-holder:     #d4d4d8;
+  --spool-holder-dim: #a1a1aa;
+  --spool-axle:       #71717a;
+  --spool-bg:         #161b22;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: var(--tracking);
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background .35s var(--ease), color .35s var(--ease);
+}
+.num {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--accent-soft); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+
+.scrollbar-pretty {
+  scrollbar-width: thin;
+  scrollbar-color: #06b6d4 transparent;
+}
+.scrollbar-pretty::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-pretty::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-pretty::-webkit-scrollbar-thumb {
+  background: #06b6d4;
+  border-radius: 9999px;
+}
+.scrollbar-pretty::-webkit-scrollbar-thumb:hover {
+  background: #22d3ee;
+}

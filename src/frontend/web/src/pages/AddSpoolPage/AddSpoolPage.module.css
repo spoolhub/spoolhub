@@ -1,0 +1,238 @@
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.backRow { margin-bottom: 2rem; }
+.backRowSmall { margin-bottom: 1.5rem; flex-shrink: 0; }
+
+.headingRow { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
+.headingTitle { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
+
+.choiceGrid {
+  display: flex; flex-direction: column; gap: 1rem;
+  width: 100%; max-width: 48rem; margin: 0 auto;
+}
+@media (min-width: 640px) { .choiceGrid { flex-direction: row; } }
+
+.choiceCardNfc {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; padding: 2rem;
+  border-radius: var(--radius-2xl);
+  border: 2px solid var(--accent);
+  background: rgba(6,182,212,0.05);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+.choiceCardNfc:hover { background: rgba(6,182,212,0.1); }
+
+.choiceCardManual {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; padding: 2rem;
+  border-radius: var(--radius-2xl);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.choiceCardManual:hover { border-color: var(--border-strong); background: var(--surface-hover); }
+
+.choiceIconNfc {
+  width: 4rem; height: 4rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--t-fast);
+}
+.choiceCardNfc:hover .choiceIconNfc { transform: scale(1.05); }
+
+.choiceIconManual {
+  width: 4rem; height: 4rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--t-fast);
+}
+.choiceCardManual:hover .choiceIconManual { transform: scale(1.05); }
+
+.choiceLabel {
+  text-align: center;
+}
+.choiceTitleNfc { font-size: 1rem; font-weight: 600; color: #0e7490; }
+:global(.dark) .choiceTitleNfc { color: #67e8f9; }
+.choiceBadge {
+  display: inline-block; font-size: 0.75rem; font-weight: 500;
+  padding: 0.125rem 0.375rem; border-radius: var(--radius-sm);
+  background: rgba(234,179,8,0.12); color: #a16207;
+}
+:global(.dark) .choiceBadge { background: rgba(234,179,8,0.2); color: #facc15; }
+.choiceTitleManual { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.choiceDesc { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+.lookingUpWrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 1rem; padding: 6rem 0;
+}
+.spinnerRing {
+  width: 2.5rem; height: 2.5rem;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin 1s linear infinite;
+}
+.lookingUpLabel { font-size: 0.875rem; color: var(--text-secondary); }
+
+.formWrap { max-width: 54rem; margin: 0 auto; width: 100%; }
+
+.backBtn {
+  display: flex; align-items: center; gap: 0.25rem;
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--text-secondary); background: none; border: none;
+  cursor: pointer; padding: 0;
+  transition: color var(--t-fast);
+}
+.backBtn:hover { color: var(--text-secondary); }
+.backBtnIcon {
+  padding: 0.375rem;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: none; border: none; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.backBtnIcon:hover { background: var(--bg-secondary); color: var(--text-secondary); }
+.backBtn svg { width: 1rem; height: 1rem; }
+.backBtnIcon svg { width: 1.25rem; height: 1.25rem; }
+
+.choiceLabelRow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.choiceIconNfc svg { width: 2rem; height: 2rem; color: white; }
+.choiceIconManual svg { width: 2rem; height: 2rem; color: var(--text-secondary); }
+
+/* Unassigned NFC tag section */
+.unassignedSection {
+  max-width: 54rem;
+  margin: 0 auto;
+  width: 100%;
+  padding-top: 1.5rem;
+}
+
+.unassignedTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unassignedDesc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.unassignedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.spoolCardWrap {
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--t-fast);
+}
+
+.spoolCardWrap:hover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* IosNfcWriter */
+.iosNfcMaxW { max-width: 28rem; }
+
+.iosNfcCard {
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.iosNfcHeader {
+  background: var(--accent);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iosNfcIconBg {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.iosNfcIconBg svg { width: 1.25rem; height: 1.25rem; color: white; }
+
+.iosNfcHeaderTitle { font-size: 0.875rem; font-weight: 700; color: white; }
+.iosNfcHeaderDesc { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+
+.iosNfcSection { padding: 1.25rem; border-bottom: 1px solid var(--border-subtle); }
+
+.iosNfcSectionLabel {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.iosNfcSteps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+.iosNfcStep { display: flex; align-items: flex-start; gap: 0.75rem; }
+
+.iosNfcStepNum {
+  flex-shrink: 0; width: 1.5rem; height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--accent); color: white;
+  font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.iosNfcStepComplete {
+  flex-shrink: 0; width: 1.5rem; height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-success); color: white;
+  font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.iosNfcStepText { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; padding-top: 0.125rem; }
+
+.iosNfcUrlSection { padding: 1.25rem; }
+
+.iosNfcUrlLabel {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+}
+
+.iosNfcUrlBox {
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 0.625rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.iosNfcUrlText { font-size: 0.75rem; font-family: monospace; color: var(--text-primary); word-break: break-all; user-select: all; line-height: 1.5; }
+
+.iosNfcCopyBtn {
+  width: 100%; font-size: 0.875rem; font-weight: 600; padding: 0.75rem;
+  border-radius: var(--radius-xl); color: white; border: none; cursor: pointer;
+  background: var(--accent);
+  transition: background var(--t-normal), transform var(--t-normal);
+}
+.iosNfcCopyBtn:hover { background: var(--accent-hover); }
+.iosNfcCopyBtnCopied { background: var(--color-success); transform: scale(0.98); }
+.iosNfcCopyBtnCopied:hover { background: var(--color-success); }

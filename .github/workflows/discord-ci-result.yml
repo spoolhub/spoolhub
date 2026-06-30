@@ -1,0 +1,27 @@
+name: Discord CI Result
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send PR result to Discord
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: >-
+            ${{ github.event.workflow_run.conclusion == 'success' && '✅ CI Passed' || '❌ CI Failed' }}
+          description: >-
+            PR #${{ github.event.workflow_run.pull_requests[0].number }} — ${{ github.event.workflow_run.pull_requests[0].title || github.event.workflow_run.head_branch }}
+          url: "${{ github.event.workflow_run.pull_requests[0].html_url || github.event.workflow_run.html_url }}"
+          color: ${{ github.event.workflow_run.conclusion == 'success' && '0x57F287' || '0xFF0000' }}
+          username: SpoolHub CI Bot
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          custom_fields: |
+            [{"name": "Conclusion", "value": "${{ github.event.workflow_run.conclusion }}", "inline": true},
+             {"name": "Branch", "value": "${{ github.event.workflow_run.head_branch }}", "inline": true}]

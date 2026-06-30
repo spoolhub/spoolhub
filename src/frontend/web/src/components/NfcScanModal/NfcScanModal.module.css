@@ -1,0 +1,93 @@
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+.overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 1rem;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  width: 100%; max-width: 24rem; overflow: hidden;
+}
+
+.headerCard {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.75rem;
+}
+
+.spoolHead { display: flex; align-items: flex-start; gap: 1rem; }
+.spoolIconWrap { flex-shrink: 0; }
+.spoolInfo { flex: 1; min-width: 0; }
+
+.spoolBrandRow { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
+.spoolBrand { font-size: 0.75rem; color: var(--text-secondary); }
+
+.spoolName { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.25; }
+
+.spoolTagRow { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; flex-wrap: wrap; }
+.spoolHex { font-size: 0.75rem; font-family: monospace; color: var(--text-secondary); }
+
+.barWrap { margin-top: 0.75rem; }
+.barHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-secondary);
+}
+.barPct { font-weight: 600; color: var(--text-secondary); }
+.barTrack { height: 0.375rem; background: var(--bg-tertiary); border-radius: var(--radius-full); overflow: hidden; }
+.barFill { height: 100%; background: var(--text-secondary); border-radius: var(--radius-full); transition: width 500ms ease; }
+:global(.dark) .barFill { background: var(--text-secondary); }
+
+.recentSection { padding: 0.75rem 1rem 0.25rem; }
+.recentLabel {
+  font-size: 0.625rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent); margin-bottom: 0.5rem;
+}
+
+.skeletonList { display: flex; flex-direction: column; gap: 0.5rem; }
+.skeletonRow {
+  height: 2.25rem; border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+
+.jobList { display: flex; flex-direction: column; }
+.jobRow {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.jobRow:last-child { border-bottom: none; }
+
+.jobLeft { flex: 1; min-width: 0; }
+.jobName { font-size: 0.75rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.jobPrinter { font-size: 0.625rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+
+.jobRight { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 0.125rem; }
+.jobGrams { font-size: 0.75rem; font-weight: 900; font-family: monospace; color: var(--text-primary); }
+.jobTime { font-size: 0.625rem; font-family: monospace; color: var(--text-secondary); }
+
+.footer { padding: 1rem; }
+.btnRow { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.assignWrap { display: flex; flex-direction: column; gap: 1rem; }
+
+.btnSecondary {
+  padding: 0.625rem; border-radius: var(--radius-xl);
+  border: 1px solid var(--border); font-size: 0.875rem; font-weight: 600;
+  color: var(--text-secondary); background: none; cursor: pointer;
+  transition: background var(--t-fast);
+}
+.btnSecondary:hover { background: var(--surface-hover); }
+
+.btnPrimary {
+  padding: 0.625rem; border-radius: var(--radius-xl);
+  background: var(--accent); color: #fff;
+  font-size: 0.875rem; font-weight: 600;
+  border: none; cursor: pointer;
+  transition: background var(--t-fast), opacity var(--t-fast);
+}
+.btnPrimary:hover:not(:disabled) { background: var(--accent-hover); }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }

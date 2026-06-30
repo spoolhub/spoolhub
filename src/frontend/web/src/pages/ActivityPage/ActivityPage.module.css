@@ -1,0 +1,213 @@
+/* ── Filter bar ─────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .filterGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .selectWrap {
+    width: 100%;
+  }
+
+  .select {
+    width: 100%;
+  }
+}
+
+.selectWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.select:hover  { border-color: #d1d5db; }
+.select:focus  { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6,182,212,.15); }
+
+:global(.dark) .select {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: var(--text-primary);
+}
+:global(.dark) .select:hover  { border-color: #52525b; }
+:global(.dark) .select:focus  { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6,182,212,.15); }
+
+.chevron {
+  position: absolute;
+  right: 0.5rem;
+  pointer-events: none;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+
+.clearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.07);
+  color: #ef4444;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.clearBtn:hover { background: rgba(239,68,68,.14); }
+
+/* ── List container ─────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .list {
+    overflow-y: auto;
+  }
+}
+
+/* ── Date group header ──────────────────── */
+.dateHeader {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  padding: 0 0.25rem 0.4rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+:global(.dark) .dateHeader {
+  color: var(--text-secondary);
+  border-bottom-color: #27272a;
+}
+
+/* ── Cards within a group ───────────────── */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* ── Day group wrapper ───────────────────── */
+.dayGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Flat rows panel (matches home page) ─── */
+.flatGroup {
+  border-radius: 0.875rem;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  padding: 0 0.75rem;
+  overflow: hidden;
+}
+
+.confirmModal { background-color: var(--surface); border: 1px solid var(--border); }
+.cancelBtn { border-color: var(--border); }
+
+/* ── Skeleton ────────────────────────────── */
+.skeletonRow {
+  height: 3.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeletonRow:last-child { border-bottom: none; }
+
+:global(.dark) .skeletonRow {
+  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+  background-size: 200% 100%;
+  border-bottom-color: #27272a;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Empty state ─────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: var(--text-secondary);
+  border: 1px dashed #e5e7eb;
+  border-radius: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:global(.dark) .empty {
+  border-color: #3f3f46;
+  color: var(--text-secondary);
+}
+
+.emptyIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d5db;
+  font-size: 1.25rem;
+}
+
+:global(.dark) .emptyIcon {
+  background: #27272a;
+  color: #52525b;
+}
+
+.empty p { font-size: 0.9rem; margin: 0; }
+
+/* ── Results bar (single-page, always-visible) ── */
+.resultsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  margin-bottom: 3rem;
+}
