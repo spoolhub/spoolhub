@@ -1,0 +1,97 @@
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%; max-width: 24rem;
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+.closeRow { display: flex; justify-content: flex-end; padding: 1rem 1rem 0; }
+.closeBtn {
+  width: 2rem; height: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  background: none; border: none; cursor: pointer;
+  transition: background var(--t-fast);
+}
+.closeBtn:hover { background: var(--surface-alt); }
+
+.header {
+  padding: 0.25rem 1.25rem 1rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.headerInfo { flex: 1; min-width: 0; }
+.brandRow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; margin-bottom: 0.125rem;
+}
+.brandLeft { display: flex; align-items: center; gap: 0.375rem; min-width: 0; }
+.brandName { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+.colorName { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.colorHex  { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.125rem; }
+
+.brandLogo { width: 1.25rem; height: 1.25rem; border-radius: 0.125rem; object-fit: contain; flex-shrink: 0; }
+.brandFallback {
+  width: 1.25rem; height: 1.25rem; border-radius: 0.125rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.625rem; font-weight: 700; flex-shrink: 0;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+}
+
+.progressWrap { padding: 0 1.25rem 1.25rem; }
+.progressRow {
+  display: flex; justify-content: space-between;
+  font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.375rem;
+}
+.progressBar {
+  height: 0.5rem; background: var(--bg-tertiary); border-radius: var(--radius-full); overflow: hidden;
+}
+.progressFill { height: 100%; border-radius: var(--radius-full); transition: width 500ms ease; }
+
+.divider { border-top: 1px solid var(--border); }
+
+.actions { padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.errorMsg { font-size: 0.75rem; color: var(--error-text); text-align: center; padding-bottom: 0.25rem; }
+.statusMsg { font-size: 0.875rem; color: var(--text-secondary); text-align: center; padding-bottom: 0.25rem; }
+
+.spinnerWrap { display: flex; justify-content: center; padding: 0.75rem 0; }
+.spinnerRing {
+  width: 1.25rem; height: 1.25rem;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  border-radius: var(--radius-full); animation: spin 1s linear infinite;
+}
+
+.btnPrimary {
+  width: 100%; font-size: 0.875rem; font-weight: 500; padding: 0.75rem;
+  border-radius: var(--radius-xl); background: var(--accent); color: #fff;
+  border: none; cursor: pointer; transition: background var(--t-fast), opacity var(--t-fast);
+}
+.btnPrimary:hover:not(:disabled) { background: var(--accent-hover); }
+.btnPrimary:disabled { opacity: 0.5; cursor: default; }
+
+.btnDanger {
+  width: 100%; font-size: 0.875rem; font-weight: 500; padding: 0.75rem;
+  border-radius: var(--radius-xl); background: var(--color-error); color: #fff;
+  border: none; cursor: pointer; transition: opacity var(--t-fast);
+}
+.btnDanger:hover:not(:disabled) { opacity: 0.85; }
+.btnDanger:disabled { opacity: 0.5; cursor: default; }
+
+.btnSecondary {
+  width: 100%; font-size: 0.875rem; font-weight: 500; padding: 0.75rem;
+  border-radius: var(--radius-xl); background: none;
+  border: 1px solid var(--border); color: var(--text-secondary);
+  cursor: pointer; transition: background var(--t-fast);
+}
+.btnSecondary:hover { background: var(--surface-hover); }

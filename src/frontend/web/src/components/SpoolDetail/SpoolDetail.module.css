@@ -1,0 +1,148 @@
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+.shake {
+  animation: shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.printerLink:hover { background-color: var(--bg-secondary); }
+.historyBtn:hover  { background-color: var(--bg-secondary); }
+
+/* Read-mode outer card */
+.viewCard { background-color: var(--surface); border-color: var(--border-subtle); border-radius: var(--radius-2xl); overflow: hidden; }
+
+/* InfoRow row divider */
+.infoRow { border-color: var(--border); }
+
+/* Edit-mode Card wrapper */
+.card { background-color: var(--surface); border-color: var(--border); }
+
+/* Shared text input (FormBox + initial-weight inline input) */
+.formInput {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Progress bar */
+.barTrack { background-color: var(--bg-secondary); }
+.barError { background-color: var(--color-error); }
+.barWarn  { background-color: var(--color-warning); }
+.barOk    { background-color: var(--color-success); }
+.pctError { color: var(--color-error); }
+.pctWarn  { color: var(--color-warning); }
+.pctOk    { color: var(--color-success); }
+
+/* Price section */
+.priceBorder  { border-color: var(--border-subtle); }
+.priceValue   { color: var(--text-primary); }
+.secondary    { color: var(--text-secondary); }
+.locationIcon { color: var(--text-secondary); flex-shrink: 0; }
+.printerImgWrap { background-color: var(--bg-secondary); }
+
+/* AMS tray text on a coloured swatch */
+.trayText { color: rgba(255,255,255,0.9); text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+
+/* Print-history expanded area */
+.historyContent { border-color: var(--border); }
+
+/* Edit-mode */
+.editSep    { border-color: var(--border); }
+
+/* Edit form: flat grid, 3 cols desktop / 2 cols mobile with field reordering */
+.editGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.editGrid > * { min-width: 0; }
+.fNotes { grid-column: 1 / -1; }
+.fNfc { overflow: hidden; }
+.nfcValue { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 639px) {
+  /* 6-unit base: equal rows = 3+3, diameter/nfc row = 2+4 */
+  .editGrid     { grid-template-columns: repeat(6, 1fr); }
+  .fCurWeight   { order: 1; grid-column: span 3; }
+  .fInitWeight  { order: 2; grid-column: span 3; }
+  .fSpoolWeight { order: 3; grid-column: span 3; }
+  .fPrice       { order: 4; grid-column: span 3; }
+  .fActive      { order: 5; grid-column: span 3; }
+  .fLowStock    { order: 6; grid-column: span 3; }
+  .fPrinter     { order: 7; grid-column: span 6; }
+  .fDiameter    { order: 8; grid-column: span 2; }
+  .fNfc         { order: 9; grid-column: span 4; }
+  .fNotes       { order: 10; }
+}
+.priceLabel { color: var(--text-secondary); }
+.priceInput { color: var(--text-primary); background-color: var(--bg-secondary); border: 1px solid var(--border); }
+.priceUnit  { color: var(--text-secondary); }
+
+/* Stock location field — matches formInput/FormBox style */
+.printerLabel {
+  display: block; font-size: 0.75rem; margin-bottom: 0.25rem;
+  color: var(--text-secondary);
+}
+.printerLabelError { color: var(--color-error); }
+
+.printerSelect {
+  width: 100%; font-size: 0.875rem; font-weight: 600;
+  color: var(--text-primary); background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  border: 1px solid var(--border);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  cursor: pointer;
+}
+.printerSelect:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(6,182,212,0.2); }
+.printerSelectError { border: 2px solid var(--color-error); }
+.printerSelectError:focus { border-color: var(--color-error); box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
+
+/* Color header overlay + layout matching SpoolEditor */
+.colorHeader { position: relative; overflow: hidden; }
+.colorHeaderOverlay { position: absolute; inset: 0; opacity: 0.05; pointer-events: none; }
+
+.viewHeaderRow { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.viewHeaderInfo { flex: 1; min-width: 0; }
+.viewHeaderMeta { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.2rem; }
+.viewHeaderBrand { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
+.viewHeaderTitle { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); line-height: 1.15; letter-spacing: -0.025em; }
+@media (min-width: 640px) {
+  .viewHeaderTitle { font-size: 1.625rem; }
+}
+.viewHeaderHex {
+  margin-top: 0.25rem;
+  font-size: 0.75rem; font-family: monospace; letter-spacing: 0.05em;
+  color: var(--text-secondary); background: var(--bg-tertiary);
+  padding: 0.15rem 0.4rem; border-radius: var(--radius-sm); display: inline-block;
+}
+.viewHeaderBadges { display: flex; flex-direction: column; align-items: flex-end; gap: 0.375rem; flex-shrink: 0; }
+.viewHeaderIcon { flex-shrink: 0; }
+@media (min-width: 640px) {
+  .viewHeaderIcon { width: 80px; height: 80px; }
+}
+.viewStatusBadge {
+  font-size: 0.75rem; font-weight: 700;
+  padding: 0.25rem 0.625rem; border-radius: var(--radius-lg);
+  background: var(--accent); color: #fff; letter-spacing: 0.025em;
+}
+.viewNfcBadge {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+}
+.viewNfcIcon { color: var(--accent); width: 14px; height: 14px; }
+
+/* Deactivate confirmation modal */
+.modal       { background-color: var(--surface); }
+.modalHeader { background-color: var(--bg-secondary); border-color: var(--border); }

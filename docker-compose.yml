@@ -1,0 +1,9 @@
+services:
+  spoolhub:
+    image: ghcr.io/spoolhub/spoolhub:latest
+    container_name: spoolhub
+    restart: unless-stopped
+    ports:
+      - "4848:4848"
+    volumes:
+      - ./data:/data

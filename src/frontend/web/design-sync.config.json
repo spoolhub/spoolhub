@@ -1,0 +1,251 @@
+{
+  "pkg": "web",
+  "globalName": "SpoolHub",
+  "shape": "package",
+  "entry": "src/components/index.ts",
+  "srcDir": "src/components",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": "src/styles/variables.css",
+  "runtimeFontPrefixes": ["JetBrains Mono", "Space Grotesk"],
+  "provider": { "component": "PreviewProvider" },
+  "componentSrcMap": {
+    "PreviewProvider": null,
+    "ActivityCard": "src/components/ActivityCard/ActivityCard.tsx",
+    "AddBrandModal": "src/components/AddBrandModal/AddBrandModal.tsx",
+    "AddPrinterModal": "src/components/AddPrinterModal/AddPrinterModal.tsx",
+    "AddSpoolForm": "src/components/AddSpoolForm/AddSpoolForm.tsx",
+    "AddSpoolProfileModal": "src/components/AddSpoolProfileModal/AddSpoolProfileModal.tsx",
+    "AmsConflictModal": "src/components/AmsConflictModal/AmsConflictModal.tsx",
+    "BrandCard": "src/components/BrandCard/BrandCard.tsx",
+    "BrandLogo": "src/components/BrandCard/BrandCard.tsx",
+    "BrandFilterBar": "src/components/BrandFilterBar/BrandFilterBar.tsx",
+    "ConnectionBanner": null,
+    "DarkModeToggle": "src/components/DarkModeToggle/DarkModeToggle.tsx",
+    "FilamentCard": "src/components/FilamentCard/FilamentCard.tsx",
+    "FilamentFilterDropdown": "src/components/FilamentFilterDropdown/FilamentFilterDropdown.tsx",
+    "Header": "src/components/Header/Header.tsx",
+    "LanguageSelector": "src/components/LanguageSelector/LanguageSelector.tsx",
+    "LowStockSpools": "src/components/LowStockSpools/LowStockSpools.tsx",
+    "MaterialTag": "src/components/MaterialTag/MaterialTag.tsx",
+    "MetricCard": "src/components/MetricCard/MetricCard.tsx",
+    "NfcScanModal": "src/components/NfcScanModal/NfcScanModal.tsx",
+    "Pagination": "src/components/Pagination/Pagination.tsx",
+    "PrinterCard": null,
+    "PrinterPicker": "src/components/PrinterPicker/PrinterPicker.tsx",
+    "PrintHistoryList": "src/components/PrintHistory/PrintHistoryList.tsx",
+    "RecentActivity": "src/components/RecentActivity/RecentActivity.tsx",
+    "ScanView": "src/components/ScanView/ScanView.tsx",
+    "Sidebar": "src/components/Sidebar/Sidebar.tsx",
+    "SpoolCard": "src/components/SpoolCard/SpoolCard.tsx",
+    "SpoolDetail": "src/components/SpoolDetail/SpoolDetail.tsx",
+    "SpoolDetailsForm": "src/components/SpoolDetailsForm/SpoolDetailsForm.tsx",
+    "SpoolEditor": "src/components/SpoolEditor/SpoolEditor.tsx",
+    "SpoolFilterDropdown": "src/components/SpoolFilterDropdown/SpoolFilterDropdown.tsx",
+    "SpoolSearchBar": "src/components/SpoolSearchBar/SpoolSearchBar.tsx",
+    "StatusRing": "src/components/StatusRing/StatusRing.tsx",
+    "UnassignedTagPanel": "src/components/UnassignedTagPanel/UnassignedTagPanel.tsx",
+    "AndroidScanner": "src/components/scan/AndroidScanner/AndroidScanner.tsx",
+    "DesktopScanner": "src/components/scan/DesktopScanner/DesktopScanner.tsx",
+    "IphoneScanner": "src/components/scan/IphoneScanner/IphoneScanner.tsx",
+    "ScanResult": "src/components/scan/ScanResult/ScanResult.tsx",
+    "SpoolScanPopup": "src/components/scan/SpoolScanPopup/SpoolScanPopup.tsx",
+    "ActiveSpoolIcon": "src/components/icons/ActiveSpoolIcon.tsx",
+    "FilamentIcon": "src/components/icons/FilamentIcon.tsx",
+    "InfoCircleIcon": "src/components/icons/InfoCircleIcon.tsx",
+    "InfoIcon": "src/components/icons/InfoIcon.tsx",
+    "LockIcon": "src/components/icons/LockIcon.tsx",
+    "NfcIcon": "src/components/icons/NfcIcon.tsx",
+    "PenIcon": "src/components/icons/PenIcon.tsx",
+    "PrinterIcon": "src/components/icons/PrinterIcon.tsx",
+    "ReloadIcon": "src/components/icons/ReloadIcon.tsx",
+    "SpoolHubLogo": "src/components/icons/SpoolHubLogo.tsx",
+    "SpoolIcon": "src/components/icons/SpoolIcon.tsx",
+    "SpoolOutlineIcon": "src/components/icons/SpoolOutlineIcon.tsx",
+    "UpdatesIcon": "src/components/icons/UpdatesIcon.tsx",
+    "UsbOffIcon": "src/components/icons/UsbOffIcon.tsx"
+  },
+  "previewArgs": {
+    "SpoolIcon": { "color": "#1A7A52", "size": 52 },
+    "FilamentIcon": { "color": "#1A7A52", "size": 68 },
+    "ActiveSpoolIcon": { "className": "w-8 h-8" },
+    "InfoCircleIcon": { "className": "w-6 h-6" },
+    "InfoIcon": { "className": "w-6 h-6" },
+    "LockIcon": { "className": "w-6 h-6" },
+    "NfcIcon": { "className": "w-6 h-6" },
+    "PenIcon": { "className": "w-6 h-6" },
+    "PrinterIcon": { "className": "w-8 h-8" },
+    "ReloadIcon": { "className": "w-6 h-6" },
+    "SpoolOutlineIcon": { "className": "w-8 h-8" },
+    "UpdatesIcon": { "className": "w-6 h-6" },
+    "UsbOffIcon": { "className": "w-6 h-6" },
+    "MaterialTag": { "material": "PLA" },
+    "BrandLogo": { "brand": "Bambu Lab", "size": 48 },
+    "DarkModeToggle": { "isDark": false, "onToggle": null },
+    "SpoolSearchBar": { "value": "", "onChange": null, "placeholder": "Search spools..." },
+    "LowStockSpools": { "spools": [], "loading": false },
+    "BrandFilterBar": { "brands": ["Bambu Lab", "eSUN", "Prusa"], "selected": "", "onChange": null },
+    "PrintHistoryList": { "jobs": [], "showSpool": false },
+    "ActivityCard": {
+      "activity": {
+        "id": "1", "eventType": "scan", "action": "scanned", "resourceType": "spool",
+        "resourceName": "Bambu Lab PLA Jade Green", "resourceId": "1", "occurredAt": "2024-01-01T12:00:00Z",
+        "snapshot": { "colorHex": "#1A7A52", "material": "PLA", "brand": "Bambu Lab" }
+      }
+    },
+    "BrandCard": {
+      "brand": {
+        "id": "1", "name": "Bambu Lab", "domain": "bambulab.com", "ofdSlug": "bambu-lab",
+        "filamentCount": 8, "spoolCount": 3,
+        "materials": ["PLA", "PETG", "ABS"],
+        "inStockMaterials": ["PLA", "PETG"]
+      },
+      "onSelect": null, "onSelectMaterial": null, "onDelete": null
+    },
+    "FilamentCard": {
+      "filament": {
+        "brand": "Bambu Lab", "filamentName": "PLA Basic", "material": "PLA",
+        "density": 1.24, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65,
+        "colorHex": "#1A7A52", "colorName": "Jade Green",
+        "discontinued": false, "diameterTolerance": null,
+        "dataSheetUrl": null, "safetySheetUrl": null
+      }
+    },
+    "FilamentFilterDropdown": {
+      "allMaterials": ["PLA", "PETG", "ABS", "ASA", "TPU"],
+      "allColors": [{ "hex": "#1A7A52", "name": "Jade Green" }, { "hex": "#FFFFFF", "name": "White" }],
+      "filters": { "materials": [], "colors": [], "hideDiscontinued": false },
+      "onChange": null
+    },
+    "SpoolFilterDropdown": {
+      "allMaterials": ["PLA", "PETG", "ABS"],
+      "allBrands": ["Bambu Lab", "eSUN", "Prusa"],
+      "allColors": [{ "hex": "#1A7A52", "name": "Jade Green" }, { "hex": "#FFFFFF", "name": "White" }],
+      "filters": {
+        "materials": [], "brands": [], "stockLevels": [], "colors": [],
+        "activeOnly": false, "lowStockOnly": false, "archivedOnly": false, "neverScanned": false
+      },
+      "onChange": null
+    },
+    "SpoolCard": {
+      "spool": {
+        "id": "1", "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green",
+        "colorHex": "#1A7A52", "initialWeightG": 1000, "currentWeightG": 750,
+        "spoolWeightG": 250, "lowStockThresholdG": 100, "isActive": true, "isArchived": false,
+        "createdAt": "2024-01-01T00:00:00Z", "lastScannedAt": null, "notes": null,
+        "density": null, "diameterTolerance": null, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65, "hasNfcTag": false, "nfcTagUid": null,
+        "printerId": null, "printerName": null, "amsSlot": null, "price": null, "stockLocation": null
+      }
+    },
+    "SpoolDetail": {
+      "spool": {
+        "id": "1", "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green",
+        "colorHex": "#1A7A52", "initialWeightG": 1000, "currentWeightG": 750,
+        "spoolWeightG": 250, "lowStockThresholdG": 100, "isActive": true, "isArchived": false,
+        "createdAt": "2024-01-01T00:00:00Z", "lastScannedAt": null, "notes": null,
+        "density": null, "diameterTolerance": null, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65, "hasNfcTag": false, "nfcTagUid": null,
+        "printerId": null, "printerName": null, "amsSlot": null, "price": null, "stockLocation": null
+      },
+      "jobs": [], "onUpdate": null, "onDelete": null
+    },
+    "NfcScanModal": {
+      "spool": {
+        "id": "1", "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green",
+        "colorHex": "#1A7A52", "initialWeightG": 1000, "currentWeightG": 750,
+        "spoolWeightG": 250, "lowStockThresholdG": 100, "isActive": true, "isArchived": false,
+        "createdAt": "2024-01-01T00:00:00Z", "lastScannedAt": null, "notes": null,
+        "density": null, "diameterTolerance": null, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65, "hasNfcTag": false, "nfcTagUid": null,
+        "printerId": null, "printerName": null, "amsSlot": null, "price": null, "stockLocation": null
+      },
+      "onClose": null
+    },
+    "SpoolScanPopup": {
+      "spool": {
+        "id": "1", "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green",
+        "colorHex": "#1A7A52", "initialWeightG": 1000, "currentWeightG": 750,
+        "spoolWeightG": 250, "lowStockThresholdG": 100, "isActive": true, "isArchived": false,
+        "createdAt": "2024-01-01T00:00:00Z", "lastScannedAt": null, "notes": null,
+        "density": null, "diameterTolerance": null, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65, "hasNfcTag": false, "nfcTagUid": null,
+        "printerId": null, "printerName": null, "amsSlot": null, "price": null, "stockLocation": null
+      },
+      "onClose": null
+    },
+    "AmsConflictModal": {
+      "printerImgSrc": "",
+      "printerBrand": "Bambu Lab", "printerModel": "P1S", "traySlot": 1,
+      "occupantSpool": {
+        "id": "1", "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green",
+        "colorHex": "#1A7A52", "initialWeightG": 1000, "currentWeightG": 750,
+        "spoolWeightG": 250, "lowStockThresholdG": 100, "isActive": true, "isArchived": false,
+        "createdAt": "2024-01-01T00:00:00Z", "lastScannedAt": null, "notes": null,
+        "density": null, "diameterTolerance": null, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65, "hasNfcTag": false, "nfcTagUid": null,
+        "printerId": "p1", "printerName": "My P1S", "amsSlot": 1, "price": null, "stockLocation": null
+      },
+      "onCancel": null, "onConfirm": null
+    },
+    "PrinterCard": {
+      "printer": {
+        "id": "1", "name": "My Printer", "brand": "Generic", "model": "FDM-1",
+        "serialNumber": null, "ipAddress": "192.168.1.100", "port": null,
+        "protocol": "http", "hasAms": false, "createdAt": "2024-01-01T00:00:00Z",
+        "tray1Spool": null, "tray2Spool": null, "tray3Spool": null, "tray4Spool": null, "extraSpool": null
+      },
+      "spools": [], "status": null
+    },
+    "PrinterPicker": {
+      "printers": [
+        {
+          "id": "1", "name": "My Printer", "brand": "Generic", "model": "FDM-1",
+          "serialNumber": null, "ipAddress": "192.168.1.100", "port": null,
+          "protocol": "http", "hasAms": false, "createdAt": "2024-01-01T00:00:00Z",
+          "tray1Spool": null, "tray2Spool": null, "tray3Spool": null, "tray4Spool": null, "extraSpool": null
+        }
+      ],
+      "value": null, "onChange": null
+    },
+    "SpoolDetailsForm": {
+      "filament": {
+        "brand": "Bambu Lab", "filamentName": "PLA Basic", "material": "PLA",
+        "density": 1.24, "extruderMin": 190, "extruderMax": 220,
+        "bedMin": 35, "bedMax": 65,
+        "colorHex": "#1A7A52", "colorName": "Jade Green",
+        "discontinued": false, "diameterTolerance": null,
+        "dataSheetUrl": null, "safetySheetUrl": null
+      },
+      "currentWeightG": "750", "setCurrentWeightG": null,
+      "initialWeightG": "1000", "setInitialWeightG": null,
+      "spoolWeightG": "250", "setSpoolWeightG": null,
+      "lowStockThresholdG": "100", "setLowStockThresholdG": null,
+      "notes": "", "setNotes": null,
+      "stockLocation": "", "setStockLocation": null,
+      "price": "", "setPrice": null,
+      "weightError": "", "setWeightError": null,
+      "isActive": true, "setIsActive": null,
+      "submitting": false, "submitError": null,
+      "onSubmit": null, "onCancel": null
+    },
+    "SpoolEditor": {
+      "brand": "Bambu Lab", "material": "PLA", "colorName": "Jade Green", "colorHex": "#1A7A52",
+      "extruderMin": 190, "extruderMax": 220, "bedMin": 35, "bedMax": 65,
+      "currentWeightG": "750", "setCurrentWeightG": null,
+      "initialWeightG": "1000", "setInitialWeightG": null,
+      "spoolWeightG": "250", "setSpoolWeightG": null,
+      "lowStockThresholdG": "100", "setLowStockThresholdG": null,
+      "weightError": "", "setWeightError": null,
+      "notes": "", "setNotes": null,
+      "stockLocation": "", "setStockLocation": null,
+      "price": "", "setPrice": null,
+      "isActive": true, "setIsActive": null,
+      "submitting": false, "submitError": null,
+      "onSubmit": null
+    }
+  },
+  "libOverrides": {
+    "bundle.mjs": "add esbuild tsconfig option for @/ alias + local-css loader + import.meta.env banner fix"
+  }
+}

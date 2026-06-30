@@ -1,0 +1,71 @@
+.dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  box-shadow: 0 10px 40px -10px oklch(0 0 0 / .3);
+  z-index: 50;
+}
+[data-dir="b"] .dock { border-radius: 10px; }
+
+.seg {
+  display: flex;
+  background: var(--surface-alt);
+  border-radius: 30px;
+  padding: 3px;
+  border: 1px solid var(--border-2);
+}
+[data-dir="b"] .seg { border-radius: 7px; }
+
+.seg button {
+  border: 0;
+  background: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--faint);
+  padding: 6px 14px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: .18s var(--ease);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-dir="b"] .seg button {
+  border-radius: 5px;
+  font-family: var(--font-num);
+  font-weight: 500;
+}
+.seg button.on {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px -2px var(--accent);
+}
+.seg button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.div {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.lbl {
+  font-size: 11px;
+  color: var(--faint);
+  font-weight: 600;
+  padding-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}

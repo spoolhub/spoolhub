@@ -1,0 +1,54 @@
+name: Deploy to Master
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/web/package-lock.json
+
+      - name: Restore dependencies
+        run: dotnet restore src/backend/backend.sln
+
+      - name: Build backend
+        run: dotnet build src/backend/backend.sln --no-restore --configuration Release
+
+      - name: Test backend
+        run: dotnet test src/backend/backend.sln --no-build --configuration Release
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: src/frontend/web
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: src/frontend/web
+
+      - name: Deploy to Master Environment
+        run: echo "Deploying to Master Environment — Docker deployment will be wired up in M8"
+
+      - name: Delete Branch
+        run: git push --delete origin ${{ github.event.pull_request.head.ref }}
