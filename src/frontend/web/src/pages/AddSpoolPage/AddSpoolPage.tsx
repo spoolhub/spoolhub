@@ -201,7 +201,10 @@ export default function AddSpoolPage() {
   const initWeight = Math.max(1, +state.init || 1)
   const pct = Math.min(100, Math.round(curWeight / initWeight * 100))
   const low = curWeight <= (+state.lowstock || 120)
-  const placementValid = state.place === 'stock' ? !!state.loc : !!state.printer
+  const selectedPrinter = state.place === 'printer' ? printers.find(p => p.id === state.printer) : undefined
+  const placementValid = state.place === 'stock'
+    ? !!state.loc
+    : !!selectedPrinter && (!selectedPrinter.hasAms || state.slot !== null)
 
   // Load data
   useEffect(() => {
@@ -311,17 +314,23 @@ export default function AddSpoolPage() {
         tagUid: state.mode === 'nfc' && state.tagUid ? state.tagUid : undefined,
       }
 
-      const created = await spoolsApi.add(spoolData)
+      // Manual mode can add several identical spools at once; NFC always adds one
+      const count = state.mode === 'manual' ? Math.max(1, Math.min(99, state.qty || 1)) : 1
+      const first = await spoolsApi.add(spoolData)
+      for (let i = 1; i < count; i++) {
+        await spoolsApi.add(spoolData)
+      }
 
+      // Only one spool can occupy the printer/slot — the rest stay in stock
       if (state.place === 'printer' && state.printer) {
-        await spoolsApi.assignPrinter(created.id, {
+        await spoolsApi.assignPrinter(first.id, {
           printerId: state.printer,
           amsSlot: state.slot ?? undefined,
         })
       }
 
       if (state.mode === 'nfc' && state.tagUid?.trim()) {
-        await registerTag(state.tagUid.trim(), created.id)
+        await registerTag(state.tagUid.trim(), first.id)
       }
 
       window.dispatchEvent(new CustomEvent('spools-updated'))
@@ -637,22 +646,40 @@ export default function AddSpoolPage() {
                             <img src={getPrinterImage(printer.brand, printer.model)} alt={printer.name} onError={e => { (e.target as HTMLElement).remove() }} />
                           </div>
                           <div className={styles.amsRight}>
-                            <div className={styles.slotLabel}>Choose AMS slot</div>
-                            <div className={styles.slotPick}>
-                              {[0, 1, 2, 3].map(i => {
-                                const n = i + 1
-                                const sel = n === state.slot
-                                return (
-                                  <div key={i} className={`${styles.slotTile}${sel ? ` ${styles['on']}` : ''}`}
-                                    onClick={() => setState(s => ({ ...s, slot: n }))}>
-                                    {sel && <span className={styles.slotHere}>Goes here</span>}
-                                    <span className={styles.slotNum}>{n}</span>
-                                    <div className={styles.slotIcon} dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />
-                                    <span className={styles.slotName}>Empty</span>
-                                  </div>
-                                )
-                              })}
-                            </div>
+                            {printer.hasAms ? (
+                              <>
+                                <div className={styles.slotLabel}>Choose AMS slot</div>
+                                <div className={styles.slotPick}>
+                                  {[printer.tray1Spool, printer.tray2Spool, printer.tray3Spool, printer.tray4Spool].map((tray, i) => {
+                                    const n = i + 1
+                                    const sel = n === state.slot
+                                    if (tray) {
+                                      return (
+                                        <div key={i} className={`${styles.slotTile} ${styles.taken}`} title={`${tray.brand} · ${tray.colorName}`}>
+                                          <span className={styles.slotNum}>{n}</span>
+                                          <span className={styles.slotSpool} dangerouslySetInnerHTML={{ __html: spoolIcon(tray.colorHex || '#888', 26, 'slot' + n) }} />
+                                          <span className={styles.slotName}>{tray.colorName || tray.brand}</span>
+                                        </div>
+                                      )
+                                    }
+                                    return (
+                                      <div key={i} className={`${styles.slotTile} ${styles.empty}${sel ? ` ${styles['on']}` : ''}`}
+                                        onClick={() => setState(s => ({ ...s, slot: n }))}>
+                                        {sel && <span className={styles.slotHere}>Goes here</span>}
+                                        <span className={styles.slotNum}>{n}</span>
+                                        <div className={styles.slotIcon} dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />
+                                        <span className={styles.slotName}>Empty</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </>
+                            ) : printer.extraSpool ? (
+                              <div className={styles.loadedAlert} role="alert">
+                                <span className={styles.slotSpool} dangerouslySetInnerHTML={{ __html: spoolIcon(printer.extraSpool.colorHex || '#888', 20, 'extra') }} />
+                                This printer already has {printer.extraSpool.colorName || printer.extraSpool.brand} loaded — it will be replaced.
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       )
@@ -667,7 +694,9 @@ export default function AddSpoolPage() {
                 <span dangerouslySetInnerHTML={{ __html: BACK_SVG }} /> Back
               </button>
               <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit} disabled={saving || !placementValid}
-                title={placementValid ? undefined : 'Choose a storage location or printer first'}>
+                title={placementValid ? undefined
+                  : selectedPrinter?.hasAms ? 'Choose an AMS slot first'
+                  : 'Choose a storage location or printer first'}>
                 {saving
                   ? <span className={styles.btnSpinner} />
                   : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}

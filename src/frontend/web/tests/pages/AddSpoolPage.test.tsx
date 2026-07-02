@@ -79,6 +79,19 @@ const createdSpool = {
   stockLocation: null,
 }
 
+const MOCK_PRINTER_AMS = {
+  id: 'printer-1', name: 'X1 Carbon', brand: 'Bambu Lab', model: 'X1C',
+  serialNumber: null, ipAddress: '', port: null, protocol: 'lan', hasAms: true,
+  createdAt: '2026-01-01T00:00:00Z',
+  tray1Spool: { id: 's1', brand: 'Bambu Lab', material: 'PLA', colorName: 'Galaxy Black', colorHex: '#222222' },
+  tray2Spool: null, tray3Spool: null, tray4Spool: null, extraSpool: null,
+}
+
+const MOCK_PRINTER_NO_AMS = {
+  ...MOCK_PRINTER_AMS, id: 'printer-2', name: 'Ender 3', brand: 'Creality', model: 'Ender-3',
+  hasAms: false, tray1Spool: null,
+}
+
 // Include all routes that AddSpoolPage navigates between
 function renderPage(path = '/spools/add') {
   return render(
@@ -230,6 +243,52 @@ describe('AddSpoolPage — form', () => {
     expect(addBtn).not.toBeDisabled()
   })
 
+  it('requires an AMS slot when the chosen printer has an AMS, and shows occupied slots', async () => {
+    vi.mocked(printersApi.getAll).mockResolvedValue([MOCK_PRINTER_AMS, MOCK_PRINTER_NO_AMS])
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.click(screen.getByText('Loaded in printer'))
+    const addBtn = screen.getByRole('button', { name: /Add spool/ })
+    expect(addBtn).toBeDisabled()
+    fireEvent.change(screen.getByDisplayValue('Select printer…'), { target: { value: 'printer-1' } })
+    await waitFor(() => screen.getByText('Choose AMS slot'))
+    // Printer picked but no slot yet — still blocked
+    expect(addBtn).toBeDisabled()
+    // Slot 1 is occupied and shows its assigned spool; clicking it doesn't select
+    fireEvent.click(screen.getByText('Galaxy Black'))
+    expect(addBtn).toBeDisabled()
+    // Picking a free slot unblocks the save
+    fireEvent.click(screen.getAllByText('Empty')[0])
+    expect(addBtn).not.toBeDisabled()
+  })
+
+  it('does not require a slot for a printer without an AMS', async () => {
+    vi.mocked(printersApi.getAll).mockResolvedValue([MOCK_PRINTER_AMS, MOCK_PRINTER_NO_AMS])
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.click(screen.getByText('Loaded in printer'))
+    fireEvent.change(screen.getByDisplayValue('Select printer…'), { target: { value: 'printer-2' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add spool/ })).not.toBeDisabled())
+    expect(screen.queryByText('Choose AMS slot')).not.toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('warns when a non-AMS printer already has a spool loaded', async () => {
+    const loadedPrinter = {
+      ...MOCK_PRINTER_NO_AMS,
+      extraSpool: { id: 's2', brand: 'Prusament', material: 'PETG', colorName: 'Orange', colorHex: '#ff7700' },
+    }
+    vi.mocked(printersApi.getAll).mockResolvedValue([loadedPrinter])
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.click(screen.getByText('Loaded in printer'))
+    fireEvent.change(screen.getByDisplayValue('Select printer…'), { target: { value: 'printer-2' } })
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByRole('alert')).toHaveTextContent('already has Orange loaded')
+    // Still allowed to save — it's a warning, not a blocker
+    expect(screen.getByRole('button', { name: /Add spool/ })).not.toBeDisabled()
+  })
+
   it('calls spoolsApi.add with correct data on submit', async () => {
     vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
     renderPage('/spools/add/manual')
@@ -241,6 +300,15 @@ describe('AddSpoolPage — form', () => {
       colorName: 'Jade White',
       initialWeightG: 1000,
     })))
+  })
+
+  it('adds as many spools as the quantity field says', async () => {
+    vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('1'), { target: { value: '10' } })
+    fireEvent.click(screen.getByRole('button', { name: /Add 10 spools/ }))
+    await waitFor(() => expect(spoolsApi.add).toHaveBeenCalledTimes(10))
   })
 
   it('does not call registerTag in manual mode', async () => {
