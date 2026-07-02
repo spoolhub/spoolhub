@@ -1,0 +1,49 @@
+<svg width="680" height="180" viewBox="0 0 680 180" role="img" aria-label="SpoolHub" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="spk-full">
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(45)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(90)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(135)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(180)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(225)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(270)"/>
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(315)"/>
+    </g>
+  </defs>
+
+  <!-- Outer rim -->
+  <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" stroke-width="3"/>
+
+  <!-- Spinning spool -->
+  <g transform="translate(115,90)">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite"/>
+      <circle r="53" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.4"/>
+      <circle r="43" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.65"/>
+      <circle r="33" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.9"/>
+      <use href="#spk-full"/>
+    </g>
+    <circle r="17" fill="#15803D"/>
+    <circle r="9" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
+  </g>
+
+  <!-- Broadcasting waves -->
+  <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke="#15803D" stroke-width="3.5" stroke-linecap="round">
+    <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-width" values="0.5;3.5;0.5" dur="2s" begin="0s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 182.9,22.2 A 96,96 0 0,1 182.9,157.8" fill="none" stroke="#15803D" stroke-width="2.5" stroke-linecap="round">
+    <animate attributeName="opacity" values="0;0.65;0" dur="2s" begin="0.35s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-width" values="0.5;2.5;0.5" dur="2s" begin="0.35s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 195.6,9.4 A 114,114 0 0,1 195.6,170.6" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round">
+    <animate attributeName="opacity" values="0;0.35;0" dur="2s" begin="0.7s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-width" values="0.5;2;0.5" dur="2s" begin="0.7s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Wordmark -->
+  <text x="242" y="90" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="80" font-weight="500" dominant-baseline="middle">
+    <tspan fill="#1B2420">Spool</tspan><tspan fill="#16A34A">Hub</tspan>
+  </text>
+</svg>
