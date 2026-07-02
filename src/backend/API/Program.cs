@@ -251,6 +251,7 @@ static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicatio
         }
 
         db.Database.Migrate();
+        await SeedData.SeedAsync(db);
         logger.LogInformation("Database initialized.");
     }
     catch (Exception ex) when (ex is InvalidOperationException or IOException)
