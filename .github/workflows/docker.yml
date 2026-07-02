@@ -39,14 +39,17 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ${{ steps.meta.outputs.tags }}
+          # docker/metadata-action produces no tags on pull_request events, so
+          # always carry this fixed local tag for the smoke test step below.
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            spoolhub:smoke-test
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Smoke test image
         run: |
           set -e
-          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          docker run -d --name smoke -p 4848:4848 "$FIRST_TAG"
+          docker run -d --name smoke -p 4848:4848 spoolhub:smoke-test
 
           echo "Waiting for the container to come up..."
           for i in $(seq 1 30); do
