@@ -600,3 +600,10 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loadingLabel { color: var(--muted); font-size: 14px; font-weight: 500; }
+.btnSpinner {
+  width: 15px; height: 15px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}

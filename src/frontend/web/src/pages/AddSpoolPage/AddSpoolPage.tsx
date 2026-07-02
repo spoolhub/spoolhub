@@ -13,7 +13,7 @@ import type { FilamentProfile } from '@/types/filament'
 import type { PrinterResponse } from '@/types/printer'
 import styles from './AddSpoolPage.module.css'
 
-type AddStep = 'choose' | 'scan' | 'pick' | 'details' | 'success'
+type AddStep = 'choose' | 'scan' | 'pick' | 'details'
 type Mode = 'nfc' | 'manual'
 type PlaceType = 'stock' | 'printer'
 
@@ -43,7 +43,6 @@ interface AddState {
   bedMax: string
   dia: string
   density: string
-  addedCount: number
 }
 
 const SHELVES = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
@@ -92,7 +91,6 @@ const PEN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const PLUS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
 const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
 const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
-const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
 
 // ───── NFC scan step (real reader via SpoolHub Agent) ─────
 interface ScanStepProps {
@@ -196,8 +194,8 @@ export default function AddSpoolPage() {
     openPrinter: false, matUnlocked: false,
     nozMin: '200', nozMax: '220', bedMin: '50', bedMax: '60',
     dia: '1.75', density: '1.24',
-    addedCount: 0,
   }))
+  const [saving, setSaving] = useState(false)
 
   const curWeight = Math.max(0, +state.cur || 0)
   const initWeight = Math.max(1, +state.init || 1)
@@ -285,8 +283,9 @@ export default function AddSpoolPage() {
 
   const handleSubmit = useCallback(async () => {
     const f = state.filament
-    if (!f || !state.brand || !state.material) return
+    if (!f || !state.brand || !state.material || saving) return
 
+    setSaving(true)
     try {
       const hex = f.colorHex || '#888'
       const spoolData = {
@@ -323,17 +322,12 @@ export default function AddSpoolPage() {
       }
 
       window.dispatchEvent(new CustomEvent('spools-updated'))
-
-      setState(s => ({
-        ...s,
-        addedCount: s.addedCount + 1,
-        step: 'success',
-      }))
-
+      navigate('/spools')
     } catch (err) {
       console.error('Failed to add spool', err)
+      setSaving(false)
     }
-  }, [state])
+  }, [state, saving, navigate])
 
   const backFromPick = useCallback(() => {
     if (state.mode === 'nfc') {
@@ -345,18 +339,6 @@ export default function AddSpoolPage() {
       goToChoose()
     }
   }, [state.mode, isNfc, isManual, navigate, goToScan, goToChoose])
-
-  const addAnother = useCallback(() => {
-    setState(s => ({
-      ...s, filament: null,
-      step: s.mode === 'nfc' ? 'scan' : 'pick',
-      brand: '', material: '', colorName: '',
-      cur: '1000', init: '1000', qty: 1,
-      value: '29.99', emptyw: '250', lowstock: '120',
-      place: 'stock', printer: '', slot: null, loc: '',
-      openPrinter: false, matUnlocked: false,
-    }))
-  }, [])
 
   // ───── RENDER ─────
   const renderChoose = () => (
@@ -680,35 +662,14 @@ export default function AddSpoolPage() {
               <button className={`${styles.btn} ${styles['back']}`} onClick={() => setState(s => ({ ...s, step: state.mode === 'nfc' ? 'scan' : 'pick' }))}>
                 <span dangerouslySetInnerHTML={{ __html: BACK_SVG }} /> Back
               </button>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit}>
-                <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />
-                {state.mode === 'manual' && state.qty > 1 ? `Add ${state.qty} spools` : 'Add spool'}
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit} disabled={saving}>
+                {saving
+                  ? <span className={styles.btnSpinner} />
+                  : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}
+                {saving ? 'Adding…' : (state.mode === 'manual' && state.qty > 1 ? `Add ${state.qty} spools` : 'Add spool')}
               </button>
             </div>
           </div>
-        </div>
-      </>
-    )
-  }
-
-  const renderSuccess = () => {
-    const count = state.addedCount
-    const f = state.filament
-    return (
-      <>
-        <div className={styles.cardBody}>
-          <div className={styles.successWrap}>
-            <div className={styles.successCheck} dangerouslySetInnerHTML={{ __html: CHECK_SVG }} />
-            <h2>{count > 1 ? `${count} spools added` : 'Spool added'}</h2>
-            {f && <p>{count > 1 ? `${count} × ` : ''}{f.brand} · {f.colorName || f.filamentName} · {f.material}</p>}
-            {state.mode === 'nfc' && state.tagUid && (
-              <p className={styles.nfcWritten}>✓ NFC tag written to library</p>
-            )}
-          </div>
-        </div>
-        <div className={styles.cardFooter}>
-          <button className={styles.btn} onClick={addAnother}>Add another</button>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => navigate('/spools')}>View spools</button>
         </div>
       </>
     )
@@ -729,7 +690,6 @@ export default function AddSpoolPage() {
       )
       case 'pick': return renderPick()
       case 'details': return renderDetails()
-      case 'success': return renderSuccess()
       default: return null
     }
   })()
