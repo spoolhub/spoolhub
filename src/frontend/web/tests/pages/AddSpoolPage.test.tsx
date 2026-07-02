@@ -137,6 +137,24 @@ describe('AddSpoolPage — choose step', () => {
     fireEvent.click(screen.getByText('Enter manually'))
     await waitFor(() => expect(screen.getByText('Select brand…')).toBeInTheDocument())
   })
+
+  it('returns to the choose step when back is clicked in the manual pick step', async () => {
+    renderPage()
+    fireEvent.click(screen.getByText('Enter manually'))
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByText('Enter manually')).toBeInTheDocument())
+  })
+
+  it('returns to the scan step when back is clicked in the NFC pick step', async () => {
+    renderPage()
+    fireEvent.click(screen.getByText('Scan NFC tag'))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('04:AA:BB:CC') })
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByText('Listening for tag…')).toBeInTheDocument())
+  })
 })
 
 describe('AddSpoolPage — scan step (real reader via agent)', () => {

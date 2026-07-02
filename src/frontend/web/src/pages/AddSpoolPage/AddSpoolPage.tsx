@@ -335,6 +335,17 @@ export default function AddSpoolPage() {
     }
   }, [state])
 
+  const backFromPick = useCallback(() => {
+    if (state.mode === 'nfc') {
+      goToScan()
+    } else if (isNfc || isManual) {
+      // Dedicated route — the choose step lives at /spools/add
+      navigate('/spools/add')
+    } else {
+      goToChoose()
+    }
+  }, [state.mode, isNfc, isManual, navigate, goToScan, goToChoose])
+
   const addAnother = useCallback(() => {
     setState(s => ({
       ...s, filament: null,
@@ -394,7 +405,7 @@ export default function AddSpoolPage() {
     return (
       <>
         <div className={styles.cardHeader}>
-          <button className={styles.closeBtn} onClick={state.mode === 'nfc' ? goToScan : () => navigate('/spools/add')} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
+          <button className={styles.closeBtn} onClick={backFromPick} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
           <div className={styles.cardHeaderTitle}>
             <h2>Add spool</h2>
             <div className={styles.sub}>
