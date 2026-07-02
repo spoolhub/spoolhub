@@ -110,6 +110,7 @@
   padding: 48px 24px; text-align: center;
   color: var(--faint); font-size: 14px; grid-column: 1 / -1;
 }
+.pagination { padding: 14px var(--card-pad); border-top: 1px solid var(--border-2); }
 
 /* ── List view ── */
 .listWrap { display: flex; flex-direction: column; }
@@ -214,8 +215,12 @@
 [data-dir="b"] .tag { font-family: var(--font-num); border-radius: 4px; font-weight: 500 }
 .tag.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted) }
 
-.activeDot { position: absolute; top: 14px; right: 14px; display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: oklch(0.6 0.13 150) }
+.badges { position: absolute; top: 14px; right: 14px; display: flex; align-items: center; gap: 10px; }
+.activeDot { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: oklch(0.6 0.13 150) }
 .activeDot i { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150 / .18) }
+
+.nfcIcon { color: var(--accent); flex: none; }
+.listId .nfcIcon { color: var(--faint); }
 
 .bar { margin-top: 15px }
 .metaRow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px }
