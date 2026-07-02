@@ -201,6 +201,7 @@ export default function AddSpoolPage() {
   const initWeight = Math.max(1, +state.init || 1)
   const pct = Math.min(100, Math.round(curWeight / initWeight * 100))
   const low = curWeight <= (+state.lowstock || 120)
+  const placementValid = state.place === 'stock' ? !!state.loc : !!state.printer
 
   // Load data
   useEffect(() => {
@@ -283,7 +284,7 @@ export default function AddSpoolPage() {
 
   const handleSubmit = useCallback(async () => {
     const f = state.filament
-    if (!f || !state.brand || !state.material || saving) return
+    if (!f || !state.brand || !state.material || !placementValid || saving) return
 
     setSaving(true)
     // Keep the button spinner visible even when the API responds instantly
@@ -330,7 +331,7 @@ export default function AddSpoolPage() {
       console.error('Failed to add spool', err)
       setSaving(false)
     }
-  }, [state, saving, navigate])
+  }, [state, saving, placementValid, navigate])
 
   const backFromPick = useCallback(() => {
     if (state.mode === 'nfc') {
@@ -665,7 +666,8 @@ export default function AddSpoolPage() {
               <button className={`${styles.btn} ${styles['back']}`} onClick={() => setState(s => ({ ...s, step: state.mode === 'nfc' ? 'scan' : 'pick' }))}>
                 <span dangerouslySetInnerHTML={{ __html: BACK_SVG }} /> Back
               </button>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit} disabled={saving}>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit} disabled={saving || !placementValid}
+                title={placementValid ? undefined : 'Choose a storage location or printer first'}>
                 {saving
                   ? <span className={styles.btnSpinner} />
                   : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}

@@ -104,6 +104,8 @@ async function selectFilament() {
   await waitFor(() => screen.getByText('Jade White', { selector: 'div' }))
   fireEvent.click(screen.getByText('Jade White', { selector: 'div' }))
   await waitFor(() => screen.getByRole('button', { name: /Add spool/ }))
+  // Placement is required before save — pick a storage location
+  fireEvent.change(screen.getByDisplayValue('Select location…'), { target: { value: 'Shelf A1' } })
 }
 
 function mockDefaults() {
@@ -209,6 +211,23 @@ describe('AddSpoolPage — form', () => {
     renderPage('/spools/add/manual')
     await selectFilament()
     expect(screen.getByRole('button', { name: /Add spool/ })).toBeInTheDocument()
+  })
+
+  it('disables Add spool until a storage location or printer is chosen', async () => {
+    vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.change(screen.getByDisplayValue('Select brand…'), { target: { value: 'Bambu Lab' } })
+    await waitFor(() => expect(screen.getByDisplayValue('Select material…')).not.toBeDisabled())
+    fireEvent.change(screen.getByDisplayValue('Select material…'), { target: { value: 'PLA' } })
+    await waitFor(() => screen.getByText('Jade White', { selector: 'div' }))
+    fireEvent.click(screen.getByText('Jade White', { selector: 'div' }))
+    const addBtn = await screen.findByRole('button', { name: /Add spool/ })
+    expect(addBtn).toBeDisabled()
+    fireEvent.click(addBtn)
+    expect(spoolsApi.add).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByDisplayValue('Select location…'), { target: { value: 'Shelf A1' } })
+    expect(addBtn).not.toBeDisabled()
   })
 
   it('calls spoolsApi.add with correct data on submit', async () => {

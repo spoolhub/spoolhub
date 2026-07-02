@@ -299,6 +299,7 @@
   outline: 0; transition: .15s var(--ease);
 }
 .field select:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 .field select:focus, .field input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
