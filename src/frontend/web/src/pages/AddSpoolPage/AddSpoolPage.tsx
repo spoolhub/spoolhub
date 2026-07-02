@@ -1,16 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import { filamentsApi } from '@/api/filaments'
-import { brandsApi } from '@/api/brands'
 import { locationsApi } from '@/api/locations'
-import { registerTag } from '@/api/nfc'
+import { registerTag, scanTag } from '@/api/nfc'
+import { useAgentNfc } from '@/hooks/useAgentNfc'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
-import type { SpoolResponse } from '@/types/spool'
 import type { FilamentProfile } from '@/types/filament'
 import type { PrinterResponse } from '@/types/printer'
 import styles from './AddSpoolPage.module.css'
@@ -23,7 +21,6 @@ interface AddState {
   step: AddStep
   mode: Mode
   tagUid?: string
-  readerStatus: 'checking' | 'listening' | 'noreader' | 'found'
   brand: string
   material: string
   colorName: string
@@ -97,11 +94,88 @@ const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
 const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
 
+// ───── NFC scan step (real reader via SpoolHub Agent) ─────
+interface ScanStepProps {
+  onBack: () => void
+  onClose: () => void
+  onManual: () => void
+  onTagFound: (tagUid: string) => void
+}
+
+function ScanStep({ onBack, onClose, onManual, onTagFound }: ScanStepProps) {
+  const [trouble, setTrouble] = useState(false)
+  const { state: agentState, reload } = useAgentNfc(onTagFound)
+
+  const noReader = trouble
+    || agentState === 'agent-offline'
+    || agentState === 'no-reader'
+    || agentState === 'install-prompt'
+  const checking = agentState === 'checking' || agentState === 'connecting'
+
+  const retry = () => { setTrouble(false); reload() }
+
+  return (
+    <>
+      <div className={styles.cardHeader}>
+        <button className={styles.closeBtn} onClick={onBack} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
+        <div className={styles.cardHeaderTitle}>
+          <h2>Scan NFC tag</h2>
+          <div className={styles.sub}>{noReader ? 'No reader connected' : "Hold the spool's NFC tag against your reader"}</div>
+        </div>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+      </div>
+      <div className={styles.cardBody}>
+        <div className={styles.scanPanel}>
+          {noReader ? (
+            <div className={styles.noReader}>
+              <div className={styles.noReaderIcon} dangerouslySetInnerHTML={{
+                __html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 7V4h6v3"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v5"/><path d="M9 21h6"/><path d="M10.5 16.5h3"/></svg>'
+              }} />
+              <div className={styles.noReaderTitle}>No NFC reader detected</div>
+              <p className={styles.noReaderText}>SpoolHub couldn't reach a reader. To scan tags:</p>
+              <ol className={styles.noReaderList}>
+                <li>Make sure the <strong>SpoolHub Agent</strong> is installed and running</li>
+                <li>Check that the reader is plugged into a working <strong>USB port</strong></li>
+                <li>Reconnect the reader, then try again</li>
+              </ol>
+            </div>
+          ) : (
+            <div className={styles.scanContainer}>
+              <div className={styles.nfcWave}>
+                <span className={styles.nfcRing}></span>
+                <span className={styles.nfcRing}></span>
+                <span className={styles.nfcRing}></span>
+                <span className={styles.nfcGlyph} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
+              </div>
+              <div className={styles.scanStatus}>{checking ? 'Connecting to reader…' : 'Listening for tag…'}</div>
+              <div className={styles.scanHint}>Keep the tag steady until it's detected</div>
+              <button className={styles.scanTrouble} onClick={() => setTrouble(true)}>Reader not working?</button>
+            </div>
+          )}
+          <div className={styles.scanActions}>
+            {noReader ? (
+              <>
+                <button className={styles.btn} onClick={onManual}>
+                  <span dangerouslySetInnerHTML={{ __html: PEN_SVG }} /> Enter manually
+                </button>
+                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={retry}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> Try again
+                </button>
+              </>
+            ) : (
+              <button className={styles.btn} onClick={onClose}>Cancel</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function AddSpoolPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
-  const { t } = useTranslation()
 
   const isNfc = pathname === '/spools/add/nfctag'
   const isManual = pathname === '/spools/add/manual'
@@ -110,16 +184,11 @@ export default function AddSpoolPage() {
   const [filaments, setFilaments] = useState<FilamentProfile[]>([])
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [locationNames, setLocationNames] = useState<string[]>([])
-  const [brands, setBrands] = useState<string[]>([])
-
-  const uidCounter = useRef(0)
-  const uid = () => 'u' + (uidCounter.current++)
 
   const [state, setState] = useState<AddState>(() => ({
     step: (isNfc || searchParams.get('mode') === 'nfc') ? 'scan' : (isManual ? 'pick' : 'choose'),
     mode: (isNfc || searchParams.get('mode') === 'nfc') ? 'nfc' : 'manual',
     tagUid: isNfc ? tagUidParam : undefined,
-    readerStatus: 'listening',
     brand: '', material: '', colorName: '', filament: null,
     cur: '1000', init: '1000', qty: 1,
     value: '29.99', emptyw: '250', lowstock: '120',
@@ -140,20 +209,7 @@ export default function AddSpoolPage() {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
     printersApi.getAll().then(setPrinters).catch(() => {})
     locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name))).catch(() => {})
-    brandsApi.getAll().then(data => setBrands(data.map((b: any) => b.name || b))).catch(() => {})
   }, [])
-
-  // NFC tag lookup
-  useEffect(() => {
-    if (!tagUidParam) return
-    import('@/api/nfc').then(({ scanTag }) => {
-      scanTag(tagUidParam).then(result => {
-        if (result.status === 'found' && result.spool) {
-          navigate(`/spools/${result.spool.id}`, { replace: true })
-        }
-      }).catch(() => {})
-    })
-  }, [tagUidParam])
 
   const close = useCallback(() => {
     navigate(isNfc || isManual ? '/spools/add' : '/spools')
@@ -164,7 +220,7 @@ export default function AddSpoolPage() {
   }, [])
 
   const goToScan = useCallback(() => {
-    setState(s => ({ ...s, step: 'scan', readerStatus: 'listening' }))
+    setState(s => ({ ...s, step: 'scan' }))
   }, [])
 
   const goToPick = useCallback((mode: Mode) => {
@@ -182,29 +238,50 @@ export default function AddSpoolPage() {
       step: 'details',
       cur: s.cur || '1000',
       init: s.init || '1000',
-      nozMin: String(def.extruderMin ?? def.nmin ?? 200),
-      nozMax: String(def.extruderMax ?? def.nmax ?? 220),
-      bedMin: String(def.bedMin ?? def.bmin ?? 50),
-      bedMax: String(def.bedMax ?? def.bmax ?? 60),
+      nozMin: String(def?.extruderMin ?? 200),
+      nozMax: String(def?.extruderMax ?? 220),
+      bedMin: String(def?.bedMin ?? 50),
+      bedMax: String(def?.bedMax ?? 60),
       dia: String(f.diameterTolerance ?? '1.75'),
-      density: String(f.density ?? def.density ?? def.d ?? 1.24),
+      density: String(f.density ?? 1.24),
     }))
   }, [])
 
-  const simulateNfcTag = useCallback(() => {
-    if (filaments.length > 0) {
-      setState(s => ({
-        ...s,
-        step: 'pick',
-        mode: 'nfc',
-        readerStatus: 'found',
-        tagUid: 'SIMULATED_' + String(Date.now()),
-        brand: '',
-        material: '',
-        colorName: '',
-      }))
-    }
-  }, [filaments])
+  const handleTagFound = useCallback(async (tagUid: string) => {
+    try {
+      const result = await scanTag(tagUid)
+      if (result.status === 'found' && result.spool) {
+        navigate(`/spools/${result.spool.id}`)
+        return
+      }
+    } catch { /* lookup failed — treat as a new tag */ }
+    setState(s => ({
+      ...s,
+      step: 'pick',
+      mode: 'nfc',
+      tagUid,
+      brand: '',
+      material: '',
+      colorName: '',
+      filament: null,
+    }))
+  }, [navigate])
+
+  // Tag UID arriving via URL (e.g. phone scan) — same lookup as a live reader scan
+  useEffect(() => {
+    if (!tagUidParam) return
+    const toPick = () => setState(s => ({
+      ...s, step: 'pick', mode: 'nfc', tagUid: tagUidParam,
+      brand: '', material: '', colorName: '', filament: null,
+    }))
+    scanTag(tagUidParam).then(result => {
+      if (result.status === 'found' && result.spool) {
+        navigate(`/spools/${result.spool.id}`, { replace: true })
+      } else {
+        toPick()
+      }
+    }).catch(toPick)
+  }, [tagUidParam])
 
   const handleSubmit = useCallback(async () => {
     const f = state.filament
@@ -232,13 +309,13 @@ export default function AddSpoolPage() {
         tagUid: state.mode === 'nfc' && state.tagUid ? state.tagUid : undefined,
       }
 
-      const created = await spoolsApi.add(spoolData as any)
+      const created = await spoolsApi.add(spoolData)
 
       if (state.place === 'printer' && state.printer) {
         await spoolsApi.assignPrinter(created.id, {
           printerId: state.printer,
           amsSlot: state.slot ?? undefined,
-        } as any)
+        })
       }
 
       if (state.mode === 'nfc' && state.tagUid?.trim()) {
@@ -251,7 +328,6 @@ export default function AddSpoolPage() {
         ...s,
         addedCount: s.addedCount + 1,
         step: 'success',
-        filament: created as any,
       }))
 
     } catch (err) {
@@ -283,7 +359,7 @@ export default function AddSpoolPage() {
       </div>
       <div className={styles.cardBody}>
         <div className={styles.chooseGrid}>
-          <button className={styles.choiceCard} onClick={() => { setState(s => ({ ...s, step: 'scan', mode: 'nfc', readerStatus: 'listening' })) }}>
+          <button className={styles.choiceCard} onClick={() => { setState(s => ({ ...s, step: 'scan', mode: 'nfc' })) }}>
             <span className={styles.choiceBadge}><i></i>Recommended</span>
             <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
             <span className={styles.choiceTitle}>Scan NFC tag</span>
@@ -298,69 +374,6 @@ export default function AddSpoolPage() {
       </div>
     </>
   )
-
-  const renderScan = () => {
-    const noReader = state.readerStatus === 'noreader'
-    return (
-      <>
-        <div className={styles.cardHeader}>
-          <button className={styles.closeBtn} onClick={goToChoose} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
-          <div className={styles.cardHeaderTitle}>
-            <h2>Scan NFC tag</h2>
-            <div className={styles.sub}>{noReader ? 'No reader connected' : "Hold the spool's NFC tag against your reader"}</div>
-          </div>
-          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-        </div>
-        <div className={styles.cardBody}>
-          <div className={styles.scanPanel}>
-            {noReader ? (
-              <div className={styles.noReader}>
-                <div className={styles.noReaderIcon} dangerouslySetInnerHTML={{
-                  __html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 7V4h6v3"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v5"/><path d="M9 21h6"/><path d="M10.5 16.5h3"/></svg>'
-                }} />
-                <div className={styles.noReaderTitle}>No NFC reader detected</div>
-                <p className={styles.noReaderText}>SpoolHub couldn't reach a reader. To scan tags:</p>
-                <ol className={styles.noReaderList}>
-                  <li>Make sure the <strong>SpoolHub Agent</strong> is installed and running</li>
-                  <li>Check that the reader is plugged into a working <strong>USB port</strong></li>
-                  <li>Reconnect the reader, then try again</li>
-                </ol>
-              </div>
-            ) : (
-              <div className={styles.scanContainer}>
-                <div className={styles.nfcWave}>
-                  <span className={styles.nfcRing}></span>
-                  <span className={styles.nfcRing}></span>
-                  <span className={styles.nfcRing}></span>
-                  <span className={styles.nfcGlyph} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
-                </div>
-                <div className={styles.scanStatus}>{state.readerStatus === 'checking' ? 'Connecting to reader…' : 'Listening for tag…'}</div>
-                <div className={styles.scanHint}>Keep the tag steady until it's detected</div>
-                <button className={styles.scanTrouble} onClick={() => setState(s => ({ ...s, readerStatus: 'noreader' }))}>Reader not working?</button>
-              </div>
-            )}
-            <div className={styles.scanActions}>
-              {noReader ? (
-                <>
-                  <button className={styles.btn} onClick={() => goToPick('manual')}>
-                    <span dangerouslySetInnerHTML={{ __html: PEN_SVG }} /> Enter manually
-                  </button>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={goToScan}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> Try again
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className={styles.btn} onClick={close}>Cancel</button>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={simulateNfcTag}>Simulate tag</button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </>
-    )
-  }
 
   const renderPick = () => {
     const filteredBrands = [...new Set(filaments.map(f => f.brand))]
@@ -429,7 +442,7 @@ export default function AddSpoolPage() {
                 <div className={styles.filaGrid}>
                   {matched.map((f, i) => (
                     <button key={i} className={styles.filaCard} onClick={() => selectFilament(f)}>
-                      <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 40, uid()) }} />
+                      <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 40, 'p' + i) }} />
                       <div className={styles.filaMeta}>
                         <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
                         <div className={styles.filaBrand}>{f.material}</div>
@@ -690,15 +703,19 @@ export default function AddSpoolPage() {
     )
   }
 
-  const showModal = state.step !== 'choose' || isNfc || isManual || true
-  const isOpen = true
-
   // Render inline in the page space, not as overlay, when at /spools/add.
   // The page will be wrapped in a full-viewport container by the route.
   const content = (() => {
     switch (state.step) {
       case 'choose': return isNfc || isManual ? null : renderChoose()
-      case 'scan': return renderScan()
+      case 'scan': return (
+        <ScanStep
+          onBack={goToChoose}
+          onClose={close}
+          onManual={() => goToPick('manual')}
+          onTagFound={handleTagFound}
+        />
+      )
       case 'pick': return renderPick()
       case 'details': return renderDetails()
       case 'success': return renderSuccess()
