@@ -112,34 +112,76 @@
 }
 
 /* ── List view ── */
-.spoolGrid.list { grid-template-columns: 1fr; gap: 12px; }
-.spoolGrid.list .spool {
-  display: flex; align-items: center; gap: 32px;
-  padding: 18px 24px;
+.listWrap { display: flex; flex-direction: column; }
+.listSkeleton {
+  height: 54px; border-bottom: 1px solid var(--border-2);
+  background: var(--track); animation: pulse 1.5s ease-in-out infinite;
 }
-.spoolGrid.list .row { flex: 1; min-width: 0; }
-.spoolGrid.list .bar { margin-top: 0; width: 240px; flex-shrink: 0; }
-.spoolGrid.list .foot {
-  margin-top: 0; padding-top: 0; border-top: 0;
-  justify-content: flex-start; gap: 22px;
-  flex-shrink: 0; font-size: 12px;
+.listRow {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+  cursor: pointer; transition: background .15s var(--ease);
 }
-.spoolGrid.list .foot span { white-space: nowrap; }
-.spoolGrid.list .activeDot {
-  position: static; order: 1;
-  flex-shrink: 0; min-width: 64px; justify-content: flex-end;
+.listRow:last-child { border-bottom: 0; }
+.listRow:hover { background: var(--surface-alt); }
+
+.listIcon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.listIcon svg { display: block; }
+
+.listId {
+  display: flex; align-items: baseline; gap: 10px;
+  width: 200px; flex: none; min-width: 0;
+}
+.listId .brand { font-weight: 700; font-size: 14px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary) }
+.listId .cname { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.listId .tag { flex-shrink: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); text-transform: uppercase }
+[data-theme="dark"] .listId .tag { color: var(--accent) }
+
+.listMeta {
+  display: flex; align-items: center; gap: 18px;
+  width: 300px; flex: none; min-width: 0;
+  font-size: 11.5px; color: var(--faint);
+}
+.listMeta span { display: flex; align-items: center; gap: 5px; flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.listMeta svg { width: 13px; height: 13px; flex: none }
+
+.listBarWrap { flex: 1; min-width: 60px; }
+.listTrack { height: 5px; border-radius: 20px; background: var(--track); overflow: hidden }
+.listTrack i { display: block; height: 100%; border-radius: inherit; background: oklch(0.6 0.13 150); transition: width .6s var(--ease) }
+.listTrack i.low { background: oklch(0.65 0.17 30) }
+
+.listStats {
+  display: flex; align-items: baseline; gap: 10px;
+  width: 100px; flex: none; justify-content: flex-end;
+  font-family: var(--font-num);
+}
+.listG { font-weight: 700; font-size: 13.5px; color: var(--text-primary) }
+.listPct { font-weight: 700; font-size: 12.5px; color: oklch(0.6 0.13 150) }
+.listPct.low { color: oklch(0.65 0.17 30) }
+
+.listActive {
+  display: flex; align-items: center; gap: 5px;
+  width: 60px; flex: none; justify-content: flex-end;
+  font-size: 10.5px; font-weight: 600; color: oklch(0.6 0.13 150);
+}
+.listActive i { width: 6px; height: 6px; border-radius: 50%; background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150 / .18) }
+
+@media (max-width: 1300px) {
+  .listMeta { width: 220px; gap: 12px; }
 }
 @media (max-width: 1100px) {
-  .spoolGrid.list .foot { gap: 14px; }
-  .spoolGrid.list .spool { gap: 20px; }
+  .listId { width: 170px; }
+  .listMeta { width: 170px; }
+  .listMeta span:first-child { display: none; }
 }
 @media (max-width: 900px) {
-  .spoolGrid.list .foot { display: none; }
-  .spoolGrid.list .bar { width: 170px; }
+  .listMeta { display: none; }
 }
-@media (max-width: 600px) {
-  .spoolGrid.list .activeDot { display: none; }
-  .spoolGrid.list .bar { width: 120px; }
+@media (max-width: 700px) {
+  .listId { width: 170px; }
+  .listStats { width: 80px; }
+  .listActive { width: 0; overflow: hidden; }
 }
 .skeleton {
   height: 180px; border-radius: var(--r-sm);

@@ -20,6 +20,12 @@ const formatRelativeTime = (dateStr: string | null): string => {
   return date.toLocaleDateString('en-GB').replace(/\//g, '/')
 }
 
+const locationLabel = (s: SpoolResponse): string => {
+  if (s.printerName) return s.amsSlot ? `${s.printerName} · Slot ${s.amsSlot}` : s.printerName
+  if (s.stockLocation) return s.stockLocation
+  return 'Unassigned'
+}
+
 export default function SpoolsPage() {
   const { t } = useTranslation()
   const [spools, setSpools] = useState<SpoolResponse[]>([])
@@ -109,37 +115,75 @@ export default function SpoolsPage() {
           <h2>All spools</h2>
           <span className={styles.meta}>{spools.length} items</span>
         </div>
-        <div className={`${styles.spoolGrid} ${view === 'list' ? styles.list : ''}`}>
-          {loading
-            ? [1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)
-            : filtered.length === 0
-              ? <div className={styles.empty}>No spools match this filter.</div>
-              : filtered.map(s => (
-                <div key={s.id} className={styles.spool} onClick={() => setSelected(s)}>
-                  {s.isActive && <span className={styles.activeDot}><i></i>ACTIVE</span>}
-                  <div className={styles.row}>
-                    <div className={styles.disc}><SpoolIcon color={s.colorHex} size={54} /></div>
-                    <div className={styles.id}>
-                      <div className={styles.brand}>{s.brand}</div>
-                      <div className={styles.cname}>{s.colorName}</div>
-                      <div className={styles.tags}><span className={styles.tag}>{s.material}</span></div>
+        {view === 'list' ? (
+          <div className={styles.listWrap}>
+            {loading
+              ? [1,2,3,4].map(i => <div key={i} className={styles.listSkeleton} />)
+              : filtered.length === 0
+                ? <div className={styles.empty}>No spools match this filter.</div>
+                : filtered.map(s => {
+                  const pct = s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0
+                  const isLow = s.currentWeightG <= 120
+                  return (
+                    <div key={s.id} className={styles.listRow} onClick={() => setSelected(s)}>
+                      <div className={styles.listIcon}><SpoolIcon color={s.colorHex} size={40} /></div>
+                      <div className={styles.listId}>
+                        <span className={styles.brand}>{s.brand}</span>
+                        <span className={styles.cname}>{s.colorName}</span>
+                        <span className={styles.tag}>{s.material}</span>
+                      </div>
+                      <div className={styles.listMeta}>
+                        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>{locationLabel(s)}</span>
+                        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>{formatRelativeTime(s.lastScannedAt)}</span>
+                      </div>
+                      <div className={styles.listBarWrap}>
+                        <div className={styles.listTrack}><i className={isLow ? styles.low : ''} style={{ width: `${pct}%` }} /></div>
+                      </div>
+                      <div className={styles.listStats}>
+                        <span className={styles.listG}>{s.currentWeightG}g</span>
+                        <span className={`${styles.listPct}${isLow ? ` ${styles.low}` : ''}`}>{pct}%</span>
+                      </div>
+                      <div className={styles.listActive}>
+                        {s.isActive && <><i></i>ACTIVE</>}
+                      </div>
+                    </div>
+                  )
+                })
+            }
+          </div>
+        ) : (
+          <div className={styles.spoolGrid}>
+            {loading
+              ? [1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)
+              : filtered.length === 0
+                ? <div className={styles.empty}>No spools match this filter.</div>
+                : filtered.map(s => (
+                  <div key={s.id} className={styles.spool} onClick={() => setSelected(s)}>
+                    {s.isActive && <span className={styles.activeDot}><i></i>ACTIVE</span>}
+                    <div className={styles.row}>
+                      <div className={styles.disc}><SpoolIcon color={s.colorHex} size={54} /></div>
+                      <div className={styles.id}>
+                        <div className={styles.brand}>{s.brand}</div>
+                        <div className={styles.cname}>{s.colorName}</div>
+                        <div className={styles.tags}><span className={styles.tag}>{s.material}</span></div>
+                      </div>
+                    </div>
+                    <div className={styles.bar}>
+                      <div className={styles.metaRow}>
+                        <span className={styles.g}>{s.currentWeightG}g <small>/ {s.initialWeightG}g</small></span>
+                        <span className={styles.pct}>{s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0}%</span>
+                      </div>
+                      <div className={styles.track}><i className={s.currentWeightG <= 120 ? styles.low : ''} style={{ width: `${s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0}%` }} /></div>
+                    </div>
+                    <div className={styles.foot}>
+                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>{s.currentWeightG <= 120 ? 'Reorder soon' : 'In stock'}</span>
+                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>{formatRelativeTime(s.lastScannedAt)}</span>
                     </div>
                   </div>
-                  <div className={styles.bar}>
-                    <div className={styles.metaRow}>
-                      <span className={styles.g}>{s.currentWeightG}g <small>/ {s.initialWeightG}g</small></span>
-                      <span className={styles.pct}>{s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0}%</span>
-                    </div>
-                    <div className={styles.track}><i className={s.currentWeightG <= 120 ? styles.low : ''} style={{ width: `${s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0}%` }} /></div>
-                  </div>
-                  <div className={styles.foot}>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>{s.currentWeightG <= 120 ? 'Reorder soon' : 'In stock'}</span>
-                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>{formatRelativeTime(s.lastScannedAt)}</span>
-                  </div>
-                </div>
-              ))
-          }
-        </div>
+                ))
+            }
+          </div>
+        )}
       </section>
       <div style={{ height: 70 }} />
 
