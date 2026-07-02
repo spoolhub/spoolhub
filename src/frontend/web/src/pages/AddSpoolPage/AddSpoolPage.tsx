@@ -286,6 +286,8 @@ export default function AddSpoolPage() {
     if (!f || !state.brand || !state.material || saving) return
 
     setSaving(true)
+    // Keep the button spinner visible even when the API responds instantly
+    const minSpin = new Promise(resolve => setTimeout(resolve, 800))
     try {
       const hex = f.colorHex || '#888'
       const spoolData = {
@@ -322,6 +324,7 @@ export default function AddSpoolPage() {
       }
 
       window.dispatchEvent(new CustomEvent('spools-updated'))
+      await minSpin
       navigate('/spools')
     } catch (err) {
       console.error('Failed to add spool', err)

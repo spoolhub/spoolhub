@@ -245,12 +245,13 @@ describe('AddSpoolPage — form', () => {
     await waitFor(() => expect(registerTag).toHaveBeenCalledWith('04:AA:BB:CC', 'spool-999'))
   })
 
-  it('navigates straight to /spools after saving, without a confirmation screen', async () => {
+  it('shows the saving spinner, then navigates straight to /spools without a confirmation screen', async () => {
     vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
     renderPage('/spools/add/manual')
     await selectFilament()
     fireEvent.click(screen.getByRole('button', { name: /Add spool/ }))
-    await waitFor(() => screen.getByText('Spools list'))
+    await waitFor(() => expect(screen.getByText('Adding…')).toBeInTheDocument())
+    await waitFor(() => screen.getByText('Spools list'), { timeout: 3000 })
     expect(screen.queryByText('Spool added')).not.toBeInTheDocument()
   })
 })
