@@ -138,11 +138,6 @@ else
 }
 
 app.UseExceptionHandler();
-var frontendDist = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "frontend", "web", "dist");
-if (!Directory.Exists(frontendDist))
-    frontendDist = Path.Combine(AppContext.BaseDirectory, "dist");
-if (!Directory.Exists(frontendDist))
-    frontendDist = Path.Combine(Directory.GetCurrentDirectory(), "dist");
 
 app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
 app.UseStaticFiles();
@@ -150,17 +145,35 @@ app.MapControllers();
 app.MapHub<NfcScanHub>("/hubs/nfc");
 app.MapHub<PrinterHub>("/hubs/printer");
 app.MapHub<LogHub>("/hubs/logs");
-if (Directory.Exists(frontendDist))
+
+if (Directory.Exists(app.Environment.WebRootPath))
 {
-    app.UseStaticFiles(new StaticFileOptions
+    // Production/Docker layout: the built frontend is copied into wwwroot,
+    // so the SPA fallback can use the app's own default file provider.
+    app.MapFallbackToFile("index.html");
+}
+else
+{
+    // Local dev without a populated wwwroot (e.g. `dotnet run` from source):
+    // look for the frontend's build output elsewhere in the repo tree.
+    var frontendDist = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "frontend", "web", "dist");
+    if (!Directory.Exists(frontendDist))
+        frontendDist = Path.Combine(AppContext.BaseDirectory, "dist");
+    if (!Directory.Exists(frontendDist))
+        frontendDist = Path.Combine(Directory.GetCurrentDirectory(), "dist");
+
+    if (Directory.Exists(frontendDist))
     {
-        FileProvider = new PhysicalFileProvider(frontendDist),
-        RequestPath = ""
-    });
-    app.MapFallbackToFile("index.html", new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(frontendDist)
-    });
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(frontendDist),
+            RequestPath = ""
+        });
+        app.MapFallbackToFile("index.html", new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(frontendDist)
+        });
+    }
 }
 
 app.Run();
