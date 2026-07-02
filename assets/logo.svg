@@ -12,12 +12,6 @@
     </g>
   </defs>
 
-  <!-- Dark background -->
-  <rect width="680" height="180" rx="20" fill="#1B2420"/>
-
-  <!-- Green background circle for spool -->
-  <circle cx="115" cy="90" r="68" fill="#16A34A"/>
-
   <!-- Outer rim -->
   <circle cx="115" cy="90" r="65" fill="none" stroke="white" stroke-width="3"/>
 
@@ -31,19 +25,19 @@
       <use href="#spk-full"/>
     </g>
     <circle r="17" fill="white"/>
-    <circle r="9" fill="none" stroke="#16A34A" stroke-width="2" opacity="0.6"/>
+    <circle r="9" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
   </g>
 
   <!-- Broadcasting waves -->
-  <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke="#22C55E" stroke-width="3.5" stroke-linecap="round">
+  <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke="#15803D" stroke-width="3.5" stroke-linecap="round">
     <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0s" repeatCount="indefinite"/>
     <animate attributeName="stroke-width" values="0.5;3.5;0.5" dur="2s" begin="0s" repeatCount="indefinite"/>
   </path>
-  <path d="M 182.9,22.2 A 96,96 0 0,1 182.9,157.8" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round">
+  <path d="M 182.9,22.2 A 96,96 0 0,1 182.9,157.8" fill="none" stroke="#15803D" stroke-width="2.5" stroke-linecap="round">
     <animate attributeName="opacity" values="0;0.65;0" dur="2s" begin="0.35s" repeatCount="indefinite"/>
     <animate attributeName="stroke-width" values="0.5;2.5;0.5" dur="2s" begin="0.35s" repeatCount="indefinite"/>
   </path>
-  <path d="M 195.6,9.4 A 114,114 0 0,1 195.6,170.6" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round">
+  <path d="M 195.6,9.4 A 114,114 0 0,1 195.6,170.6" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round">
     <animate attributeName="opacity" values="0;0.35;0" dur="2s" begin="0.7s" repeatCount="indefinite"/>
     <animate attributeName="stroke-width" values="0.5;2;0.5" dur="2s" begin="0.7s" repeatCount="indefinite"/>
   </path>
