@@ -7,7 +7,6 @@ import { printersApi } from '@/api/printers'
 import { filamentsApi } from '@/api/filaments'
 import { brandsApi } from '@/api/brands'
 import { locationsApi } from '@/api/locations'
-import { settingsApi } from '@/api/settings'
 import { registerTag } from '@/api/nfc'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
@@ -140,7 +139,7 @@ export default function AddSpoolPage() {
   useEffect(() => {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
     printersApi.getAll().then(setPrinters).catch(() => {})
-    locationsApi.getAllNames().then(setLocationNames).catch(() => {})
+    locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name))).catch(() => {})
     brandsApi.getAll().then(data => setBrands(data.map((b: any) => b.name || b))).catch(() => {})
   }, [])
 
@@ -588,9 +587,9 @@ export default function AddSpoolPage() {
 
             <div className={styles.sectionLabel}>Placement</div>
             <div className={styles.segGroup}>
-              <button className={state.place === 'stock' ? 'on' : ''} data-t="stock"
+              <button className={state.place === 'stock' ? styles.on : ''} data-t="stock"
                 onClick={() => setState(s => ({ ...s, place: 'stock' }))}>In stock</button>
-              <button className={state.place === 'printer' ? 'on' : ''} data-t="printer"
+              <button className={state.place === 'printer' ? styles.on : ''} data-t="printer"
                 onClick={() => setState(s => ({ ...s, place: 'printer' }))}>Loaded in printer</button>
             </div>
 
