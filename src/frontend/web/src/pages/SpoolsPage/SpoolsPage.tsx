@@ -176,7 +176,7 @@ export default function SpoolsPage() {
                       <div className={styles.track}><i className={s.currentWeightG <= 120 ? styles.low : ''} style={{ width: `${s.initialWeightG > 0 ? Math.round(s.currentWeightG / s.initialWeightG * 100) : 0}%` }} /></div>
                     </div>
                     <div className={styles.foot}>
-                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>{s.currentWeightG <= 120 ? 'Reorder soon' : 'In stock'}</span>
+                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>{locationLabel(s)}</span>
                       <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>{formatRelativeTime(s.lastScannedAt)}</span>
                     </div>
                   </div>
