@@ -1,238 +1,602 @@
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* Add Spool Modal — redesign handoff styles */
+/* Uses global design tokens from variables.css */
+
+/* ───── scrim & modal shell ───── */
+.scrim {
+  position: fixed; inset: 0;
+  background: oklch(0.2 0.02 60 / .5);
+  backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease);
+  z-index: 70;
 }
+.scrim.on { opacity: 1; pointer-events: auto; }
 
-.wrap {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+.modal {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 248px;
+  z-index: 71; display: block; padding: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity .22s var(--ease);
 }
+.modal.on { opacity: 1; pointer-events: auto; }
+@media (max-width: 900px) { .modal { left: 0; } }
 
-.backRow { margin-bottom: 2rem; }
-.backRowSmall { margin-bottom: 1.5rem; flex-shrink: 0; }
-
-.headingRow { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
-.headingTitle { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
-
-.choiceGrid {
-  display: flex; flex-direction: column; gap: 1rem;
-  width: 100%; max-width: 48rem; margin: 0 auto;
-}
-@media (min-width: 640px) { .choiceGrid { flex-direction: row; } }
-
-.choiceCardNfc {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 1rem; padding: 2rem;
-  border-radius: var(--radius-2xl);
-  border: 2px solid var(--accent);
-  background: rgba(6,182,212,0.05);
-  cursor: pointer;
-  transition: background var(--t-fast);
-}
-.choiceCardNfc:hover { background: rgba(6,182,212,0.1); }
-
-.choiceCardManual {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 1rem; padding: 2rem;
-  border-radius: var(--radius-2xl);
-  border: 2px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-  transition: background var(--t-fast), border-color var(--t-fast);
-}
-.choiceCardManual:hover { border-color: var(--border-strong); background: var(--surface-hover); }
-
-.choiceIconNfc {
-  width: 4rem; height: 4rem;
-  border-radius: var(--radius-full);
-  background: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow-md);
-  transition: transform var(--t-fast);
-}
-.choiceCardNfc:hover .choiceIconNfc { transform: scale(1.05); }
-
-.choiceIconManual {
-  width: 4rem; height: 4rem;
-  border-radius: var(--radius-full);
-  background: var(--bg-tertiary);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--t-fast);
-}
-.choiceCardManual:hover .choiceIconManual { transform: scale(1.05); }
-
-.choiceLabel {
-  text-align: center;
-}
-.choiceTitleNfc { font-size: 1rem; font-weight: 600; color: #0e7490; }
-:global(.dark) .choiceTitleNfc { color: #67e8f9; }
-.choiceBadge {
-  display: inline-block; font-size: 0.75rem; font-weight: 500;
-  padding: 0.125rem 0.375rem; border-radius: var(--radius-sm);
-  background: rgba(234,179,8,0.12); color: #a16207;
-}
-:global(.dark) .choiceBadge { background: rgba(234,179,8,0.2); color: #facc15; }
-.choiceTitleManual { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
-.choiceDesc { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem; }
-
-.lookingUpWrap {
+.card {
+  width: 100%; max-width: 100%; height: 100vh;
+  background: var(--bg); color: var(--text-primary);
+  border: 0; border-radius: 0; box-shadow: none;
   display: flex; flex-direction: column;
-  align-items: center; gap: 1rem; padding: 6rem 0;
+  overflow-y: auto; overflow-x: hidden;
 }
-.spinnerRing {
-  width: 2.5rem; height: 2.5rem;
-  border: 2px solid var(--accent); border-top-color: transparent;
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
-}
-.lookingUpLabel { font-size: 0.875rem; color: var(--text-secondary); }
-
-.formWrap { max-width: 54rem; margin: 0 auto; width: 100%; }
-
-.backBtn {
-  display: flex; align-items: center; gap: 0.25rem;
-  font-size: 0.875rem; font-weight: 500;
-  color: var(--text-secondary); background: none; border: none;
-  cursor: pointer; padding: 0;
-  transition: color var(--t-fast);
-}
-.backBtn:hover { color: var(--text-secondary); }
-.backBtnIcon {
-  padding: 0.375rem;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  background: none; border: none; cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
-}
-.backBtnIcon:hover { background: var(--bg-secondary); color: var(--text-secondary); }
-.backBtn svg { width: 1rem; height: 1rem; }
-.backBtnIcon svg { width: 1.25rem; height: 1.25rem; }
-
-.choiceLabelRow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-.choiceIconNfc svg { width: 2rem; height: 2rem; color: white; }
-.choiceIconManual svg { width: 2rem; height: 2rem; color: var(--text-secondary); }
-
-/* Unassigned NFC tag section */
-.unassignedSection {
-  max-width: 54rem;
-  margin: 0 auto;
-  width: 100%;
-  padding-top: 1.5rem;
+.card::-webkit-scrollbar { width: 10px; }
+.card::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 20px;
+  border: 3px solid var(--bg);
 }
 
-.unassignedTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
+.card > .cardHeader,
+.card > .cardBody,
+.card > .cardFooter {
+  width: 100%; max-width: 1000px;
+  margin-left: auto; margin-right: auto;
+}
+
+/* ───── header ───── */
+.cardHeader {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 22px 24px; border-bottom: 1px solid var(--border-subtle);
+}
+.cardHeaderTitle { flex: 1; min-width: 0; }
+.cardHeaderTitle h2 {
+  margin: 0; font-family: var(--font-display);
+  font-size: 20px; font-weight: 700; letter-spacing: -.02em;
+}
+.cardHeaderTitle .sub {
+  font-size: 13px; color: var(--muted); margin-top: 3px;
+}
+
+/* NFC badge */
+.nfcBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent-ink); background: var(--accent-soft);
+  padding: 4px 10px; border-radius: 20px;
+  margin-top: 8px;
+}
+.nfcBadge i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  animation: asblink 1.4s var(--ease) infinite;
+}
+
+/* close & back buttons */
+.closeBtn {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: .15s var(--ease);
+  flex: none;
+}
+.closeBtn:hover { color: var(--text-primary); border-color: var(--accent); }
+.closeBtn svg { width: 18px; height: 18px; }
+
+/* ───── body ───── */
+.cardBody {
+  flex: 1; overflow: visible;
+  padding: 22px 24px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+.sectionLabel {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--faint); font-weight: 700;
+}
+
+/* ───── cardFooter ───── */
+.cardFooter {
+  display: flex; gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+.cardFooter .btn { flex: 1; justify-content: center; }
+.cardFooter .btn.back { flex: none; }
+
+/* ───── generic buttons ───── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 42px; padding: 0 17px; border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  font: inherit; font-weight: 600; font-size: 13.5px;
+  cursor: pointer; transition: .16s var(--ease);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-hover); }
+.btn svg { width: 16px; height: 16px; }
+.btnPrimary {
+  background: var(--accent); border-color: transparent; color: #fff;
+}
+.btnPrimary:hover { filter: brightness(1.06); }
+.btnIcon {
+  width: 42px; padding: 0;
+  justify-content: center; color: var(--muted);
+}
+
+/* ───── Step 1: Choose mode ───── */
+.chooseGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .chooseGrid { grid-template-columns: 1fr; } }
+
+.choiceCard {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 9px; text-align: left; padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt); color: var(--text-primary);
+  cursor: pointer; transition: .16s var(--ease);
+  position: relative;
+}
+.choiceCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 10px 26px -16px var(--accent);
+  transform: translateY(-2px);
+}
+.choiceIcon {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: var(--accent-soft); color: var(--accent-ink);
+  display: grid; place-items: center;
+}
+.choiceIcon svg { width: 24px; height: 24px; }
+.choiceTitle {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 16px; letter-spacing: -.01em;
   color: var(--text-primary);
 }
-
-.unassignedDesc {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
-  margin-bottom: 1rem;
+.choiceDesc {
+  font-size: 12.5px; color: var(--muted); line-height: 1.5;
+}
+.choiceBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent-ink); background: var(--accent-soft);
+  padding: 4px 9px; border-radius: 20px;
+  position: absolute; top: 14px; right: 14px;
+}
+.choiceBadge i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  animation: asblink 1.4s var(--ease) infinite;
 }
 
-.unassignedGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.75rem;
-}
+@keyframes asblink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 
-.spoolCardWrap {
-  cursor: pointer;
-  border-radius: var(--radius-lg);
-  transition: box-shadow var(--t-fast);
-}
-
-.spoolCardWrap:hover {
-  box-shadow: 0 0 0 2px var(--accent);
-}
-
-/* IosNfcWriter */
-.iosNfcMaxW { max-width: 28rem; }
-
-.iosNfcCard {
-  border-radius: var(--radius-2xl);
-  border: 1px solid var(--border);
+/* ───── Step 2: NFC Scan ───── */
+.scanPanel {
+  margin: 18px auto 0; width: 100%; max-width: 820px;
   background: var(--surface);
-  overflow: hidden;
-}
-
-.iosNfcHeader {
-  background: var(--accent);
-  padding: 1rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.iosNfcIconBg {
-  width: 2.5rem; height: 2.5rem;
-  border-radius: var(--radius-full);
-  background: rgba(255,255,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.iosNfcIconBg svg { width: 1.25rem; height: 1.25rem; color: white; }
-
-.iosNfcHeaderTitle { font-size: 0.875rem; font-weight: 700; color: white; }
-.iosNfcHeaderDesc { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
-
-.iosNfcSection { padding: 1.25rem; border-bottom: 1px solid var(--border-subtle); }
-
-.iosNfcSectionLabel {
-  font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 1rem;
-}
-
-.iosNfcSteps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; }
-
-.iosNfcStep { display: flex; align-items: flex-start; gap: 0.75rem; }
-
-.iosNfcStepNum {
-  flex-shrink: 0; width: 1.5rem; height: 1.5rem;
-  border-radius: var(--radius-full);
-  background: var(--accent); color: white;
-  font-size: 0.75rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-.iosNfcStepComplete {
-  flex-shrink: 0; width: 1.5rem; height: 1.5rem;
-  border-radius: var(--radius-full);
-  background: var(--color-success); color: white;
-  font-size: 0.75rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-.iosNfcStepText { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; padding-top: 0.125rem; }
-
-.iosNfcUrlSection { padding: 1.25rem; }
-
-.iosNfcUrlLabel {
-  font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
-}
-
-.iosNfcUrlBox {
-  border-radius: var(--radius-lg);
-  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  padding: 0.625rem 0.75rem;
-  margin-bottom: 0.75rem;
+  border-radius: var(--r);
+  box-shadow: var(--shadow-card);
+  padding: 34px 28px;
 }
-.iosNfcUrlText { font-size: 0.75rem; font-family: monospace; color: var(--text-primary); word-break: break-all; user-select: all; line-height: 1.5; }
+.scanContainer {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; padding: 26px 10px 14px;
+}
+.nfcWave {
+  position: relative; width: 150px; height: 150px;
+  display: grid; place-items: center; margin-bottom: 10px;
+}
+.nfcRing {
+  position: absolute; inset: 0; margin: auto;
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: nfcring 2.2s var(--ease) infinite;
+}
+.nfcRing:nth-child(2) { animation-delay: .7s; }
+.nfcRing:nth-child(3) { animation-delay: 1.4s; }
+@keyframes nfcring {
+  0% { transform: scale(.6); opacity: .7; }
+  80% { opacity: 0; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+.nfcGlyph {
+  position: relative;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: grid; place-items: center;
+  box-shadow: 0 10px 26px -10px var(--accent);
+}
+.nfcGlyph svg { width: 32px; height: 32px; }
+.scanStatus {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 16px; letter-spacing: -.01em;
+  color: var(--text-primary);
+}
+.scanHint { font-size: 12.5px; color: var(--muted); }
+.scanTrouble {
+  margin-top: 14px;
+  background: none; border: 0;
+  color: var(--muted); font: inherit; font-size: 12.5px;
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; padding: 6px;
+}
+.scanTrouble:hover { color: var(--text-primary); }
 
-.iosNfcCopyBtn {
-  width: 100%; font-size: 0.875rem; font-weight: 600; padding: 0.75rem;
-  border-radius: var(--radius-xl); color: white; border: none; cursor: pointer;
-  background: var(--accent);
-  transition: background var(--t-normal), transform var(--t-normal);
+.scanActions {
+  display: flex; gap: 10px;
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
 }
-.iosNfcCopyBtn:hover { background: var(--accent-hover); }
-.iosNfcCopyBtnCopied { background: var(--color-success); transform: scale(0.98); }
-.iosNfcCopyBtnCopied:hover { background: var(--color-success); }
+.scanActions .btn { flex: 1; justify-content: center; }
+
+/* No-reader state */
+.noReader { max-width: 440px; margin: 0 auto; text-align: center; }
+.noReaderIcon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: oklch(0.65 0.17 30 / .13);
+  color: oklch(0.55 0.17 30);
+  display: grid; place-items: center; margin-bottom: 10px;
+}
+.noReaderIcon svg { width: 34px; height: 34px; }
+.noReaderTitle {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 18px; letter-spacing: -.01em;
+  color: var(--text-primary);
+}
+.noReaderText { margin: 4px 0 6px; color: var(--muted); font-size: 13.5px; }
+.noReaderList {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  text-align: left; width: 100%;
+  counter-reset: nr;
+}
+.noReaderList li {
+  position: relative;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+  font-size: 13px; color: var(--muted); line-height: 1.5;
+  counter-increment: nr;
+}
+.noReaderList li strong { color: var(--text-primary); font-weight: 600; }
+.noReaderList li::before {
+  content: counter(nr);
+  position: absolute; left: 12px; top: 11px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent-ink);
+  font-family: var(--font-num); font-weight: 700; font-size: 11px;
+  display: grid; place-items: center;
+}
+
+/* ───── Step 3: Pick filament ───── */
+.detailPanel {
+  margin: 18px auto 0; width: 100%; max-width: 960px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-card);
+  padding: 24px 24px 22px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+.pickGrid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.pickGrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .pickGrid3 { grid-template-columns: 1fr; } .pickGrid2 { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.field select, .field input {
+  height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text-primary);
+  border-radius: var(--r-sm);
+  padding: 0 13px; font: inherit; font-size: 14px;
+  outline: 0; transition: .15s var(--ease);
+}
+.field select:disabled { opacity: .5; cursor: not-allowed; }
+.field select:focus, .field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* filament grid */
+.filaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.filaCard {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt); color: var(--text-primary);
+  cursor: pointer; transition: .15s var(--ease);
+  text-align: left;
+}
+.filaCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px -12px var(--accent);
+}
+.filaDisc { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.filaMeta { min-width: 0; }
+.filaName {
+  font-weight: 600; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.filaBrand {
+  font-size: 11.5px; color: var(--faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.emptyState {
+  padding: 30px; text-align: center; color: var(--faint);
+  font-size: 13px; border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+}
+
+/* ───── Step 4: Details ───── */
+.selectedCard {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+}
+.selectedDisc { width: 56px; height: 56px; flex: none; display: grid; place-items: center; }
+.selectedInfo { flex: 1; min-width: 0; }
+.selectedInfo .b { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.selectedInfo .c { font-size: 12.5px; color: var(--muted); }
+.selectedInfo .tags { margin-top: 6px; }
+.tag {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+  padding: 3px 8px; border-radius: 6px;
+  background: var(--accent-soft); color: var(--accent-ink);
+  text-transform: uppercase;
+}
+.tagGhost {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.changeBtn {
+  font-size: 12px; font-weight: 600; color: var(--accent-ink);
+  background: none; border: 0; cursor: pointer;
+  padding: 6px 8px; border-radius: var(--r-xs);
+}
+.changeBtn:hover { background: var(--accent-soft); }
+.changeBtnIcon {
+  width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.changeBtnIcon:hover { color: var(--text-primary); border-color: var(--accent); }
+.changeBtnIcon svg { width: 16px; height: 16px; }
+
+/* weight bar */
+.wbar { }
+.wbarMeta {
+  display: flex; justify-content: space-between;
+  align-items: baseline; margin-bottom: 7px;
+}
+.wbarGrams {
+  font-family: var(--font-num); font-weight: 700; font-size: 15px;
+}
+.wbarGrams small { color: var(--faint); font-weight: 500; font-size: 12px; }
+.wbarPct {
+  font-family: var(--font-num); font-weight: 700;
+  font-size: 14px; color: var(--accent-ink);
+}
+.wbarTrack {
+  height: 9px; border-radius: 20px;
+  background: var(--track); overflow: hidden;
+}
+.wbarTrack i {
+  display: block; height: 100%; border-radius: inherit;
+  background: var(--accent); transition: width .3s var(--ease);
+}
+.wbarTrack i.low { background: oklch(0.65 0.17 30); }
+
+/* qty stepper */
+.qtyStepper {
+  display: flex; align-items: center; height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm); overflow: hidden;
+  background: var(--surface-alt);
+}
+.qtyStepper button {
+  width: 44px; align-self: stretch; border: 0;
+  background: none; color: var(--muted);
+  cursor: pointer; display: grid; place-items: center;
+  transition: .15s var(--ease);
+}
+.qtyStepper button:hover {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.qtyStepper button svg { width: 16px; height: 16px; }
+.qtyStepper input {
+  flex: 1; min-width: 0; width: 100%; height: 100%;
+  border: 0; border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  text-align: center; font: inherit;
+  font-family: var(--font-num); font-weight: 700; font-size: 16px;
+  outline: 0; -moz-appearance: textfield;
+}
+.qtyStepper input::-webkit-inner-spin-button,
+.qtyStepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+
+/* collapsible section */
+.collapsible { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); }
+.collapsibleHeader {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+  width: 100%; padding: 13px 15px;
+  background: none; border: 0; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted);
+}
+.collapsibleHeader:hover { color: var(--text-primary); }
+.collapsibleTools { display: flex; align-items: center; gap: 8px; }
+.collapsibleChevron {
+  width: 17px; height: 17px; color: var(--faint);
+  transition: transform .22s var(--ease);
+}
+.collapsibleBody {
+  overflow: hidden; max-height: 0;
+  transition: max-height .28s var(--ease);
+  padding: 0 15px;
+}
+.collapsible[data-open="true"] .collapsibleBody {
+  max-height: 640px; padding: 0 15px 16px;
+}
+.collapsible[data-open="true"] .collapsibleChevron { transform: rotate(180deg); }
+
+.editBtn {
+  display: inline-flex; align-items: center;
+  justify-content: center; width: 30px; height: 30px;
+  border-radius: var(--r-xs); border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--muted);
+  cursor: pointer; transition: .15s var(--ease);
+}
+.editBtn svg { width: 15px; height: 15px; }
+.editBtn:hover { color: var(--text-primary); border-color: var(--accent); }
+.editBtn.on {
+  background: var(--accent-soft); border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.rangeRow { display: flex; align-items: center; gap: 8px; }
+.rangeRow input { flex: 1; min-width: 0; }
+.rangeRow span { color: var(--faint); font-weight: 600; }
+.rangeRow input[type="number"] {
+  height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text-primary);
+  border-radius: var(--r-sm);
+  padding: 0 13px; font: inherit; font-size: 14px;
+  outline: 0; transition: .15s var(--ease);
+}
+.rangeRow input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.subCol { min-width: 0; }
+.subColBorder { border-left: 1px solid var(--border-subtle); padding-left: 18px; }
+@media (max-width: 640px) { .subColBorder { border-left: 0; padding-left: 0; } }
+
+/* ───── Placement seg ───── */
+.segGroup {
+  display: flex; background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 3px; gap: 3px;
+}
+.segGroup button {
+  flex: 1; border: 0; background: 0; color: var(--muted);
+  padding: 10px; border-radius: var(--r-xs);
+  cursor: pointer; font: inherit; font-weight: 600; font-size: 13.5px;
+  transition: .15s var(--ease);
+}
+.segGroup button.on { background: var(--accent); color: #fff; }
+
+/* AMS slot picker */
+.amsLayout { display: flex; gap: 14px; align-items: start; }
+.printerThumb {
+  width: 120px; flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden; position: relative;
+  aspect-ratio: 1;
+  background: var(--surface);
+  display: grid; place-items: center;
+}
+.printerThumb img, .printerThumb svg { width: 100%; height: 100%; object-fit: cover; }
+.amsRight { flex: 1; min-width: 0; }
+.slotLabel { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+.slotPick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.slotTile {
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: var(--surface); padding: 8px 3px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; transition: .15s var(--ease);
+  position: relative;
+}
+.slotTile:hover { border-color: var(--accent); }
+.slotTile.on { border-color: var(--accent); background: var(--accent-soft); }
+.slotTile.empty { border-style: dashed; }
+.slotNum { font-size: 8px; color: var(--faint); font-family: var(--font-num); font-weight: 600; }
+.slotIcon { width: 24px; height: 24px; display: grid; place-items: center; color: var(--faint); }
+.slotIcon svg { width: 100%; height: 100%; }
+.slotName {
+  font-size: 8px; font-weight: 600; color: var(--muted);
+  line-height: 1.1; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 100%;
+}
+.slotTile.on .slotHere {
+  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  font-size: 7px; font-weight: 700; color: var(--accent-ink);
+  background: var(--accent-soft); padding: 1px 5px;
+  border-radius: 4px; white-space: nowrap;
+}
+.slotNote {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--muted); margin-top: 10px;
+}
+.slotNote svg { width: 15px; height: 15px; flex: none; }
+
+.singleSlot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.singleSlot .ic { width: 40px; height: 40px; display: grid; place-items: center; }
+.singleSlot .t { font-weight: 600; font-size: 14px; }
+.singleSlot .d { font-size: 12px; color: var(--faint); }
+
+/* detail actions */
+.detailActions {
+  display: flex; gap: 10px; margin-top: 6px;
+  padding-top: 20px; border-top: 1px solid var(--border-subtle);
+}
+.detailActions .btn { flex: 1; justify-content: center; }
+.detailActions .btn.back { flex: none; }
+
+/* ───── Success ───── */
+.successWrap {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  gap: 6px; padding: 40px 24px;
+}
+.successCheck {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: oklch(0.6 0.13 150 / .14);
+  color: oklch(0.5 0.12 150);
+  display: grid; place-items: center; margin-bottom: 8px;
+}
+.successCheck svg { width: 36px; height: 36px; }
+.successWrap h2 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.successWrap p { margin: 0; color: var(--muted); font-size: 14px; }
+.successWrap .nfcWritten { color: var(--accent-ink); font-weight: 600; font-size: 12.5px; margin-top: 2px; }
+
+/* ───── loading ───── */
+.loadingWrap {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; padding: 80px 24px;
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loadingLabel { color: var(--muted); font-size: 14px; font-weight: 500; }
