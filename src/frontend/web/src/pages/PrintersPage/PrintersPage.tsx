@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useConnection } from '@/context/ConnectionContext'
 import { printersApi } from '@/api/printers'
 import { spoolsApi } from '@/api/spools'
 import PrinterCard from '@/components/PrinterCard'
+import { getPrinterStatusClass } from '@/utils/printerStatus'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './PrintersPage.module.css'
+
+const VIEW_KEY = 'spoolhub-printers-view'
 
 async function fetchStatuses(printers: PrinterResponse[]): Promise<Map<string, PrinterStatus>> {
   const results = await Promise.allSettled(
@@ -27,6 +30,9 @@ export default function PrintersPage() {
   const [spools, setSpools]       = useState<SpoolResponse[]>([])
   const [statuses, setStatuses]   = useState<Map<string, PrinterStatus>>(new Map())
   const [loading, setLoading]     = useState(true)
+  const [query, setQuery]         = useState('')
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [view, setView]           = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
   const printersRef               = useRef<PrinterResponse[]>([])
 
   useEffect(() => {
@@ -62,31 +68,83 @@ export default function PrintersPage() {
     return () => { cancelled = true; clearInterval(dataTimer); clearInterval(statusTimer) }
   }, [refreshKey])
 
+  useEffect(() => { localStorage.setItem(VIEW_KEY, view) }, [view])
+
+  const filtered = useMemo(() => {
+    return printers.filter(p => {
+      if (query) {
+        const hay = `${p.brand} ${p.name} ${p.model}`.toLowerCase()
+        if (!hay.includes(query.toLowerCase())) return false
+      }
+      if (activeFilter === 'ams') return p.hasAms
+      if (activeFilter === 'all') return true
+      return getPrinterStatusClass(statuses.get(p.id)) === activeFilter
+    })
+  }, [printers, query, activeFilter, statuses])
+
+  const onlineCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) !== 'offline').length
+  const printingCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) === 'printing').length
+
   return (
-    <div className={styles.wrap}>
-
-      <h1 className={styles.title}>{t('printers.title')}</h1>
-
-      {loading ? (
-        <div className={styles.grid} data-testid="loading-skeleton">
-          {[0, 1, 2].map(i => (
-            <div key={i} className={styles.skeletonCard} />
-          ))}
+    <div className={styles.page}>
+      <header className={styles.topbar}>
+        <div className={styles.h}>
+          <h1>{t('printers.title')}</h1>
+          <div className={styles.sub}>{printers.length} printer{printers.length === 1 ? '' : 's'} · {onlineCount} online · {printingCount} printing now</div>
         </div>
-      ) : (
-        <div className={styles.grid}>
-          {printers.map(p => (
-            <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} />
-          ))}
-          <Link to="/printers/addprinter" className={styles.addCard}>
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span className={styles.addText}>{t('printers.addPrinter')}</span>
-          </Link>
-        </div>
-      )}
+        <label className={styles.search}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input placeholder="Search printers…" value={query} onChange={e => setQuery(e.target.value)} />
+        </label>
+        <button className={styles.iconBtn} title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>
+        </button>
+        <Link to="/printers/addprinter" className={styles.primaryBtn}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          {t('printers.addPrinter')}
+        </Link>
+      </header>
 
+      <section className={styles.invbar}>
+        <div className={styles.chips}>
+          <button className={`${styles.chip} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All</button>
+          <button className={`${styles.chip} ${activeFilter === 'printing' ? styles.on : ''}`} onClick={() => setActiveFilter('printing')}>Printing</button>
+          <button className={`${styles.chip} ${activeFilter === 'idle' ? styles.on : ''}`} onClick={() => setActiveFilter('idle')}>Idle</button>
+          <button className={`${styles.chip} ${activeFilter === 'offline' ? styles.on : ''}`} onClick={() => setActiveFilter('offline')}>Offline</button>
+          <button className={`${styles.chip} ${activeFilter === 'ams' ? styles.on : ''}`} onClick={() => setActiveFilter('ams')}>AMS</button>
+        </div>
+        <div className={styles.invtools}>
+          <div className={styles.seg2}>
+            <button className={view === 'grid' ? styles.on : ''} onClick={() => setView('grid')} title="Grid view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            </button>
+            <button className={view === 'list' ? styles.on : ''} onClick={() => setView('list')} title="List view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.panel}>
+        <div className={styles.panelHead}>
+          <h2>All printers</h2>
+          <span className={styles.meta}>{filtered.length} of {printers.length}</span>
+        </div>
+        {loading ? (
+          <div className={styles.grid} data-testid="loading-skeleton">
+            {[0, 1, 2].map(i => <div key={i} className={styles.skeletonCard} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.empty}>{printers.length === 0 ? 'No printers yet — add one to get started.' : 'No printers match this filter.'}</div>
+        ) : (
+          <div className={`${styles.grid}${view === 'list' ? ` ${styles.gridList}` : ''}`}>
+            {filtered.map(p => (
+              <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} />
+            ))}
+          </div>
+        )}
+      </section>
+      <div style={{ height: 70 }} />
     </div>
   )
 }

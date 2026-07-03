@@ -1,6 +1,7 @@
 import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { getPrinterImage } from '@/utils/printerImages'
+import { getPrinterStatusClass, getPrinterStatusLabel } from '@/utils/printerStatus'
 import { SpoolIcon } from '@/components/icons'
 import StatusRing from '@/components/StatusRing'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
@@ -52,11 +53,9 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick }: {
     if (onSpoolClick) { e.preventDefault(); e.stopPropagation(); onSpoolClick(s) }
   }
 
-  const stLabel = !status || status.gcodeState?.toUpperCase() !== 'FAILED'
-    ? (status?.gcodeState?.toUpperCase() === 'RUNNING' ? 'Printing' : 'Idle')
-    : 'Offline'
+  const stLabel = getPrinterStatusLabel(status)
   const stExtra = status?.gcodeState?.toUpperCase() === 'RUNNING' ? ` · ${status.progressPercent ?? 0}%` : ''
-  const stClass = status?.gcodeState?.toUpperCase() === 'RUNNING' ? 'printing' : (status?.connectionError ? 'offline' : 'idle')
+  const stClass = getPrinterStatusClass(status)
 
   // Resolve tray spools
   const traySpoolIds = [printer.tray1Spool?.id, printer.tray2Spool?.id, printer.tray3Spool?.id, printer.tray4Spool?.id]

@@ -59,7 +59,7 @@ describe('PrintersPage', () => {
   it('shows page heading', async () => {
     vi.mocked(printersApi.getAll).mockResolvedValue([basePrinter])
     renderPage()
-    await waitFor(() => expect(screen.getByText('3D Printers')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Printers')).toBeInTheDocument())
   })
 
   it('shows Add Printer link card', async () => {
