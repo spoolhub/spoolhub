@@ -42,12 +42,10 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const { t } = useTranslation()
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState<EditForm>({})
-  const [showPlacement, setShowPlacement] = useState(false)
-  const [placementForm, setPlacementForm] = useState<EditForm>({})
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [newLocation, setNewLocation] = useState('')
   const [customLocations, setCustomLocations] = useState<string[]>([])
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState(false)
 
   const startEdit = (s: SpoolResponse) => {
     setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: null })
@@ -89,26 +87,10 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
 
   return (
     <>
-      <div className={`${styles.scrim} ${styles.scrimOn}`} onClick={() => { onClose(); setEditMode(false) }} />
+      <div className={`${styles.scrim} ${styles.scrimOn}`} onClick={() => { onClose(); setEditMode(false); setPendingDelete(false) }} />
       <aside className={`${styles.drawer} ${styles.drawerOn}`}>
         {editMode ? renderEdit() : renderDetail()}
       </aside>
-      {deleteConfirm && (
-        <>
-          <div className={styles.modalScrim} onClick={() => setDeleteConfirm(false)} />
-          <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Delete spool">
-            <div className={styles.modalIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-            <div className={styles.modalTitle}>Delete spool?</div>
-            <div className={styles.modalDesc}>{spool.brand} · {spool.colorName}</div>
-            <div className={styles.modalActions}>
-              <button className={styles.btn} onClick={() => setDeleteConfirm(false)}>Cancel</button>
-              <button className={`${styles.btn} ${styles.danger}`} onClick={handleDelete}>Delete</button>
-            </div>
-          </div>
-        </>
-      )}
     </>
   )
 
@@ -177,7 +159,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           <div className={styles.dwline}><span className={styles.lk}>Last scanned</span><span className={styles.lv}>{formatRelativeTime(s.lastScannedAt)}</span></div>
           <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>{s.nfcTagUid ?? '—'}</span></div>
         </div>
-        {!showPlacement && (
         <div className={styles.dwsec}>
           <h3>Recent activity</h3>
           <div className={styles.dwts}>
@@ -186,25 +167,25 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
             <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>Added to inventory</div><div className={styles.b}>{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div></div></div>
           </div>
         </div>
-        )}
         <div className={styles.dwact}>
-          {!showPlacement && (
-            <button className={styles.btn} onClick={() => startEdit(spool)} id="dwedit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit
-            </button>)}
-          {!showPlacement && (
-            s.printerId ? (
-              <button className={`${styles.btn} ${styles.danger}`} onClick={() => { setPlacementForm({ ...s, isLoadedInPrinter: false, printerId: null, amsSlot: null }); setShowPlacement(true) }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M1 12h22M3 5l2 15h14l2-15"/></svg>Unassign from printer
+          {pendingDelete ? (
+            <>
+              <button className={`${styles.btn} ${styles.danger}`} onClick={handleDelete} id="dwconfirm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>Confirm
               </button>
-            ) : (
-              <button className={`${styles.btn} ${styles.primary}`} onClick={() => { setPlacementForm({ ...s, isLoadedInPrinter: true, printerId: null, amsSlot: null }); setShowPlacement(true) }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/></svg>Assign to printer
+              <button className={styles.btn} onClick={() => setPendingDelete(false)} id="dwcancel">Cancel</button>
+            </>
+          ) : (
+            <>
+              <button className={styles.btn} onClick={() => startEdit(spool)} id="dwedit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit
               </button>
-            )
+              <button className={`${styles.btn} ${styles.danger}`} onClick={() => setPendingDelete(true)} id="dwdelete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 4v6m4-6v6M10 3h4a1 1 0 011 1v2H9V4a1 1 0 011-1z"/></svg>Delete
+              </button>
+            </>
           )}
         </div>
-        {showPlacement && renderQuickPlacement()}
       </>
     )
   }
@@ -312,7 +293,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                   <option value="__add_new">+ Add new location</option>
                 </select>
                 {showAddLocation && (<div className={styles.addWrap}><input type="text" placeholder="Enter new location..." value={newLocation} onChange={e => setNewLocation(e.target.value)} autoFocus /><button type="button" className={styles.btnCancel} onClick={() => { setShowAddLocation(false); setNewLocation('') }}>x</button></div>)}
-                {showAddLocation && (<button type="button" className={styles.btnAdd} disabled={!newLocation.trim()} onClick={() => { if (newLocation.trim()) { if (!customLocations.includes(newLocation.trim())) setCustomLocations(prev => [...prev, newLocation.trim()]); setEditForm(p => ({ ...p, stockLocation: newLocation.trim() })); setShowAddLocation(false); setNewLocation('') } }}>Add "{newLocation.trim()}"</button>)}
+                {showAddLocation && (<button type="button" className={styles.btnAdd} disabled={!newLocation.trim()} onClick={() => { if (newLocation.trim()) { if (!customLocations.includes(newLocation.trim())) setCustomLocations(prev => [...prev, newLocation.trim()]); setEditForm(p => ({ ...p, stockLocation: newLocation.trim() })); setShowAddLocation(false); setNewLocation('') } }}>Add &quot;{newLocation.trim()}&quot;</button>)}
               </div>
             )}
           </div>
@@ -324,83 +305,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           </button>
         </div>
       </>
-    )
-  }
-
-  function renderQuickPlacement() {
-    const f = placementForm
-    return (
-      <div className={styles.dwsec} style={{ borderTop: '1px solid var(--border-2)' }}>
-        <h3>Placement</h3>
-        <div className={styles.placementSection}>
-          <div className={styles.placementToggle}>
-            <button className={!f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setPlacementForm(p => ({ ...p, isLoadedInPrinter: false, printerId: null, amsSlot: null }))}>In stock</button>
-            <button className={f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setPlacementForm(p => ({ ...p, isLoadedInPrinter: true, amsSlot: null }))}>Loaded in printer</button>
-          </div>
-          {f.isLoadedInPrinter && (<>
-            <div className={styles.ff}><label>Printer</label>
-              <select value={f.printerId ?? ''} onChange={e => setPlacementForm(p => ({ ...p, printerId: e.target.value || null }))}>
-                <option value="">Select printer</option>
-                {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
-              </select>
-            </div>
-            {f.printerId && (() => {
-              const printer = printers.find(p => p.id === f.printerId)
-              if (!printer) return null
-              const traySlotMap: Record<number, TraySpoolSummary | null> = { 1: printer.tray1Spool, 2: printer.tray2Spool, 3: printer.tray3Spool, 4: printer.tray4Spool }
-              return (
-                <div className={styles.amsLayout}>
-                  <div className={styles.pcardThumb}><div className={styles.pcardPic}><img src={getPrinterImage(printer.brand, printer.model)} alt={`${printer.brand} ${printer.model}`} className={styles.pcardImg} onError={e => { (e.currentTarget as HTMLImageElement).src = '/printers/generic.svg' }} /></div></div>
-                  <div className={styles.amsRight}>
-                    {printer.hasAms ? (<>
-                      <p className={styles.slotLabel}>{t('spoolForm.chooseAmsSlot')}</p>
-                      <div className={styles.slotPick}>
-                        {[1, 2, 3, 4].map(slot => {
-                          const occupant = traySlotMap[slot]; const isSel = f.amsSlot === slot
-                          const colorHex = isSel ? spool.colorHex : occupant?.colorHex
-                          const name = isSel ? spool.colorName : occupant?.colorName ?? t('spoolForm.slotEmpty')
-                          return (
-                            <button key={slot} type="button" className={`${styles.slotTile}${isSel ? ' ' + styles.slotTileSel : ''}${!occupant && !isSel ? ' ' + styles.slotTileEmpty : ''}`} onClick={() => setPlacementForm(p => ({ ...p, amsSlot: isSel ? null : slot }))}>
-                              {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
-                              <span className={styles.slotNum}>{slot}</span>
-                              <span className={styles.slotIc}>{colorHex ? <SpoolIcon color={colorHex} size={22} /> : <PlusIcon className={styles.slotPlus} />}</span>
-                              <span className={styles.slotCn}>{name}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </>) : (
-                      <div className={styles.singleSlot}>
-                        <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex ?? '#888'} size={28} /></span>
-                        <div><p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p><p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })()}
-          </>)}
-          {!f.isLoadedInPrinter && (
-            <div className={styles.ff}><label>Storage location</label>
-              <select value={f.stockLocation ?? ''} onChange={e => { setPlacementForm(p => ({ ...p, stockLocation: e.target.value || null })) }}>
-                <option value="">Select location</option>
-                {BASE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                {customLocations.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-          )}
-        </div>
-        <div className={styles.dwact} style={{ marginTop: 16 }}>
-          <button className={styles.btn} onClick={() => setShowPlacement(false)}>Cancel</button>
-          <button className={`${styles.btn} ${styles.primary}`} onClick={async () => {
-            const s = spool
-            await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: f.isLoadedInPrinter ? f.printerId : null, amsSlot: f.isLoadedInPrinter ? f.amsSlot ?? 1 : null }) })
-            const updated = { ...s, isActive: !!f.isLoadedInPrinter, printerId: f.isLoadedInPrinter ? f.printerId ?? null : null, amsSlot: f.isLoadedInPrinter ? f.amsSlot ?? null : null } as SpoolResponse
-            onUpdated?.(updated)
-            setShowPlacement(false)
-          }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>Apply placement</button>
-        </div>
-      </div>
     )
   }
 }

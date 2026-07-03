@@ -115,41 +115,6 @@
 .fsec { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700; margin: 4px 0 -4px }
 [data-dir="b"] .fsec { font-family: var(--font-num); font-weight: 500 }
 
-/* ── Delete confirmation modal ── */
-.modalScrim {
-  position: fixed; inset: 0;
-  background: oklch(0 0 0 / .5);
-  backdrop-filter: blur(2px);
-  z-index: 70;
-}
-.modal {
-  position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-card);
-  padding: 32px;
-  width: 380px;
-  max-width: 90vw;
-  text-align: center;
-  z-index: 71;
-}
-.modalIcon {
-  width: 48px; height: 48px;
-  margin: 0 auto 16px;
-  border-radius: 50%;
-  background: oklch(0.55 0.15 25 / .15);
-  color: oklch(0.55 0.15 25);
-  display: grid; place-items: center;
-}
-.modalIcon svg { width: 24px; height: 24px }
-.modalTitle { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--text-primary) }
-.modalDesc { margin: 0 0 24px; font-size: 14px; color: var(--muted); line-height: 1.5 }
-.modalActions { display: flex; gap: 12px }
-.modalActions .btn { flex: 1 }
-
 /* ── Inline add location ── */
 .addNew { font-style: italic; color: var(--accent) }
 .addWrap { display: flex; gap: 8px; align-items: center }
