@@ -45,10 +45,13 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [newLocation, setNewLocation] = useState('')
   const [customLocations, setCustomLocations] = useState<string[]>([])
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState(false)
 
   const startEdit = (s: SpoolResponse) => {
-    setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: null })
+    setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: s.amsSlot ?? null })
+    if (s.stockLocation && !BASE_LOCATIONS.includes(s.stockLocation)) {
+      setCustomLocations(prev => prev.includes(s.stockLocation!) ? prev : [...prev, s.stockLocation!])
+    }
     setEditMode(true)
   }
 
@@ -63,13 +66,12 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       if (editForm.lowStockThresholdG != null) body.lowStockThresholdG = Number(editForm.lowStockThresholdG)
       if (editForm.price != null) body.price = Number(editForm.price)
       if (editForm.density != null) body.density = Number(editForm.density)
+      if (!editForm.isLoadedInPrinter) body.stockLocation = editForm.stockLocation ?? ''
       await fetch(`/api/spools/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (editForm.isLoadedInPrinter) {
-        await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: editForm.printerId, amsSlot: editForm.amsSlot ?? 1 }) })
-      } else {
-        await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: null, amsSlot: null }) })
-      }
-      const updated: SpoolResponse = { ...s, ...editForm, isActive: !!editForm.isLoadedInPrinter, printerId: editForm.isLoadedInPrinter ? (editForm.printerId ?? null) : null } as SpoolResponse
+      const assignRes = editForm.isLoadedInPrinter
+        ? await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: editForm.printerId, amsSlot: editForm.amsSlot ?? 1 }) })
+        : await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: null, amsSlot: null }) })
+      const updated: SpoolResponse = await assignRes.json()
       onUpdated?.(updated)
       setEditForm({})
       setEditMode(false)
@@ -87,26 +89,10 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
 
   return (
     <>
-      <div className={`${styles.scrim} ${styles.scrimOn}`} onClick={() => { onClose(); setEditMode(false) }} />
+      <div className={`${styles.scrim} ${styles.scrimOn}`} onClick={() => { onClose(); setEditMode(false); setPendingDelete(false) }} />
       <aside className={`${styles.drawer} ${styles.drawerOn}`}>
         {editMode ? renderEdit() : renderDetail()}
       </aside>
-      {deleteConfirm && (
-        <>
-          <div className={styles.modalScrim} onClick={() => setDeleteConfirm(false)} />
-          <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Delete spool">
-            <div className={styles.modalIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-            <div className={styles.modalTitle}>Delete spool?</div>
-            <div className={styles.modalDesc}>{spool.brand} · {spool.colorName}</div>
-            <div className={styles.modalActions}>
-              <button className={styles.btn} onClick={() => setDeleteConfirm(false)}>Cancel</button>
-              <button className={`${styles.btn} ${styles.danger}`} onClick={handleDelete}>Delete</button>
-            </div>
-          </div>
-        </>
-      )}
     </>
   )
 
@@ -118,29 +104,31 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
     const bed = s.bedMin != null && s.bedMax != null ? `${s.bedMin}–${s.bedMax}°C` : '—'
     return (
       <>
-        <div className={styles.dwtop}>
-          <h2>Spool details</h2>
-          <button className={styles.dwclose} onClick={() => { onClose(); setEditMode(false) }} aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-          </button>
-        </div>
-        <div className={styles.dwhero}>
-          <div className={styles.dwdisc}><SpoolIcon color={s.colorHex} size={96} /></div>
-          <div className={styles.dwid}>
-            <div className={styles.b}>{s.brand}</div>
-            <div className={styles.c}>{s.colorName}</div>
-            <div className={styles.tags}>
-              <span className={styles.tag}>{s.material}</span>
-              {s.isActive && <span className={styles.tag} style={{ background: 'oklch(0.6 0.13 150/.15)', color: 'oklch(0.5 0.12 150)' }}>ACTIVE</span>}
+        <div className={styles.dwSticky}>
+          <div className={styles.dwtop}>
+            <h2>Spool details</h2>
+            <button className={styles.dwclose} onClick={() => { onClose(); setEditMode(false) }} aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+          <div className={styles.dwhero}>
+            <div className={styles.dwdisc}><SpoolIcon color={s.colorHex} size={96} /></div>
+            <div className={styles.dwid}>
+              <div className={styles.c}>{s.colorName}</div>
+              <div className={styles.b}>{s.brand}</div>
+              <div className={styles.tags}>
+                <span className={styles.tag}>{s.material}</span>
+                {s.isActive && <span className={styles.tag} style={{ background: 'oklch(0.6 0.13 150/.15)', color: 'oklch(0.5 0.12 150)' }}>ACTIVE</span>}
+              </div>
             </div>
           </div>
-        </div>
-        <div className={styles.dwbar}>
-          <div className={styles.meta}>
-            <span className={styles.g}>{s.currentWeightG} g <small>/ {s.initialWeightG} g</small></span>
-            <span className={styles.pct}>{pct}%</span>
+          <div className={styles.dwbar}>
+            <div className={styles.meta}>
+              <span className={styles.g}>{s.currentWeightG} g <small>/ {s.initialWeightG} g</small></span>
+              <span className={styles.pct}>{pct}%</span>
+            </div>
+            <div className={styles.track}><i className={low ? styles.low : ''} style={{ width: `${pct}%` }} /></div>
           </div>
-          <div className={styles.track}><i className={low ? styles.low : ''} style={{ width: `${pct}%` }} /></div>
         </div>
         <div className={styles.dwgrid}>
           <div className={styles.dwstat}><div className={styles.k}>Est. length left</div><div className={styles.v}>{Math.round(s.currentWeightG / 2.98)} m</div></div>
@@ -157,21 +145,48 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           <div className={styles.dwline}><span className={styles.lk}>Bed temp</span><span className={styles.lv}>{bed}</span></div>
         </div>
         <div className={styles.dwsec}>
-          <h3>{s.isActive ? 'Loaded in' : 'Location'}</h3>
-          <div className={styles.dwline}><span className={styles.lk}>Status</span><span className={styles.lv}>{low ? 'Low — reorder soon' : 'In stock'}</span></div>
+          <h3>{s.printerName ? 'Loaded in' : 'Location'}</h3>
+          {s.printerName ? (
+            <>
+              <div className={styles.dwline}><span className={styles.lk}>Printer</span><span className={styles.lv}>{s.printerName}</span></div>
+              {s.amsSlot != null && <div className={styles.dwline}><span className={styles.lk}>AMS slot</span><span className={styles.lv}>Slot {s.amsSlot}</span></div>}
+            </>
+          ) : (
+            <div className={styles.dwline}><span className={styles.lk}>Stored at</span><span className={styles.lv}>{s.stockLocation ?? 'Unassigned'}</span></div>
+          )}
+          <div className={styles.dwline}><span className={styles.lk}>Status</span><span className={styles.lv} style={{ color: s.isActive ? 'oklch(0.55 0.13 150)' : low ? 'oklch(0.62 0.16 30)' : 'var(--text-primary)' }}>{s.isActive ? 'Loaded' : low ? 'Low - reorder soon' : 'In stock'}</span></div>
         </div>
         <div className={styles.dwsec}>
           <h3>Inventory</h3>
           <div className={styles.dwline}><span className={styles.lk}>Last scanned</span><span className={styles.lv}>{formatRelativeTime(s.lastScannedAt)}</span></div>
-          <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>SPL-{String(1000 + parseInt(s.id.slice(0, 8), 16) % 9000).slice(0, 4)}</span></div>
+          <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>{s.nfcTagUid ?? '—'}</span></div>
+        </div>
+        <div className={styles.dwsec}>
+          <h3>Recent activity</h3>
+          <div className={styles.dwts}>
+            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>{s.isActive ? 'Loaded into printer' : 'Stored in stock'}</div><div className={styles.b}>{formatRelativeTime(s.lastScannedAt)}</div></div></div>
+            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>Used {Math.max(0, s.initialWeightG - s.currentWeightG)} g · Filament tracked</div><div className={styles.b}>Last logged</div></div></div>
+            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>Added to inventory</div><div className={styles.b}>{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div></div></div>
+          </div>
         </div>
         <div className={styles.dwact}>
-          <button className={styles.btn} onClick={() => startEdit(spool)} id="dwedit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit
-          </button>
-          <button className={`${styles.btn} ${styles.danger}`} onClick={() => setDeleteConfirm(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Delete
-          </button>
+          {pendingDelete ? (
+            <>
+              <button className={`${styles.btn} ${styles.danger}`} onClick={handleDelete} id="dwconfirm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>Confirm
+              </button>
+              <button className={styles.btn} onClick={() => setPendingDelete(false)} id="dwcancel">Cancel</button>
+            </>
+          ) : (
+            <>
+              <button className={styles.btn} onClick={() => startEdit(spool)} id="dwedit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit
+              </button>
+              <button className={`${styles.btn} ${styles.danger}`} onClick={() => setPendingDelete(true)} id="dwdelete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 4v6m4-6v6M10 3h4a1 1 0 011 1v2H9V4a1 1 0 011-1z"/></svg>Delete
+              </button>
+            </>
+          )}
         </div>
       </>
     )
@@ -280,7 +295,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                   <option value="__add_new">+ Add new location</option>
                 </select>
                 {showAddLocation && (<div className={styles.addWrap}><input type="text" placeholder="Enter new location..." value={newLocation} onChange={e => setNewLocation(e.target.value)} autoFocus /><button type="button" className={styles.btnCancel} onClick={() => { setShowAddLocation(false); setNewLocation('') }}>x</button></div>)}
-                {showAddLocation && (<button type="button" className={styles.btnAdd} disabled={!newLocation.trim()} onClick={() => { if (newLocation.trim()) { if (!customLocations.includes(newLocation.trim())) setCustomLocations(prev => [...prev, newLocation.trim()]); setEditForm(p => ({ ...p, stockLocation: newLocation.trim() })); setShowAddLocation(false); setNewLocation('') } }}>Add "{newLocation.trim()}"</button>)}
+                {showAddLocation && (<button type="button" className={styles.btnAdd} disabled={!newLocation.trim()} onClick={() => { if (newLocation.trim()) { if (!customLocations.includes(newLocation.trim())) setCustomLocations(prev => [...prev, newLocation.trim()]); setEditForm(p => ({ ...p, stockLocation: newLocation.trim() })); setShowAddLocation(false); setNewLocation('') } }}>Add &quot;{newLocation.trim()}&quot;</button>)}
               </div>
             )}
           </div>
