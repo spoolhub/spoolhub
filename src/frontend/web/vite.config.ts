@@ -30,6 +30,7 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1500,
+    minify: false,
     rollupOptions: {
       onwarn: (warning, warn) => {
         if (warning.code === 'INVALID_ANNOTATION') {
