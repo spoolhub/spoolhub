@@ -67,6 +67,11 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
             {t('nav.printers')}
           </NavLink>
 
+          <NavLink to="/locations" onClick={onClose} className={navClass}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 11v8h14v-8"/><path d="M9 19v-5h6v5"/></svg>
+            {t('nav.locations')}
+          </NavLink>
+
           <div className={styles.navlabel}>Tools</div>
 
           <NavLink to="/scan" onClick={onClose} className={navClass}>
