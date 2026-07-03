@@ -48,7 +48,10 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const [pendingDelete, setPendingDelete] = useState(false)
 
   const startEdit = (s: SpoolResponse) => {
-    setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: null })
+    setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: s.amsSlot ?? null })
+    if (s.stockLocation && !BASE_LOCATIONS.includes(s.stockLocation)) {
+      setCustomLocations(prev => prev.includes(s.stockLocation!) ? prev : [...prev, s.stockLocation!])
+    }
     setEditMode(true)
   }
 
@@ -63,13 +66,12 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       if (editForm.lowStockThresholdG != null) body.lowStockThresholdG = Number(editForm.lowStockThresholdG)
       if (editForm.price != null) body.price = Number(editForm.price)
       if (editForm.density != null) body.density = Number(editForm.density)
+      if (!editForm.isLoadedInPrinter) body.stockLocation = editForm.stockLocation ?? ''
       await fetch(`/api/spools/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (editForm.isLoadedInPrinter) {
-        await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: editForm.printerId, amsSlot: editForm.amsSlot ?? 1 }) })
-      } else {
-        await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: null, amsSlot: null }) })
-      }
-      const updated: SpoolResponse = { ...s, ...editForm, isActive: !!editForm.isLoadedInPrinter, printerId: editForm.isLoadedInPrinter ? (editForm.printerId ?? null) : null } as SpoolResponse
+      const assignRes = editForm.isLoadedInPrinter
+        ? await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: editForm.printerId, amsSlot: editForm.amsSlot ?? 1 }) })
+        : await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: null, amsSlot: null }) })
+      const updated: SpoolResponse = await assignRes.json()
       onUpdated?.(updated)
       setEditForm({})
       setEditMode(false)
