@@ -175,7 +175,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
         <div className={styles.dwsec}>
           <h3>Inventory</h3>
           <div className={styles.dwline}><span className={styles.lk}>Last scanned</span><span className={styles.lv}>{formatRelativeTime(s.lastScannedAt)}</span></div>
-          <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>SPL-{String(1000 + parseInt(s.id.slice(0, 8), 16) % 9000).slice(0, 4)}</span></div>
+          <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>{s.nfcTagUid ?? '—'}</span></div>
         </div>
         {!showPlacement && (
         <div className={styles.dwsec}>
