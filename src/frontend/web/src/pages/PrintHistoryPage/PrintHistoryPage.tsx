@@ -101,7 +101,7 @@ export default function PrintHistoryPage() {
   }, [])
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       {/* Top bar */}
       <header className={styles.topbar}>
         <div className={styles.topbarH}>

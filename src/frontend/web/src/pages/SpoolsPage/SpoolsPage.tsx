@@ -90,7 +90,7 @@ export default function SpoolsPage() {
   const brands = new Set(spools.map(s => s.brand))
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('spools.title', 'Spools')}</h1>

@@ -120,7 +120,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div className={styles.page}>
+      <div className={`${styles.page} page`}>
         {/* ════ TOPBAR ════ */}
       <header className={styles.topbar}>
         <div className={styles.h}>

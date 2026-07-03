@@ -5,6 +5,7 @@ import { printersApi } from '@/api/printers'
 import { spoolsApi } from '@/api/spools'
 import PrinterCard from '@/components/PrinterCard'
 import { getPrinterStatusClass } from '@/utils/printerStatus'
+import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import AddPrinterModal from './AddPrinterModal'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
@@ -34,6 +35,7 @@ export default function PrintersPage() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView]           = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedSpool, setSelectedSpool] = useState<SpoolResponse | null>(null)
   const printersRef               = useRef<PrinterResponse[]>([])
 
   useEffect(() => {
@@ -83,6 +85,29 @@ export default function PrintersPage() {
     }).catch(() => {})
   }, [])
 
+  const handleSpoolClick = useCallback((spool: SpoolResponse) => {
+    setSelectedSpool(spool)
+  }, [])
+
+  const handleSpoolClose = useCallback(() => {
+    setSelectedSpool(null)
+  }, [])
+
+  const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
+    setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
+  }, [])
+
+  const handleSpoolDeleted = useCallback((id: string, wasActive: boolean) => {
+    setSpools(prev => prev.filter(s => s.id !== id))
+    // If the deleted spool was assigned to a printer, we need to refresh printers too
+    if (wasActive) {
+      printersApi.getAll().then(p => {
+        printersRef.current = p
+        setPrinters(p)
+      }).catch(() => {})
+    }
+  }, [])
+
   const filtered = useMemo(() => {
     return printers.filter(p => {
       if (query) {
@@ -100,7 +125,7 @@ export default function PrintersPage() {
 
   return (
     <>
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('printers.title')}</h1>
@@ -153,7 +178,7 @@ export default function PrintersPage() {
         ) : (
           <div className={`${styles.grid}${view === 'list' ? ` ${styles.gridList}` : ''}`}>
             {filtered.map(p => (
-              <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} />
+              <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} onSpoolClick={handleSpoolClick} />
             ))}
           </div>
         )}
@@ -163,6 +188,16 @@ export default function PrintersPage() {
 
     {showAddModal && (
       <AddPrinterModal onClose={handleAddPrinterClose} onAdded={handlePrinterAdded} />
+    )}
+
+    {selectedSpool && (
+      <SpoolDetailDrawer
+        spool={selectedSpool}
+        printers={printers}
+        onClose={handleSpoolClose}
+        onUpdated={handleSpoolUpdated}
+        onDeleted={handleSpoolDeleted}
+      />
     )}
     </>
   )

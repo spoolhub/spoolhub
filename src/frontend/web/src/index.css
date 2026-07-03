@@ -48,6 +48,37 @@ body {
   animation: shake 0.45s ease-in-out;
 }
 
+/* Global scrollbar styling (matches Spools page) */
+.page,
+.scrollbar-styled {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.page::-webkit-scrollbar,
+.scrollbar-styled::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.page::-webkit-scrollbar-track,
+.scrollbar-styled::-webkit-scrollbar-track {
+  background: transparent;
+}
+.page::-webkit-scrollbar-thumb,
+.scrollbar-styled::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+  border: 3px solid var(--bg);
+}
+.page::-webkit-scrollbar-thumb:hover,
+.scrollbar-styled::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+.page::-webkit-scrollbar-corner,
+.scrollbar-styled::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Legacy cyan scrollbar class (kept for backward compat) */
 .scrollbar-pretty {
   scrollbar-width: thin;
   scrollbar-color: #06b6d4 transparent;
