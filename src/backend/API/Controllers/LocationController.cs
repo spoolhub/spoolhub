@@ -18,10 +18,19 @@ public class LocationController(ILocationService service) : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLocationRequest request)
+    {
+        var updated = await service.UpdateAsync(id, request);
+        return updated is null ? NotFound() : Ok(updated);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var deleted = await service.DeleteAsync(id);
-        return deleted ? NoContent() : NotFound();
+        var result = await service.DeleteAsync(id);
+        if (result is null) return NotFound();
+        if (result == false) return Conflict(new { error = "Move the spools out of this location before deleting it." });
+        return NoContent();
     }
 }

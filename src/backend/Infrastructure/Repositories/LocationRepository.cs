@@ -20,6 +20,13 @@ public class LocationRepository(FilamentDbContext db) : ILocationRepository
         return location;
     }
 
+    public async Task<Location> UpdateAsync(Location location)
+    {
+        db.Locations.Update(location);
+        await db.SaveChangesAsync();
+        return location;
+    }
+
     public async Task<bool> DeleteAsync(Guid id)
     {
         var location = await db.Locations.FindAsync(id);

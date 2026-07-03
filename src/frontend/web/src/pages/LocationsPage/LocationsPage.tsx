@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import {
   DndContext,
   closestCenter,
@@ -19,11 +18,26 @@ import { CSS } from '@dnd-kit/utilities'
 import { locationsApi } from '@/api/locations'
 import { spoolsApi } from '@/api/spools'
 import SpoolIcon from '@/components/icons/SpoolIcon'
-import type { LocationResponse } from '@/types/location'
+import type { LocationResponse, LocationType } from '@/types/location'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './LocationsPage.module.css'
 
 const ORDER_KEY = 'locations-order'
+const VIEW_KEY = 'spoolhub-locations-view'
+
+const SHELF_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 14.5h18M8 4v5M14 4v5M9 14.5v5M15 14.5v5"/>
+  </svg>
+)
+const DRYBOX_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M8 6V4h8v2"/><path d="M12 14.5c1.5-1.6 1.5-2.8 0-4-1.5 1.2-1.5 2.4 0 4Z"/>
+  </svg>
+)
+const DROPLET_ICON = (
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/></svg>
+)
 
 function savedOrder(): string[] {
   try { return JSON.parse(localStorage.getItem(ORDER_KEY) ?? '[]') } catch { return [] }
@@ -40,15 +54,38 @@ function applyOrder(locations: LocationResponse[], order: string[]): LocationRes
   return [...ordered, ...rest]
 }
 
-interface CardProps {
-  location: LocationResponse
-  spools: SpoolResponse[]
-  onDelete: (id: string) => void
+function humBand(h: number): 'dry' | 'ok' | 'high' {
+  return h <= 20 ? 'dry' : h <= 35 ? 'ok' : 'high'
 }
 
-function LocationCard({ location, spools, onDelete }: CardProps) {
-  const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(true)
+interface LocationStats {
+  list: SpoolResponse[]
+  count: number
+  totalG: number
+  low: number
+  materials: string[]
+  free: number
+  fillPct: number
+}
+
+function computeStats(loc: LocationResponse, spools: SpoolResponse[]): LocationStats {
+  const list = spools.filter(s => s.stockLocation === loc.name && !s.isArchived)
+  const totalG = list.reduce((a, s) => a + s.currentWeightG, 0)
+  const low = list.filter(s => s.currentWeightG <= s.lowStockThresholdG).length
+  const materials = [...new Set(list.map(s => s.material))]
+  const free = Math.max(0, loc.capacity - list.length)
+  const fillPct = loc.capacity > 0 ? Math.round((list.length / loc.capacity) * 100) : 0
+  return { list, count: list.length, totalG, low, materials, free, fillPct }
+}
+
+interface CardProps {
+  location: LocationResponse
+  stats: LocationStats
+  view: 'grid' | 'list'
+  onOpen: (loc: LocationResponse) => void
+}
+
+function LocationCard({ location, stats, view, onOpen }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: location.id })
 
@@ -58,79 +95,53 @@ function LocationCard({ location, spools, onDelete }: CardProps) {
     opacity: isDragging ? 0.4 : 1,
   }
 
-  const locationSpools = spools.filter(
-    s => s.stockLocation === location.name && !s.isArchived
-  )
+  const full = stats.fillPct >= 80
 
   return (
-    <div ref={setNodeRef} style={style} className={styles.card}>
-      <div className={styles.cardHeader}>
-        <button className={styles.dragHandle} {...attributes} {...listeners} aria-label={t('locations.dragToReorder')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none"/>
-          </svg>
-        </button>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.card}${view === 'list' ? ` ${styles.cardList}` : ''}`}
+      onClick={() => onOpen(location)}
+    >
+      <button className={styles.dragHandle} {...attributes} {...listeners} onClick={e => e.stopPropagation()} aria-label="Drag to reorder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
 
-        <div className={styles.cardIcon}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
+      <div className={styles.bhead}>
+        <span className={styles.licon}>{location.type === 'drybox' ? DRYBOX_ICON : SHELF_ICON}</span>
+        <div className={styles.bmeta}>
+          <div className={styles.bn}>{location.name}</div>
+          <div className={styles.bd}>{location.type === 'drybox' ? 'Sealed drybox' : 'Storage shelf'}</div>
         </div>
-
-        <div className={styles.cardMeta}>
-          <p className={styles.cardName}>{location.name}</p>
-          <p className={styles.cardCount}>
-            {locationSpools.length} {locationSpools.length === 1 ? t('locations.spoolSingular') : t('locations.spoolPlural')}
-          </p>
-        </div>
-
-        <div className={styles.cardActions}>
-          {locationSpools.length > 0 && (
-            <button
-              className={styles.expandBtn}
-              onClick={() => setExpanded(e => !e)}
-              aria-label={expanded ? t('locations.collapse') : t('locations.expand')}
-            >
-              <svg
-                className={`${styles.chevron}${expanded ? ` ${styles.chevronOpen}` : ''}`}
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              >
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </button>
-          )}
-          <button className={styles.deleteBtn} onClick={() => onDelete(location.id)} aria-label={t('common.delete')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14H6L5 6"/>
-              <path d="M10 11v6"/><path d="M14 11v6"/>
-              <path d="M9 6V4h6v2"/>
-            </svg>
-          </button>
-        </div>
+        <span className={styles.bcount}>{stats.count}/{location.capacity}</span>
       </div>
 
-      {expanded && locationSpools.length > 0 && (
-        <div className={styles.spoolList}>
-          {locationSpools.map(s => (
-            <Link key={s.id} to={`/spools/${s.id}`} className={styles.spoolRow}>
-              <SpoolIcon color={s.colorHex} size={28} className={styles.spoolIconImg} />
-              <span className={styles.spoolLabel}>
-                {s.brand} · {s.material} · {s.colorName}
-              </span>
-              <span className={styles.spoolWeight}>
-                {Math.round(s.currentWeightG)}g / {Math.round(s.initialWeightG)}g
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className={styles.bstats}>
+        <div className={styles.bstat}><div className={styles.v}>{(stats.totalG / 1000).toFixed(1)}<small>kg</small></div><div className={styles.l}>Stored</div></div>
+        <div className={styles.bstat}><div className={styles.v}>{stats.free}</div><div className={styles.l}>Slots free</div></div>
+        <div className={styles.bstat}><div className={styles.v} style={stats.low ? { color: 'oklch(0.62 0.17 30)' } : undefined}>{stats.low}</div><div className={styles.l}>Low stock</div></div>
+      </div>
+
+      <div className={styles.caprow}><span>Capacity</span><span className={styles.n}>{stats.fillPct}%</span></div>
+      <div className={styles.captrack}><i className={full ? styles.full : ''} style={{ width: `${Math.min(100, stats.fillPct)}%` }}/></div>
+
+      <div className={styles.caprow2}>
+        {location.type === 'drybox' && location.humidity != null
+          ? <span className={`${styles.humtag} ${styles[humBand(location.humidity)]}`}>{DROPLET_ICON}{location.humidity}% RH</span>
+          : <span className={styles.openShelf}>Open shelf</span>}
+        <span className={styles.matCount}>{stats.materials.length} material{stats.materials.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className={styles.bcolors}>
+        {stats.list.length
+          ? stats.list.slice(0, 6).map(s => <span key={s.id} className={styles.swatch}><SpoolIcon color={s.colorHex} size={30}/></span>)
+          : <span className={styles.emptyNote}>Empty</span>}
+      </div>
     </div>
   )
 }
@@ -140,11 +151,22 @@ export default function LocationsPage() {
   const [locations, setLocations] = useState<LocationResponse[]>([])
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [name, setName] = useState('')
+  const [query, setQuery] = useState('')
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('spools')
+  const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
+
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [isNew, setIsNew] = useState(false)
+  const [editing, setEditing] = useState<LocationResponse | null>(null)
+  const [form, setForm] = useState<{ name: string; type: LocationType; capacity: number; humidity: number }>({
+    name: '', type: 'shelf', capacity: 12, humidity: 30,
+  })
+  const [nameError, setNameError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -158,6 +180,8 @@ export default function LocationsPage() {
       .catch(() => setLoading(false))
   }, [])
 
+  useEffect(() => { localStorage.setItem(VIEW_KEY, view) }, [view])
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -170,107 +194,275 @@ export default function LocationsPage() {
     })
   }
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) return
+  const statsById = useMemo(() => {
+    const map = new Map<string, LocationStats>()
+    locations.forEach(l => map.set(l.id, computeStats(l, spools)))
+    return map
+  }, [locations, spools])
+
+  const visible = useMemo(() => {
+    let list = locations.filter(l => {
+      if (query && !l.name.toLowerCase().includes(query.toLowerCase())) return false
+      if (activeFilter === 'shelf') return l.type === 'shelf'
+      if (activeFilter === 'drybox') return l.type === 'drybox'
+      const stats = statsById.get(l.id)
+      if (!stats) return true
+      if (activeFilter === 'full') return stats.fillPct >= 80
+      if (activeFilter === 'empty') return stats.free > 0
+      return true
+    })
+    list = [...list]
+    if (sortBy === 'space') list.sort((a, b) => (statsById.get(b.id)?.free ?? 0) - (statsById.get(a.id)?.free ?? 0))
+    else if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name))
+    else list.sort((a, b) => (statsById.get(b.id)?.count ?? 0) - (statsById.get(a.id)?.count ?? 0))
+    return list
+  }, [locations, query, activeFilter, sortBy, statsById])
+
+  const totalKg = (spools.reduce((s, sp) => s + sp.currentWeightG, 0) / 1000).toFixed(1)
+
+  function openAddDrawer() {
+    setIsNew(true)
+    setEditing(null)
+    setForm({ name: '', type: 'shelf', capacity: 12, humidity: 30 })
+    setNameError('')
+    setDeleteConfirm(false)
+    setDeleteError('')
+    setDrawerOpen(true)
+  }
+
+  function openEditDrawer(loc: LocationResponse) {
+    setIsNew(false)
+    setEditing(loc)
+    setForm({ name: loc.name, type: loc.type, capacity: loc.capacity, humidity: loc.humidity ?? 30 })
+    setNameError('')
+    setDeleteConfirm(false)
+    setDeleteError('')
+    setDrawerOpen(true)
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false)
+    setEditing(null)
+    setDeleteConfirm(false)
+  }
+
+  async function handleSave() {
+    const name = form.name.trim()
+    if (!name) { setNameError('Give the location a name.'); return }
+    if (locations.some(l => l.name.toLowerCase() === name.toLowerCase() && l.id !== editing?.id)) {
+      setNameError(`A location named "${name}" already exists.`)
+      return
+    }
     setSaving(true)
     try {
-      const created = await locationsApi.add({ name: name.trim() })
-      setLocations(prev => [...prev, created])
-      setName('')
-      setShowModal(false)
+      if (isNew) {
+        const created = await locationsApi.add({
+          name, type: form.type, capacity: form.capacity,
+          humidity: form.type === 'drybox' ? form.humidity : undefined,
+        })
+        setLocations(prev => [...prev, created])
+      } else if (editing) {
+        const updated = await locationsApi.update(editing.id, {
+          name, type: form.type, capacity: form.capacity,
+          humidity: form.type === 'drybox' ? form.humidity : undefined,
+        })
+        setLocations(prev => prev.map(l => l.id === updated.id ? updated : l))
+        if (updated.name !== editing.name) {
+          setSpools(prev => prev.map(s => s.stockLocation === editing.name ? { ...s, stockLocation: updated.name } : s))
+        }
+      }
+      closeDrawer()
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    if (!deleteId) return
+    if (!editing) return
     setDeleting(true)
+    setDeleteError('')
     try {
-      await locationsApi.delete(deleteId)
-      setLocations(prev => prev.filter(l => l.id !== deleteId))
-      setDeleteId(null)
+      await locationsApi.delete(editing.id)
+      setLocations(prev => prev.filter(l => l.id !== editing.id))
+      closeDrawer()
+    } catch {
+      setDeleteError('Move the spools out of this location before deleting it.')
+      setDeleteConfirm(false)
     } finally {
       setDeleting(false)
     }
   }
 
+  const editingStats = editing ? statsById.get(editing.id) : undefined
+  const editingCount = editingStats?.count ?? 0
+
   return (
-    <div className={styles.wrap}>
-      <h1 className={styles.title}>{t('locations.title')}</h1>
-
-      {loading ? (
-        <div className={styles.grid}>
-          {[0, 1, 2].map(i => <div key={i} className={styles.skeletonCard} />)}
+    <div className={styles.page}>
+      <header className={styles.topbar}>
+        <div className={styles.h}>
+          <h1>{t('locations.title')}</h1>
+          <div className={styles.sub}>{locations.length} storage location{locations.length === 1 ? '' : 's'} · {spools.length} spools · {totalKg} kg filament on hand</div>
         </div>
-      ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={locations.map(l => l.id)} strategy={rectSortingStrategy}>
-            <div className={styles.grid}>
-              {locations.map(loc => (
-                <LocationCard
-                  key={loc.id}
-                  location={loc}
-                  spools={spools}
-                  onDelete={id => setDeleteId(id)}
-                />
-              ))}
-              <button className={styles.addCard} onClick={() => setShowModal(true)}>
-                <svg className={styles.addIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                <span className={styles.addText}>{t('locations.addLocation')}</span>
-              </button>
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
+        <label className={styles.search}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input placeholder="Search locations…" value={query} onChange={e => setQuery(e.target.value)} />
+        </label>
+        <button className={styles.primaryBtn} onClick={openAddDrawer}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          {t('locations.addLocation')}
+        </button>
+      </header>
 
-      {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>{t('locations.addLocation')}</h2>
-            <form onSubmit={handleAdd}>
-              <label className={styles.label}>{t('locations.name')}</label>
-              <input
-                className={styles.input}
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder={t('locations.namePlaceholder')}
-                autoFocus
-                required
-              />
-              <div className={styles.modalActions}>
-                <button type="button" className={styles.cancelBtn} onClick={() => setShowModal(false)}>
-                  {t('common.cancel')}
-                </button>
-                <button type="submit" className={styles.saveBtn} disabled={saving || !name.trim()}>
-                  {saving ? t('common.saving') : t('common.add')}
-                </button>
+      <section className={styles.invbar}>
+        <div className={styles.chips}>
+          <button className={`${styles.chip} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All</button>
+          <button className={`${styles.chip} ${activeFilter === 'shelf' ? styles.on : ''}`} onClick={() => setActiveFilter('shelf')}>Shelves</button>
+          <button className={`${styles.chip} ${activeFilter === 'drybox' ? styles.on : ''}`} onClick={() => setActiveFilter('drybox')}>Dryboxes</button>
+          <button className={`${styles.chip} ${activeFilter === 'full' ? styles.on : ''}`} onClick={() => setActiveFilter('full')}>Near full</button>
+          <button className={`${styles.chip} ${activeFilter === 'empty' ? styles.on : ''}`} onClick={() => setActiveFilter('empty')}>Has space</button>
+        </div>
+        <div className={styles.invtools}>
+          <select className={styles.sortsel} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="spools">Sort: Most spools</option>
+            <option value="space">Sort: Most space</option>
+            <option value="name">Sort: Name A–Z</option>
+          </select>
+          <div className={styles.seg2}>
+            <button className={view === 'grid' ? styles.on : ''} onClick={() => setView('grid')} title="Grid view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            </button>
+            <button className={view === 'list' ? styles.on : ''} onClick={() => setView('list')} title="List view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.panel}>
+        <div className={styles.panelHead}>
+          <h2>All locations</h2>
+          <span className={styles.meta}>{visible.length} location{visible.length === 1 ? '' : 's'}</span>
+        </div>
+        {loading ? (
+          <div className={styles.grid}>
+            {[0, 1, 2].map(i => <div key={i} className={styles.skeletonCard} />)}
+          </div>
+        ) : visible.length === 0 ? (
+          <div className={styles.empty}>No locations match this filter.</div>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={visible.map(l => l.id)} strategy={rectSortingStrategy}>
+              <div className={`${styles.grid}${view === 'list' ? ` ${styles.gridList}` : ''}`}>
+                {visible.map(loc => (
+                  <LocationCard
+                    key={loc.id}
+                    location={loc}
+                    stats={statsById.get(loc.id)!}
+                    view={view}
+                    onOpen={openEditDrawer}
+                  />
+                ))}
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </SortableContext>
+          </DndContext>
+        )}
+      </section>
+      <div style={{ height: 70 }} />
 
-      {deleteId && (
-        <div className={styles.modalOverlay} onClick={() => setDeleteId(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>{t('locations.deleteTitle')}</h2>
-            <p className={styles.modalBody}>{t('locations.deleteConfirm')}</p>
-            <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={() => setDeleteId(null)}>
-                {t('common.cancel')}
-              </button>
-              <button className={styles.deleteConfirmBtn} onClick={handleDelete} disabled={deleting}>
-                {deleting ? t('common.deleting') : t('common.delete')}
-              </button>
+      {/* EDIT / ADD DRAWER */}
+      <div className={`${styles.scrim}${drawerOpen ? ` ${styles.on}` : ''}`} onClick={closeDrawer} />
+      <aside className={`${styles.drawer}${drawerOpen ? ` ${styles.on}` : ''}`} aria-hidden={!drawerOpen}>
+        <div className={styles.dwtop}>
+          <span className={styles.licon}>{form.type === 'drybox' ? DRYBOX_ICON : SHELF_ICON}</span>
+          <div className={styles.dwtitle}>
+            <h2>{isNew ? 'Add location' : `Edit ${editing?.name ?? ''}`}</h2>
+            <p>{form.type === 'drybox' ? 'Sealed drybox' : 'Storage shelf'}</p>
+          </div>
+          <button className={styles.dwclose} onClick={closeDrawer} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <div className={styles.dwbody}>
+          {!isNew && (
+            <div className={styles.dstats}>
+              <div><div className={styles.v}>{((editingStats?.totalG ?? 0) / 1000).toFixed(1)}<small>kg</small></div><div className={styles.l}>Stored</div></div>
+              <div><div className={styles.v}>{editingCount}</div><div className={styles.l}>Spools</div></div>
+              <div><div className={styles.v}>{Math.max(0, form.capacity - editingCount)}</div><div className={styles.l}>Slots free</div></div>
+            </div>
+          )}
+
+          <div className={styles.ff}>
+            <label htmlFor="locName">Location name</label>
+            <input id="locName" type="text" placeholder="e.g. Shelf A1" value={form.name}
+              onChange={e => { setForm(p => ({ ...p, name: e.target.value })); setNameError('') }} autoFocus />
+            {nameError && <span className={styles.fieldError}>{nameError}</span>}
+          </div>
+
+          <div className={styles.ff}>
+            <label>Type</label>
+            <div className={styles.typeseg}>
+              <button type="button" className={form.type === 'shelf' ? styles.on : ''} onClick={() => setForm(p => ({ ...p, type: 'shelf' }))}>{SHELF_ICON}Shelf</button>
+              <button type="button" className={form.type === 'drybox' ? styles.on : ''} onClick={() => setForm(p => ({ ...p, type: 'drybox' }))}>{DRYBOX_ICON}Drybox</button>
             </div>
           </div>
+
+          <div className={styles.ff2}>
+            <div className={styles.ff}>
+              <label htmlFor="locCap">Capacity (slots)</label>
+              <input id="locCap" type="number" min={1} max={60} step={1} value={form.capacity}
+                onChange={e => setForm(p => ({ ...p, capacity: +e.target.value }))} />
+            </div>
+            {form.type === 'drybox' && (
+              <div className={styles.ff}>
+                <label htmlFor="locHum">Target humidity (% RH)</label>
+                <input id="locHum" type="number" min={0} max={100} step={1} value={form.humidity}
+                  onChange={e => setForm(p => ({ ...p, humidity: +e.target.value }))} />
+              </div>
+            )}
+          </div>
+          <span className={styles.hint}>
+            {isNew ? 'New empty location.' : `${editingCount} spool${editingCount === 1 ? '' : 's'} currently stored here — capacity can't go below this.`}
+          </span>
+          {deleteError && <span className={styles.fieldError}>{deleteError}</span>}
         </div>
-      )}
+
+        <div className={styles.dwact}>
+          {!isNew && (
+            deleteConfirm ? (
+              <>
+                <button className={`${styles.btn} ${styles.danger}`} onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Deleting…' : 'Confirm delete'}
+                </button>
+                <button className={styles.btn} onClick={() => setDeleteConfirm(false)}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={`${styles.btn} ${styles.danger} ${styles.iconOnly}`}
+                  onClick={() => setDeleteConfirm(true)}
+                  disabled={editingCount > 0}
+                  title={editingCount > 0 ? `Move the ${editingCount} spool${editingCount === 1 ? '' : 's'} out first` : 'Delete location'}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+                </button>
+                <button className={styles.btn} onClick={closeDrawer}>{t('common.cancel')}</button>
+                <button className={`${styles.btn} ${styles.primary}`} onClick={handleSave} disabled={saving}>
+                  {saving ? t('common.saving') : 'Save changes'}
+                </button>
+              </>
+            )
+          )}
+          {isNew && (
+            <>
+              <button className={styles.btn} onClick={closeDrawer}>{t('common.cancel')}</button>
+              <button className={`${styles.btn} ${styles.primary}`} onClick={handleSave} disabled={saving}>
+                {saving ? t('common.saving') : 'Add location'}
+              </button>
+            </>
+          )}
+        </div>
+      </aside>
     </div>
   )
 }
