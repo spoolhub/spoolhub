@@ -37,6 +37,9 @@ public static class SeedData
         {
             Id = Guid.NewGuid(),
             Name = l.Name,
+            Type = l.Type == "drybox" ? "drybox" : "shelf",
+            Capacity = l.Capacity ?? 12,
+            Humidity = l.Type == "drybox" ? l.Humidity ?? 30 : null,
             CreatedAt = ResolveTime(now, l.CreatedAt)
         }));
 
@@ -235,6 +238,9 @@ public static class SeedData
     private sealed class LocationFixture
     {
         public string Name { get; set; } = "";
+        public string? Type { get; set; }
+        public int? Capacity { get; set; }
+        public int? Humidity { get; set; }
         public string CreatedAt { get; set; } = "";
     }
 

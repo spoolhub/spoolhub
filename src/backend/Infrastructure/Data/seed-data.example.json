@@ -1,8 +1,8 @@
 {
   "_comment": "Committed sample fixture. Copy this file to seed-data.local.json (gitignored) to seed a working dev database, then edit it freely with your own data.",
   "locations": [
-    { "name": "Shelf A1", "createdAt": "-30d" },
-    { "name": "Drybox 1", "createdAt": "-30d" }
+    { "name": "Shelf A1", "type": "shelf", "capacity": 12, "createdAt": "-30d" },
+    { "name": "Drybox 1", "type": "drybox", "capacity": 6, "humidity": 22, "createdAt": "-30d" }
   ],
   "appSettings": [
     { "key": "alerts.enabled", "value": "false" },

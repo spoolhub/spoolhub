@@ -51,6 +51,11 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /^Printers/ })).toHaveAttribute('href', '/printers')
   })
 
+  it('renders Locations link pointing to /locations', () => {
+    renderSidebar()
+    expect(screen.getByRole('link', { name: /^Locations/ })).toHaveAttribute('href', '/locations')
+  })
+
   // ── Sub-items are not rendered ─────────────────────────────────
 
   it('does not show sub-items when on Home (/)', () => {
