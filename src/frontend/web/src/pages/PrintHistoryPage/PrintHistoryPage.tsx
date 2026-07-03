@@ -126,7 +126,7 @@ export default function PrintHistoryPage() {
   }, [])
 
   return (
-    <div>
+    <div className={styles.page}>
       {/* Top bar */}
       <header className={styles.topbar}>
         <div className={styles.topbarH}>
@@ -258,7 +258,6 @@ export default function PrintHistoryPage() {
         )}
       </section>
 
-      <div className={styles.botspacer} />
     </div>
   )
 }

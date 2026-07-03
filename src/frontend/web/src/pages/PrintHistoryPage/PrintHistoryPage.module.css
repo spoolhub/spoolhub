@@ -1,5 +1,14 @@
 /* ============ Print History Page ============ */
 
+/* Page shell */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: var(--pad);
+  padding-bottom: 80px;
+}
+
 /* Top bar */
 .topbar {
   display: flex;
