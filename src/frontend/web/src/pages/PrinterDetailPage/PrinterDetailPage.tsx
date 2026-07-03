@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { printersApi } from '@/api/printers'
 import { spoolsApi } from '@/api/spools'
 import { printJobsApi } from '@/api/printJobs'
+import PrintHistoryList from '@/components/PrintHistory/PrintHistoryList'
 import { getPrinterImage } from '@/utils/printerImages'
 import { SpoolIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/BrandCard'
@@ -11,33 +12,6 @@ import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrintJobResponse } from '@/types/printJob'
 import styles from './PrinterDetailPage.module.css'
-
-type Translate = (key: string, options?: { count: number }) => string
-
-// Relative calendar day: Today / Yesterday / weekday (within the past week) / exact date
-function dayLabel(iso: string, t: Translate, locale: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  const diffDays = Math.round((todayStart - dayStart) / 86_400_000)
-  if (diffDays <= 0) return t('common.today')
-  if (diffDays === 1) return t('common.yesterday')
-  if (diffDays <= 6) { const w = d.toLocaleDateString(locale, { weekday: 'long' }); return w.charAt(0).toUpperCase() + w.slice(1) }
-  return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-// Relative time: "X min/hrs ago" within 24h, otherwise the exact 24h clock time
-function relativeTime(iso: string, t: Translate, locale: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime()
-  if (diffMs < 86_400_000) {
-    const mins = Math.floor(diffMs / 60_000)
-    if (mins < 1) return t('common.justNow')
-    if (mins < 60) return t('common.minutesAgo', { count: mins })
-    return t('common.hoursAgo', { count: Math.floor(diffMs / 3_600_000) })
-  }
-  return new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })
-}
 
 function weightPct(s: SpoolResponse) {
   return s.initialWeightG > 0 ? Math.min(100, Math.round((s.currentWeightG / s.initialWeightG) * 100)) : 0
@@ -81,7 +55,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 export default function PrinterDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const [printer, setPrinter]           = useState<PrinterResponse | null>(null)
@@ -479,88 +453,7 @@ export default function PrinterDetailPage() {
 
         {historyOpen && (
           <div className={styles.slotContent}>
-            {jobs.length === 0 ? (
-              <p className={styles.historyEmpty}>{t('printerDetail.noJobs')}</p>
-            ) : (
-              <div className={styles.historyList}>
-                {jobs.map(job => {
-                  const statusClass =
-                    job.status === 'finished'  ? styles.statusFinished  :
-                    job.status === 'failed'    ? styles.statusFailed    :
-                    job.status === 'cancelled' ? styles.statusCancelled : styles.statusRunning
-                  const statusLabel =
-                    job.status === 'finished'  ? t('printerDetail.statusFinished')  :
-                    job.status === 'failed'    ? t('printerDetail.statusFailed')    :
-                    job.status === 'cancelled' ? t('printerDetail.statusCancelled') : t('printerDetail.statusRunning')
-
-                  const durationMs = job.finishedAt
-                    ? new Date(job.finishedAt).getTime() - new Date(job.startedAt).getTime()
-                    : null
-                  const durationLabel = durationMs != null
-                    ? durationMs < 3_600_000
-                      ? `${Math.round(durationMs / 60_000)}m`
-                      : `${Math.floor(durationMs / 3_600_000)}h ${Math.round((durationMs % 3_600_000) / 60_000)}m`
-                    : t('printerDetail.ongoing')
-
-                  const fmt = (iso: string) => new Date(iso).toLocaleTimeString(i18n.language, {
-                    hour: '2-digit', minute: '2-digit', hour12: false,
-                  })
-                  const anchorIso = job.finishedAt ?? job.startedAt
-
-                  const isMultiColor = (job.filaments?.length ?? 0) > 1
-
-                  type Pill = { spoolId: string | null; colorHex: string | null; label: string; grams: number }
-                  const pills: Pill[] = isMultiColor
-                    ? (job.filaments ?? []).map(f => ({
-                        spoolId: f.spoolId, colorHex: f.colorHex,
-                        label: f.colorName ?? '—', grams: f.gramsUsed,
-                      }))
-                    : [{
-                        spoolId: job.spoolId, colorHex: job.spoolColorHex,
-                        label: [job.spoolMaterial, job.spoolColorName].filter(Boolean).join(' · ') || '—',
-                        grams: job.gramsUsed,
-                      }]
-
-                  return (
-                    <div key={job.id} className={styles.historyItem}>
-                      <div className={styles.historyHeader}>
-                        <p className={styles.historyName}>
-                          {job.printFileName ?? <span className={styles.historyNameSkeleton} />}
-                        </p>
-                        <span className={`${styles.statusBadge} ${statusClass}`}>{statusLabel}</span>
-                      </div>
-
-                      <div className={styles.historyRow2}>
-                        <div className={styles.filamentPills}>
-                          {pills.map((pill, i) => {
-                            const content = (
-                              <>
-                                <SpoolIcon color={pill.colorHex ?? '#888'} className="w-4 h-4 flex-shrink-0" />
-                                <span className={styles.pillLabel}>{pill.label}</span>
-                                <span className={styles.pillGrams}>{pill.grams.toFixed(1)}g</span>
-                              </>
-                            )
-                            return pill.spoolId ? (
-                              <Link key={i} to={`/spools/${pill.spoolId}`} className={styles.pill}>{content}</Link>
-                            ) : (
-                              <div key={i} className={styles.pill}>{content}</div>
-                            )
-                          })}
-                        </div>
-                        <span className={styles.historyDate}>{dayLabel(anchorIso, t, i18n.language)}</span>
-                      </div>
-
-                      <div className={styles.historyMeta}>
-                        <span>{fmt(job.startedAt)}{job.finishedAt ? ` → ${fmt(job.finishedAt)}` : ''}</span>
-                        <span className={styles.historyDot}>·</span>
-                        <span>{durationLabel}</span>
-                        <span className={styles.historyTime}>{relativeTime(anchorIso, t, i18n.language)}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            <PrintHistoryList jobs={jobs} showSpool={true} />
           </div>
         )}
 

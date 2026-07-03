@@ -839,6 +839,33 @@
     "aboutProfile": "Acerca de este Perfil",
     "deleteProfile": "Eliminar Perfil"
   },
+  "printHistory": {
+    "title": "Print History",
+    "subtitle": "Every job logged across your printers",
+    "searchPlaceholder": "Search jobs…",
+    "exportCsv": "Export CSV",
+    "filterAll": "All",
+    "filterCompleted": "Completed",
+    "filterInProgress": "In progress",
+    "filterFailed": "Failed",
+    "jobsSectionTitle": "Jobs",
+    "colPart": "Part",
+    "colPrinter": "Printer",
+    "colFilament": "Filament",
+    "colUsed": "Used",
+    "colDuration": "Duration",
+    "colDate": "Date",
+    "colStatus": "Status",
+    "emptyFilter": "No jobs match this filter.",
+    "statusCompleted": "Completed",
+    "statusFailed": "Failed",
+    "statusCancelled": "Cancelled",
+    "statusPrinting": "In progress",
+    "statusPaused": "Paused",
+    "statusUnknown": "Unknown",
+    "job": "job",
+    "jobs": "jobs"
+  },
   "dashboard": {
     "usedThisWeek": "usados esta semana",
     "thisMonth": "este mes"

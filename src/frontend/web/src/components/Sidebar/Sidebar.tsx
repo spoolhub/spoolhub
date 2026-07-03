@@ -80,7 +80,7 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
           </NavLink>
 
           <NavLink to="/print-history" onClick={onClose} className={navClass}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><polyline points="12 7 12 12 16 14"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="8"/></svg>
             Print History
           </NavLink>
 
