@@ -69,7 +69,6 @@ export default function PrintHistoryPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     printJobsApi.getAll({ limit: 100, sortBy: 'startedAt_desc' })
       .then(res => {
         if (!cancelled) {
