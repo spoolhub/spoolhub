@@ -62,18 +62,10 @@ describe('PrintersPage', () => {
     await waitFor(() => expect(screen.getByText('Printers')).toBeInTheDocument())
   })
 
-  it('shows Add Printer link card', async () => {
+  it('shows Add Printer button', async () => {
     vi.mocked(printersApi.getAll).mockResolvedValue([])
     renderPage()
-    await waitFor(() => expect(screen.getByText('Add Printer')).toBeInTheDocument())
-  })
-
-  it('Add Printer card links to /printers/addprinter', async () => {
-    vi.mocked(printersApi.getAll).mockResolvedValue([])
-    renderPage()
-    await waitFor(() => screen.getByText('Add Printer'))
-    const link = screen.getByRole('link', { name: /add printer/i })
-    expect(link).toHaveAttribute('href', '/printers/addprinter')
+    await waitFor(() => expect(screen.getByRole('button', { name: /add printer/i })).toBeInTheDocument())
   })
 
   it('shows printer card after load', async () => {
