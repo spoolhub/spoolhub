@@ -1,0 +1,50 @@
+{
+  "_comment": "Committed sample fixture. Copy this file to seed-data.local.json (gitignored) to seed a working dev database, then edit it freely with your own data.",
+  "locations": [
+    { "name": "Shelf A1", "createdAt": "-30d" },
+    { "name": "Drybox 1", "createdAt": "-30d" }
+  ],
+  "appSettings": [
+    { "key": "alerts.enabled", "value": "false" },
+    { "key": "alerts.provider", "value": "ntfy" },
+    { "key": "alerts.ntfy_url", "value": "" },
+    { "key": "alerts.webhook_url", "value": "" },
+    { "key": "alerts.discord_webhook_url", "value": "" },
+    { "key": "alerts.notify_low_stock", "value": "true" },
+    { "key": "alerts.notify_spool_assigned", "value": "true" },
+    { "key": "alerts.notify_spool_added", "value": "true" },
+    { "key": "alerts.notify_spool_deleted", "value": "true" },
+    { "key": "alerts.notify_printer_deleted", "value": "true" },
+    { "key": "filaments.auto_sync", "value": "true" },
+    { "key": "filaments.ofd_source_url", "value": "https://openfilament.com/api/filaments" },
+    { "key": "app.default_low_stock_threshold_g", "value": "100" },
+    { "key": "app.currency", "value": "USD" },
+    { "key": "app.language", "value": "en" }
+  ],
+  "brands": [
+    { "name": "Example Filaments", "domain": "example.com", "ofdSlug": "example_filaments", "createdAt": "-30d" }
+  ],
+  "spoolProfiles": [
+    { "name": "Example PLA Basic", "brand": "Example Filaments", "material": "PLA", "colorName": "White", "colorHex": "#FFFFFF", "initialWeightG": 1000, "spoolWeightG": 200, "lowStockThresholdG": 100, "density": 1.24, "diameterTolerance": 1.75, "extruderMin": 200, "extruderMax": 220, "bedMin": 55, "bedMax": 60, "price": 19.99, "createdAt": "-30d", "updatedAt": "-30d" }
+  ],
+  "spools": [
+    { "key": "spExampleWhite", "brand": "Example Filaments", "material": "PLA", "colorName": "White", "colorHex": "#FFFFFF", "initialWeightG": 1000, "currentWeightG": 850, "spoolWeightG": 200, "lowStockThresholdG": 120, "isActive": true, "isArchived": false, "createdAt": "-10d", "lastScannedAt": "-2h", "notes": "Sample spool", "stockLocation": "Shelf A1", "price": 19.99, "density": 1.24, "diameterTolerance": 1.75, "extruderMin": 200, "extruderMax": 220, "bedMin": 55, "bedMax": 60 },
+    { "key": "spExampleSpare", "brand": "Example Filaments", "material": "PLA", "colorName": "White", "colorHex": "#FFFFFF", "initialWeightG": 1000, "currentWeightG": 1000, "spoolWeightG": 200, "lowStockThresholdG": 120, "isActive": false, "isArchived": false, "createdAt": "-5d", "lastScannedAt": null, "notes": "Unopened spare", "stockLocation": "Drybox 1", "price": 19.99, "density": 1.24, "diameterTolerance": 1.75, "extruderMin": 200, "extruderMax": 220, "bedMin": 55, "bedMax": 60 }
+  ],
+  "nfcTags": [
+    { "tagUid": "04:00:00:00:00:00:01", "type": "NTAG213", "spool": "spExampleWhite", "createdAt": "-10d" }
+  ],
+  "printers": [
+    { "key": "p1", "name": "Example Printer", "brand": "Bambu Lab", "model": "X1 Carbon", "serialNumber": "EXAMPLE0000001", "hasAms": true, "protocol": "mqtt_lan", "ipAddress": "192.168.1.100", "port": 8883, "accessCode": "00000000", "tray1Spool": "spExampleWhite", "tray2Spool": null, "tray3Spool": null, "tray4Spool": null, "createdAt": "-10d" }
+  ],
+  "printJobs": [
+    { "key": "job1", "printer": "p1", "spool": "spExampleWhite", "printFileName": "example.3mf", "status": "Finished", "gramsUsed": 42.0, "startedAt": "-1d", "finishedAt": "-22h", "lastUpdatedAt": "-22h", "filamentDeducted": true, "source": "local" }
+  ],
+  "printJobFilaments": [
+    { "printJob": "job1", "spool": "spExampleWhite", "colorName": "White", "colorHex": "#FFFFFF", "material": "PLA", "gramsUsed": 42.0, "slotIndex": 0 }
+  ],
+  "activities": [
+    { "eventType": "PrinterCreated", "resourceType": "Printer", "resource": "p1", "resourceName": "Example Printer", "action": "Added printer Example Printer", "createdAt": "-10d" },
+    { "eventType": "SpoolAdded", "resourceType": "Spool", "resource": "spExampleWhite", "resourceName": "Example Filaments White", "action": "Added spool Example Filaments White", "createdAt": "-10d" }
+  ]
+}

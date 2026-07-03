@@ -10,7 +10,7 @@ namespace Infrastructure.Data;
 /// <summary>
 /// Loads demo/dev data from a gitignored local fixture (seed-data.local.json, next to this file).
 /// The fixture never ships in the repo or the Docker image; if it's absent, seeding is a no-op.
-/// See docs/seed-data.md for the fixture format.
+/// Copy seed-data.example.json (committed) to seed-data.local.json to get started, then edit freely.
 /// </summary>
 public static class SeedData
 {
