@@ -74,7 +74,7 @@ export default function PrintersPage() {
   const handleAddPrinter = useCallback(() => setShowAddModal(true), [])
   const handleAddPrinterClose = useCallback(() => setShowAddModal(false), [])
 
-  const handlePrinterAdded = useCallback((_printer: PrinterResponse) => {
+  const handlePrinterAdded = useCallback(() => {
     setShowAddModal(false)
     // Trigger a re-fetch by toggling the refresh key
     printersApi.getAll().then(p => {
