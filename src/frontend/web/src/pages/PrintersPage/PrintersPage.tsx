@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConnection } from '@/context/ConnectionContext'
 import { printersApi } from '@/api/printers'
 import { spoolsApi } from '@/api/spools'
 import PrinterCard from '@/components/PrinterCard'
 import { getPrinterStatusClass } from '@/utils/printerStatus'
+import AddPrinterModal from './AddPrinterModal'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './PrintersPage.module.css'
@@ -33,6 +33,7 @@ export default function PrintersPage() {
   const [query, setQuery]         = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView]           = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
+  const [showAddModal, setShowAddModal] = useState(false)
   const printersRef               = useRef<PrinterResponse[]>([])
 
   useEffect(() => {
@@ -70,6 +71,18 @@ export default function PrintersPage() {
 
   useEffect(() => { localStorage.setItem(VIEW_KEY, view) }, [view])
 
+  const handleAddPrinter = useCallback(() => setShowAddModal(true), [])
+  const handleAddPrinterClose = useCallback(() => setShowAddModal(false), [])
+
+  const handlePrinterAdded = useCallback((_printer: PrinterResponse) => {
+    setShowAddModal(false)
+    // Trigger a re-fetch by toggling the refresh key
+    printersApi.getAll().then(p => {
+      printersRef.current = p
+      setPrinters(p)
+    }).catch(() => {})
+  }, [])
+
   const filtered = useMemo(() => {
     return printers.filter(p => {
       if (query) {
@@ -86,6 +99,7 @@ export default function PrintersPage() {
   const printingCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) === 'printing').length
 
   return (
+    <>
     <div className={styles.page}>
       <header className={styles.topbar}>
         <div className={styles.h}>
@@ -99,10 +113,10 @@ export default function PrintersPage() {
         <button className={styles.iconBtn} title="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>
         </button>
-        <Link to="/printers/addprinter" className={styles.primaryBtn}>
+        <button className={styles.primaryBtn} onClick={handleAddPrinter}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
           {t('printers.addPrinter')}
-        </Link>
+        </button>
       </header>
 
       <section className={styles.invbar}>
@@ -146,5 +160,10 @@ export default function PrintersPage() {
       </section>
       <div style={{ height: 70 }} />
     </div>
+
+    {showAddModal && (
+      <AddPrinterModal onClose={handleAddPrinterClose} onAdded={handlePrinterAdded} />
+    )}
+    </>
   )
 }

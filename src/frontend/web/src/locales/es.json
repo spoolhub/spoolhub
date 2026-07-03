@@ -498,7 +498,12 @@
     "registerTitle": "Registrar impresora LAN",
     "registering": "Registrando…",
     "register": "Registrar",
-    "registerError": "Error al registrar la impresora. Comprueba los detalles e inténtalo de nuevo."
+    "registerError": "Error al registrar la impresora. Comprueba los detalles e inténtalo de nuevo.",
+    "connectingLan": "Conectando con la impresora por LAN…",
+    "connectingCloud": "Añadiendo tu impresora…",
+    "connectedTitle": "Impresora conectada",
+    "connectedDesc": "Tu impresora ya está vinculada a SpoolHub.",
+    "done": "Listo"
   },
   "filamentDetail": {
     "notFound": "Filamento no encontrado.",

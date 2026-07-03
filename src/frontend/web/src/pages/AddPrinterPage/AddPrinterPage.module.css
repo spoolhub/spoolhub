@@ -2,7 +2,9 @@
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 /* ── Page shell ── */
-.wrap { max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+.wrap { max-width: 48rem; margin: 0 auto; padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+.navRow { display: flex; align-items: center; justify-content: space-between; }
 
 .backBtn {
   display: flex;
@@ -18,6 +20,17 @@
   transition: color var(--t-fast);
 }
 .backBtn:hover { color: var(--text-primary); }
+
+.closeBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 2.125rem; height: 2.125rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-secondary);
+  background: none; border: none; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.closeBtn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.closeBtn svg { width: 1.0625rem; height: 1.0625rem; }
 
 .pageTitle {
   font-size: 1.25rem;
@@ -35,34 +48,33 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem;
-  border-radius: var(--radius-2xl);
-  border: 2px solid var(--border);
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
   background: var(--surface);
-  text-align: center;
+  text-align: left;
   cursor: pointer;
-  transition: border-color var(--t-normal), box-shadow var(--t-normal);
+  transition: border-color var(--t-normal), box-shadow var(--t-normal), transform var(--t-normal);
 }
-.brandCard:hover:not(:disabled) { border-color: var(--accent); box-shadow: var(--shadow-md); }
-.brandCard:disabled { border-color: var(--border-subtle); background: var(--bg-secondary); cursor: default; opacity: 0.5; }
+.brandCard:hover:not(:disabled) { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.brandCard:disabled { cursor: not-allowed; opacity: 0.55; }
+.brandCard:disabled:hover { border-color: var(--border); box-shadow: none; transform: none; }
 
 .brandLogo {
-  width: 4rem; height: 4rem;
-  border-radius: var(--radius-2xl);
+  width: 2.75rem; height: 2.75rem;
+  border-radius: 0.6875rem;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow-sm);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  transition: transform var(--t-normal);
+  background: var(--accent-bg);
+  color: var(--accent);
 }
-.brandCard:hover:not(:disabled) .brandLogo { transform: scale(1.05); }
+.brandLogo svg { width: 1.4375rem; height: 1.4375rem; }
+.brandLogoDisabled { background: var(--bg-secondary); color: var(--text-secondary); }
 
-.brandName { font-size: 1rem; font-weight: 700; line-height: 1.25; color: var(--text-primary); }
+.brandName { font-size: 0.96875rem; font-weight: 700; line-height: 1.25; color: var(--text-primary); letter-spacing: -0.01em; }
 .brandNameDisabled { color: var(--text-secondary); }
-.brandCta      { font-size: 0.75rem; color: var(--accent); margin-top: 0.25rem; font-weight: 500; }
-.brandSubtitle { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+.brandDesc { font-size: 0.78125rem; color: var(--text-secondary); line-height: 1.5; margin-top: 0.125rem; }
 
 .soonBadge {
   position: absolute; top: 0.75rem; right: 0.75rem;
@@ -226,6 +238,16 @@
 .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
 .inputMono { font-family: monospace; }
 .inputCode { font-family: monospace; text-align: center; font-size: 1.125rem; letter-spacing: 0.3em; }
+
+.codeGrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.4375rem; }
+.codeDigit {
+  width: 100%; aspect-ratio: 1 / 1.05;
+  text-align: center; font-family: monospace; font-size: 1.1875rem; font-weight: 700;
+  border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
+  border-radius: var(--radius-lg); outline: 0;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.codeDigit:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); background: var(--bg-primary); }
 
 .fieldHint { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.375rem; }
 
@@ -487,3 +509,22 @@
   background: var(--error-bg); border: 1px solid var(--error-border);
   border-radius: var(--radius-lg); padding: 0.5rem 0.75rem;
 }
+
+/* ── Success ── */
+.successCard {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.375rem;
+  padding: 2.5rem 1.5rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-sm);
+}
+.successCheck {
+  width: 4rem; height: 4rem;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.14); color: #22c55e;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.successCheck svg { width: 2rem; height: 2rem; }
+.successTitle { font-size: 1.1875rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; margin: 0; }
+.successDesc { font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 0.5rem; }
+.successCard .btnSubmit { width: 100%; }

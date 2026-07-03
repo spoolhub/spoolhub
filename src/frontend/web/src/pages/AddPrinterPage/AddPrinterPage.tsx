@@ -5,12 +5,24 @@ import { printersApi } from '@/api/printers'
 import type { LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
 import styles from './AddPrinterPage.module.css'
 
+const BAMBU_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="4" y1="3" x2="4" y2="19"/><line x1="20" y1="3" x2="20" y2="19"/><path d="M4 3h16"/><line x1="4" y1="9" x2="20" y2="9"/>
+    <rect x="9.5" y="6.5" width="5" height="4" rx="0.75"/><rect x="3" y="19" width="18" height="2" rx="0.75"/><rect x="8.5" y="14.5" width="7" height="4" rx="0.5"/>
+  </svg>
+)
+const KLIPPER_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 9h8M8 12h8M8 15h5"/>
+  </svg>
+)
+
 const BRANDS = [
-  { name: 'Bambu Lab', domain: 'bambulab.com',  available: true,  subtitle: '' },
-  { name: 'Klipper',   domain: 'klipper3d.org', available: false, subtitle: 'Elegoo, Creality, Voron and more' },
+  { name: 'Bambu Lab', icon: BAMBU_ICON,   available: true,  description: 'Connect over LAN or Bambu Cloud. Supports AMS tray sync.', domain: 'bambulab.com' },
+  { name: 'Klipper',   icon: KLIPPER_ICON, available: false, description: 'Moonraker-based printers. Support is on the way.', domain: '' },
 ]
 
-type Step = 'brand' | 'connection' | 'login' | 'verify' | 'cloud_select' | 'lan_scan' | 'lan_form' | 'form'
+type Step = 'brand' | 'connection' | 'login' | 'verify' | 'cloud_select' | 'lan_scan' | 'lan_form' | 'form' | 'connecting' | 'success'
 
 export default function AddPrinterPage() {
   const navigate = useNavigate()
@@ -27,9 +39,11 @@ export default function AddPrinterPage() {
   const [model, setModel]           = useState('')
   const [ip, setIp]                 = useState('')
   const [serialNumber, setSerialNumber] = useState('')
-  const [accessCode, setAccessCode] = useState('')
+  const [codeDigits, setCodeDigits] = useState<string[]>(Array(8).fill(''))
+  const codeRefs                    = useRef<(HTMLInputElement | null)[]>([])
   const [hasAms, setHasAms]         = useState(false)
   const [port, setPort]             = useState('')
+  const [connectingMessage, setConnectingMessage] = useState('')
 
   const [scanning, setScanning]           = useState(false)
   const [discovered, setDiscovered]       = useState<LanDiscoveredPrinter[]>([])
@@ -75,6 +89,29 @@ export default function AddPrinterPage() {
     pasted.split('').forEach((c, i) => { next[i] = c })
     setDigits(next)
     digitRefs.current[Math.min(pasted.length, 5)]?.focus()
+  }
+
+  function handleCodeChange(i: number, val: string) {
+    const d = val.slice(-1)
+    const next = [...codeDigits]
+    next[i] = d
+    setCodeDigits(next)
+    if (d && i < 7) codeRefs.current[i + 1]?.focus()
+  }
+
+  function handleCodeKeyDown(i: number, e: React.KeyboardEvent) {
+    if (e.key === 'Backspace' && !codeDigits[i] && i > 0) {
+      codeRefs.current[i - 1]?.focus()
+    }
+  }
+
+  function handleCodePaste(e: React.ClipboardEvent) {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\s/g, '').slice(0, 8)
+    const next = Array(8).fill('')
+    pasted.split('').forEach((c, i) => { next[i] = c })
+    setCodeDigits(next)
+    codeRefs.current[Math.min(pasted.length, 7)]?.focus()
   }
 
   function selectBrand(b: typeof BRANDS[number]) {
@@ -126,7 +163,9 @@ export default function AddPrinterPage() {
   function selectDiscoveredPrinter(p: LanDiscoveredPrinter) {
     setIp(p.ipAddress)
     setSerialNumber(p.serialNumber)
-    setAccessCode(p.accessCode ?? '')
+    const next = Array(8).fill('')
+    ;(p.accessCode ?? '').split('').forEach((c, i) => { if (i < 8) next[i] = c })
+    setCodeDigits(next)
     setName(p.name.includes(p.ipAddress) ? `Bambu ${p.model}` : p.name)
     setModel(p.model)
     setFromDiscovery(true)
@@ -178,22 +217,27 @@ export default function AddPrinterPage() {
   async function handleCloudPrinterTap(serial: string) {
     setAddingSerial(serial)
     setError(null)
+    setConnectingMessage(t('addPrinter.connectingCloud'))
+    setStep('connecting')
     try {
       await printersApi.selectCloud([serial])
-      navigate('/printers')
+      setStep('success')
     } catch {
       setError(t('addPrinter.addError'))
       setAddingSerial(null)
+      setStep('cloud_select')
     }
   }
 
   async function handleLanSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError(null)
     const sn = serialNumber.trim()
     const resolvedName = name.trim() || (sn ? `Bambu Lab ${sn.slice(-6)}` : 'Bambu Lab Printer')
     const resolvedModel = model.trim() || 'Bambu Lab Printer'
+    const accessCode = codeDigits.join('').trim()
+    setConnectingMessage(t('addPrinter.connectingLan'))
+    setStep('connecting')
     try {
       await printersApi.registerLan({
         name:         resolvedName,
@@ -201,20 +245,21 @@ export default function AddPrinterPage() {
         model:        resolvedModel,
         ipAddress:    ip.trim(),
         serialNumber: sn || null,
-        accessCode:   accessCode.trim() || null,
+        accessCode:   accessCode || null,
       })
-      navigate('/printers')
+      setStep('success')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
       setError(msg ?? t('addPrinter.addError'))
-      setSubmitting(false)
+      setStep('lan_form')
     }
   }
 
   async function handleGenericLanSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError(null)
+    setConnectingMessage(t('addPrinter.connectingLan'))
+    setStep('connecting')
     try {
       await printersApi.registerLan({
         name:      name.trim(),
@@ -224,10 +269,10 @@ export default function AddPrinterPage() {
         port:      port ? parseInt(port, 10) : null,
         hasAms,
       })
-      navigate('/printers')
+      setStep('success')
     } catch {
       setError(t('addPrinter.addError'))
-      setSubmitting(false)
+      setStep('form')
     }
   }
 
@@ -269,19 +314,57 @@ export default function AddPrinterPage() {
   return (
     <div className={styles.wrap}>
 
-      {/* ── Back ── */}
-      <button onClick={goBack} className={styles.backBtn}>
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        {backLabel()}
-      </button>
+      {/* ── Nav: back + close ── */}
+      {step !== 'connecting' && step !== 'success' && (
+        <div className={styles.navRow}>
+          {step === 'brand'
+            ? <span />
+            : (
+              <button onClick={goBack} className={styles.backBtn}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                {backLabel()}
+              </button>
+            )}
+          <Link to="/printers" className={styles.closeBtn} aria-label={t('common.cancel')}>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+          </Link>
+        </div>
+      )}
 
       {/* ── Header ── */}
-      {step !== 'login' && step !== 'verify' && (
+      {step !== 'login' && step !== 'verify' && step !== 'connecting' && step !== 'success' && (
         <div>
           <h1 className={styles.pageTitle}>{pageTitle()}</h1>
           <p className={styles.pageSubtitle}>{pageSubtitle()}</p>
+        </div>
+      )}
+
+      {/* ── Connecting ── */}
+      {step === 'connecting' && (
+        <div className={styles.scanProgress}>
+          <svg className={`w-8 h-8 ${styles.scanSpinner}`} viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <p className={styles.scanLabel}>{connectingMessage}</p>
+        </div>
+      )}
+
+      {/* ── Success ── */}
+      {step === 'success' && (
+        <div className={styles.successCard}>
+          <div className={styles.successCheck}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h2 className={styles.successTitle}>{t('addPrinter.connectedTitle')}</h2>
+          <p className={styles.successDesc}>{t('addPrinter.connectedDesc')}</p>
+          <button onClick={() => navigate('/printers')} className={styles.btnSubmit}>{t('addPrinter.done')}</button>
         </div>
       )}
 
@@ -295,17 +378,16 @@ export default function AddPrinterPage() {
               disabled={!b.available}
               className={styles.brandCard}
             >
-              <div className={styles.brandLogo}>
-                <img src={`https://www.google.com/s2/favicons?sz=64&domain=${b.domain}`} alt={b.name} className="w-10 h-10 object-contain" />
-              </div>
-              <div>
-                <p className={b.available ? styles.brandName : `${styles.brandName} ${styles.brandNameDisabled}`}>{b.name}</p>
-                {b.available && <p className={styles.brandCta}>{t('addPrinter.clickToSetUp')}</p>}
-                {!b.available && b.subtitle && <p className={styles.brandSubtitle}>{b.subtitle}</p>}
-              </div>
               {!b.available && (
                 <span className={styles.soonBadge}>{t('addPrinter.soon')}</span>
               )}
+              <div className={b.available ? styles.brandLogo : `${styles.brandLogo} ${styles.brandLogoDisabled}`}>
+                {b.icon}
+              </div>
+              <div>
+                <p className={b.available ? styles.brandName : `${styles.brandName} ${styles.brandNameDisabled}`}>{b.name}</p>
+                <p className={styles.brandDesc}>{b.description}</p>
+              </div>
             </button>
           ))}
         </div>
@@ -407,7 +489,7 @@ export default function AddPrinterPage() {
                   Scan again
                 </button>
                 <button
-                  onClick={() => { setName(''); setModel(''); setFromDiscovery(false); setStep('lan_form') }}
+                  onClick={() => { setName(''); setModel(''); setCodeDigits(Array(8).fill('')); setFromDiscovery(false); setStep('lan_form') }}
                   className={styles.btnManual}
                 >
                   Enter manually
@@ -446,12 +528,22 @@ export default function AddPrinterPage() {
 
                 <div>
                   <label className={styles.fieldLabel}>{t('addPrinter.labelAccessCode')}</label>
-                  <input
-                    type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)}
-                    placeholder="12345678" required autoFocus
-                    className={`${styles.input} ${styles.inputCode}`}
-                  />
-                  <p className={styles.fieldHint}>Shown on your printer's touchscreen under Network settings</p>
+                  <div className={styles.codeGrid}>
+                    {codeDigits.map((d, i) => (
+                      <input
+                        key={i}
+                        ref={el => { codeRefs.current[i] = el }}
+                        type="text" maxLength={1} autoComplete="one-time-code"
+                        value={d}
+                        onChange={e => handleCodeChange(i, e.target.value)}
+                        onKeyDown={e => handleCodeKeyDown(i, e)}
+                        onPaste={i === 0 ? handleCodePaste : undefined}
+                        autoFocus={i === 0}
+                        className={styles.codeDigit}
+                      />
+                    ))}
+                  </div>
+                  <p className={styles.fieldHint}>{t('addPrinter.accessCodeHint')}</p>
                 </div>
               </>
             ) : (
@@ -477,11 +569,21 @@ export default function AddPrinterPage() {
 
                 <div>
                   <label className={styles.fieldLabel}>{t('addPrinter.labelAccessCode')}</label>
-                  <input
-                    type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)}
-                    placeholder="12345678"
-                    className={`${styles.input} ${styles.inputMono}`}
-                  />
+                  <div className={styles.codeGrid}>
+                    {codeDigits.map((d, i) => (
+                      <input
+                        key={i}
+                        ref={el => { codeRefs.current[i] = el }}
+                        type="text" maxLength={1} autoComplete="one-time-code"
+                        value={d}
+                        onChange={e => handleCodeChange(i, e.target.value)}
+                        onKeyDown={e => handleCodeKeyDown(i, e)}
+                        onPaste={i === 0 ? handleCodePaste : undefined}
+                        className={styles.codeDigit}
+                      />
+                    ))}
+                  </div>
+                  <p className={styles.fieldHint}>{t('addPrinter.accessCodeHint')}</p>
                 </div>
               </>
             )}
