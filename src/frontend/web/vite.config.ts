@@ -28,4 +28,16 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
   },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    minify: false,
+    rollupOptions: {
+      onwarn: (warning, warn) => {
+        if (warning.code === 'INVALID_ANNOTATION') {
+          return;
+        }
+        warn(warning);
+      },
+    },
+  }
 })

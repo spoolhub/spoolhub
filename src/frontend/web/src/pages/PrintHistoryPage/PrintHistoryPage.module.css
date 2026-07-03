@@ -1,0 +1,356 @@
+/* ============ Print History Page ============ */
+
+/* Page shell */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: var(--pad);
+  padding-bottom: 80px;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+.topbarH {
+  flex: 1;
+  min-width: 0;
+}
+.topbar h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Search */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 13px;
+  height: 42px;
+  width: 280px;
+  max-width: 280px;
+  flex: 1 1 160px;
+  min-width: 120px;
+  color: var(--muted);
+  transition: 0.18s var(--ease);
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.search input {
+  border: 0;
+  background: 0;
+  outline: 0;
+  color: var(--text);
+  font: inherit;
+  width: 100%;
+}
+.search input::placeholder {
+  color: var(--faint);
+}
+.search .k {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: 0.16s var(--ease);
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+.btnPrimary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.btnPrimary:hover {
+  filter: brightness(1.06);
+}
+.btnIcon {
+  width: 42px;
+  padding: 0;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* Filter chips bar */
+.invbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: var(--gap);
+  flex-wrap: wrap;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  flex: 1;
+  min-width: 0;
+}
+.chip {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: 0.15s var(--ease);
+}
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.chipOn {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Panel */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+.ph {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+}
+.ph h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.phMeta {
+  font-size: 12.5px;
+  color: var(--faint);
+  font-family: var(--font-num);
+}
+
+/* Table */
+.jtablewrap {
+  padding: 6px var(--card-pad) var(--card-pad);
+  overflow-x: auto;
+}
+.jtable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+.jtable th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+  font-weight: 700;
+  padding: 8px 14px;
+}
+.jtable td {
+  padding: 13px 14px;
+  border-top: 1px solid var(--border-2);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.jrow {
+  transition: background 0.15s var(--ease);
+}
+.jrow:hover {
+  background: var(--surface-2);
+}
+.jpart {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.jsub {
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-top: 1px;
+}
+.jspool {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.jspool .sc {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.jspool .scn {
+  min-width: 0;
+}
+.jspool .scn .a {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jspool .scn .b {
+  font-size: 11px;
+  color: var(--faint);
+}
+.jnum {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+}
+
+/* Status badges */
+.jstatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.jstatus i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.jstatusDone {
+  background: oklch(0.6 0.13 150 / 0.14);
+  color: oklch(0.46 0.12 150);
+}
+.jstatusDone i {
+  background: oklch(0.6 0.13 150);
+}
+.jstatusFailed {
+  background: oklch(0.62 0.16 25 / 0.13);
+  color: oklch(0.52 0.15 25);
+}
+.jstatusFailed i {
+  background: oklch(0.62 0.16 25);
+}
+.jstatusPrinting {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.jstatusPrinting i {
+  background: var(--accent);
+}
+
+/* Empty state */
+.emptyNote {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--faint);
+  font-size: 14px;
+  grid-column: 1 / -1;
+}
+
+/* Loading */
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+/* Bottom spacer */
+.botspacer {
+  height: 70px;
+}
+
+/* Dark theme overrides */
+:global([data-theme="dark"]) .jstatusDone {
+  color: oklch(0.74 0.13 150);
+}
+:global([data-theme="dark"]) .jstatusFailed {
+  color: oklch(0.75 0.15 25);
+}
+:global([data-theme="dark"]) .jstatusPrinting {
+  color: var(--accent);
+}
+
+/* Console (dir=b) overrides */
+:global([data-dir="b"]) .topbar h1 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+:global([data-dir="b"]) .ph h2 {
+  font-weight: 600;
+  letter-spacing: 0;
+}
+:global([data-dir="b"]) .chip {
+  border-radius: 5px;
+  font-family: var(--font-num);
+  font-weight: 500;
+  font-size: 12px;
+}
+:global([data-dir="b"]) .jtable th {
+  font-family: var(--font-num);
+  font-weight: 500;
+}
+:global([data-dir="b"]) .jstatus {
+  border-radius: 5px;
+  font-family: var(--font-num);
+}

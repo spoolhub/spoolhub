@@ -19,6 +19,7 @@ import ActiveSpoolsPage from '@/pages/ActiveSpoolsPage'
 import ActivityPage from '@/pages/ActivityPage'
 import SelectSpoolPage from '@/pages/SelectSpoolPage'
 import LocationsPage from '@/pages/LocationsPage'
+import PrintHistoryPage from './pages/PrintHistoryPage/PrintHistoryPage'
 import ConnectionBanner from '@/components/ConnectionBanner/ConnectionBanner'
 import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
@@ -69,6 +70,7 @@ function AppShell() {
               <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
               <Route path="/spool-profiles" element={<SpoolProfilePage />} />
               <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
+              <Route path="/print-history" element={<PrintHistoryPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/locations" element={<LocationsPage />} />
             </Routes>
