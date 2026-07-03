@@ -109,7 +109,7 @@
     "addBrand": "Lägg till märke"
   },
   "printers": {
-    "title": "3D-skrivare",
+    "title": "Skrivare",
     "addPrinter": "Lägg till skrivare"
   },
   "connection": {
@@ -498,7 +498,12 @@
     "registerTitle": "Registrera LAN-skrivare",
     "registering": "Registrerar…",
     "register": "Registrera",
-    "registerError": "Det gick inte att registrera skrivaren. Kontrollera uppgifterna och försök igen."
+    "registerError": "Det gick inte att registrera skrivaren. Kontrollera uppgifterna och försök igen.",
+    "connectingLan": "Ansluter till skrivaren via LAN…",
+    "connectingCloud": "Lägger till din skrivare…",
+    "connectedTitle": "Skrivaren är ansluten",
+    "connectedDesc": "Din skrivare är nu länkad till SpoolHub.",
+    "done": "Klart"
   },
   "filamentDetail": {
     "notFound": "Filament hittades inte.",

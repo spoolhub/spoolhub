@@ -68,7 +68,7 @@ export default function BrandsPage() {
 
   if (loading) {
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} page`}>
         <div className={styles.topbar}>
           <div className={styles.h}><h1>{t('brands.title', 'Brands')}</h1></div>
         </div>
@@ -83,7 +83,7 @@ export default function BrandsPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('brands.title', 'Brands')}</h1>

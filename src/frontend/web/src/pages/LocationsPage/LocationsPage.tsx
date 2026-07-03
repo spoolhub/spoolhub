@@ -299,7 +299,7 @@ export default function LocationsPage() {
   const editingCount = editingStats?.count ?? 0
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('locations.title')}</h1>

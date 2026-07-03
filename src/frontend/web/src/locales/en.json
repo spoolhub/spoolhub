@@ -111,7 +111,7 @@
     "addBrand": "Add Brand"
   },
   "printers": {
-    "title": "3D Printers",
+    "title": "Printers",
     "addPrinter": "Add Printer"
   },
   "connection": {
@@ -508,7 +508,12 @@
     "registerTitle": "Register LAN Printer",
     "registering": "Registering…",
     "register": "Register",
-    "registerError": "Failed to register printer. Check the details and try again."
+    "registerError": "Failed to register printer. Check the details and try again.",
+    "connectingLan": "Connecting to printer over LAN…",
+    "connectingCloud": "Adding your printer…",
+    "connectedTitle": "Printer connected",
+    "connectedDesc": "Your printer is now linked to SpoolHub.",
+    "done": "Done"
   },
   "filamentDetail": {
     "notFound": "Filament not found.",

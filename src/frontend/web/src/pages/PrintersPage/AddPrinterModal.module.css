@@ -1,0 +1,265 @@
+/* ── Scrim backdrop ── */
+.scrim {
+  position: fixed; inset: 0;
+  background: oklch(0.2 0.02 60 / .5);
+  backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease); z-index: 70;
+}
+.scrimOn { opacity: 1; pointer-events: auto }
+
+/* ── Modal container ── */
+.modal {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  left: 248px; z-index: 71;
+  display: block; padding: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity .22s var(--ease);
+}
+[data-dir="b"] .modal { left: 230px }
+@media (max-width: 900px) { .modal { left: 0 } }
+.modalOn { opacity: 1; pointer-events: auto }
+
+/* ── Card ── */
+.card {
+  width: 100%; max-width: 100%;
+  height: 100vh; max-height: 100vh;
+  background: var(--bg); color: var(--text);
+  border: 0; border-radius: 0;
+  box-shadow: none;
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+  transform: none;
+}
+.card > .nav, .card > .body, .card > .foot {
+  width: 100%; max-width: 720px;
+  margin-left: auto; margin-right: auto;
+}
+.card::-webkit-scrollbar { width: 10px }
+.card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px; border: 3px solid var(--surface) }
+
+/* ── Nav bar ── */
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 0; max-width: 720px; margin: 0 auto; width: 100% }
+.close {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  border: 0; background: none; color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: .15s var(--ease); flex: none;
+}
+.close:hover { color: var(--text); background: var(--surface-alt) }
+.close svg { width: 17px; height: 17px }
+
+.back {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 34px; padding: 0 10px 0 6px; border-radius: var(--r-sm);
+  border: 0; background: none; color: var(--muted);
+  cursor: pointer; transition: .15s var(--ease);
+  flex: none; font: inherit; font-weight: 600; font-size: 13.5px;
+}
+.back:hover { color: var(--text); background: var(--surface-alt) }
+.back svg { width: 17px; height: 17px }
+
+/* ── Body ── */
+.body { flex: 1; padding: 8px 24px 24px; display: flex; flex-direction: column; gap: 16px }
+
+/* ── Heading ── */
+.heading { margin-bottom: 6px }
+.heading h1 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -.03em }
+[data-dir="b"] .heading h1 { font-weight: 600; letter-spacing: -.01em }
+.heading p { margin: 6px 0 0; font-size: 14px; color: var(--muted) }
+
+/* ── Choice grid ── */
+.choose { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
+@media (max-width: 520px) { .choose { grid-template-columns: 1fr } }
+
+.choice {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  text-align: left; padding: 20px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface-alt); color: var(--text);
+  cursor: pointer; transition: .16s var(--ease); position: relative;
+}
+.choice:hover { border-color: var(--accent); box-shadow: 0 10px 26px -16px var(--accent); transform: translateY(-2px) }
+.choiceDisabled { opacity: .55; cursor: not-allowed }
+.choiceDisabled:hover { border-color: var(--border); box-shadow: none; transform: none }
+
+.choiceIcon {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--accent-soft); color: var(--accent-ink);
+  display: grid; place-items: center;
+}
+[data-theme="dark"] .choiceIcon { color: var(--accent) }
+.choiceDisabled .choiceIcon { background: var(--surface); color: var(--faint) }
+.choiceIcon svg { width: 23px; height: 23px }
+
+.choiceTitle { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; letter-spacing: -.01em; color: var(--text) }
+[data-dir="b"] .choiceTitle { font-weight: 600 }
+.choiceDesc { font-size: 12.5px; color: var(--muted); line-height: 1.5 }
+
+.cBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--accent-ink);
+  background: var(--accent-soft); padding: 4px 9px;
+  border-radius: 20px; position: absolute; top: 14px; right: 14px;
+}
+[data-theme="dark"] .cBadge { color: var(--accent) }
+[data-dir="b"] .cBadge { border-radius: 5px; font-family: var(--font-num) }
+.cBadgeSoon { color: var(--faint); background: var(--surface) }
+
+/* ── Form section label ── */
+.fsec { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700 }
+[data-dir="b"] .fsec { font-family: var(--font-num); font-weight: 500 }
+
+/* ── Field ── */
+.field { display: flex; flex-direction: column; gap: 7px }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--muted) }
+.field input {
+  height: 44px; border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text);
+  border-radius: var(--r-sm); padding: 0 13px;
+  font: inherit; font-size: 14px; outline: 0; transition: .15s var(--ease);
+}
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr } }
+
+/* ── Success ── */
+.success { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 30px 10px }
+.success .ck {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: oklch(0.6 0.13 150 / .14);
+  color: oklch(0.5 0.12 150);
+  display: grid; place-items: center; margin-bottom: 8px;
+}
+[data-theme="dark"] .success .ck { color: oklch(0.72 0.13 150) }
+.success .ck svg { width: 32px; height: 32px }
+.success h2 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -.02em }
+.success p { margin: 0; color: var(--muted); font-size: 13.5px }
+
+/* ── Footer ── */
+.foot { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-2) }
+.foot .btn { flex: 1; justify-content: center }
+.foot .back { flex: none }
+
+/* ── Form card ── */
+.formCard { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow-card); padding: 24px }
+
+/* ── LAN scan ── */
+.lanScan { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 26px 10px }
+.lanSpin {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  animation: lanSpin .8s linear infinite;
+}
+@keyframes lanSpin { to { transform: rotate(360deg) } }
+.lanScanTxt { font-size: 13.5px; color: var(--muted) }
+
+.lanResult {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 12px; border: 0; border-radius: var(--r-sm);
+  background: none; cursor: pointer; transition: .15s var(--ease); text-align: left;
+}
+.lanResult:hover { background: var(--surface-alt) }
+.lanResult + .lanResult { margin-top: 2px }
+.lanResultCt { font-family: var(--font-display); font-weight: 700; letter-spacing: -.01em; color: var(--text) }
+[data-dir="b"] .lanResultCt { font-weight: 600 }
+.lanResultCd { color: var(--muted); line-height: 1.5 }
+
+/* ── Access code ── */
+.codeWrap { display: flex; flex-direction: column; gap: 12px }
+.codeGrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px }
+.codeDigit {
+  width: 100%; aspect-ratio: 1 / 1.05;
+  text-align: center; font-family: var(--font-num);
+  font-size: 19px; font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text);
+  border-radius: var(--r-sm); outline: 0;
+  transition: .15s var(--ease);
+}
+.codeDigit:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); background: var(--surface) }
+.codeHint { font-size: 12.5px; color: var(--muted) }
+.codeHint b { color: var(--text); font-weight: 600 }
+@media (max-width: 480px) { .codeDigit { font-size: 16px } }
+
+/* ── Error ── */
+.error {
+  font-size: 13px; color: #dc2626;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--r-sm); padding: 10px 14px;
+}
+
+/* ── Generic button ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 42px; padding: 0 17px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font: inherit; font-weight: 600;
+  font-size: 13.5px; cursor: pointer; transition: .16s var(--ease); white-space: nowrap;
+  text-decoration: none;
+}
+.btn:hover { background: var(--surface-alt) }
+.btn svg { width: 16px; height: 16px }
+.btnPrimary { background: var(--accent); border-color: transparent; color: #fff }
+.btnPrimary:hover { filter: brightness(1.06) }
+.btnWide { width: 100%; justify-content: center }
+
+/* ── OTP ── */
+.otpWrap { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 2px }
+.otp { display: flex; gap: 9px }
+.otpInput {
+  width: 46px; height: 54px; text-align: center;
+  font-family: var(--font-num); font-size: 20px; font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text);
+  border-radius: var(--r-sm); outline: 0; transition: .15s var(--ease);
+}
+.otpInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+.otpIcon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent-ink);
+  display: grid; place-items: center; margin-bottom: 4px;
+}
+[data-theme="dark"] .otpIcon { color: var(--accent) }
+.otpIcon svg { width: 26px; height: 26px }
+
+/* ── Cloud printer list ── */
+.cloudList { display: flex; flex-direction: column; gap: 8px }
+.cloudPrinter {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border: 1px solid var(--border);
+  border-radius: var(--r-sm); background: var(--surface-alt);
+  cursor: pointer; transition: .15s var(--ease); text-align: left; width: 100%;
+}
+.cloudPrinter:hover { border-color: var(--accent) }
+.cloudPrinter:disabled { opacity: .5; cursor: not-allowed; border-color: var(--border) }
+.cloudPrinterInfo { flex: 1; min-width: 0 }
+.cloudPrinterName { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.cloudPrinterModel { font-size: 12px; color: var(--muted); margin-top: 2px }
+.cloudPrinterSerial { font-size: 11.5px; color: var(--faint); font-family: var(--font-num); margin-top: 1px }
+
+.badgeOnline {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 20px; background: oklch(0.6 0.13 150 / .14);
+  color: oklch(0.48 0.12 150); margin-left: auto; flex: none;
+}
+[data-theme="dark"] .badgeOnline { color: oklch(0.74 0.13 150) }
+.badgeOffline {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 20px; background: var(--surface);
+  border: 1px solid var(--border); color: var(--faint); margin-left: auto; flex: none;
+}
+.badgeAdded {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 20px; background: var(--surface);
+  color: var(--faint); margin-left: auto; flex: none;
+}
+
+.emptyNote { padding: 40px 24px; text-align: center; color: var(--faint); font-size: 14px; grid-column: 1 / -1 }
+
+@media (max-width: 900px) {
+  .modal { left: 0 }
+}

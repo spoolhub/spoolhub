@@ -56,10 +56,11 @@ describe('AddPrinterPage', () => {
     expect(soonBadges).toHaveLength(1)
   })
 
-  it('back button on brand picker links to printers', () => {
+  it('brand picker has no back button, only a close link to printers', () => {
     renderPage()
-    const back = screen.getByText('Printers')
-    expect(back.closest('button')).toBeInTheDocument()
+    expect(screen.queryByText('Printers')).not.toBeInTheDocument()
+    const close = screen.getByLabelText('Cancel')
+    expect(close).toHaveAttribute('href', '/printers')
   })
 
   // ── Bambu Lab → connection step ───────────────────────────────
@@ -99,7 +100,7 @@ describe('AddPrinterPage', () => {
     expect(screen.getByText('Bambu Cloud')).toBeInTheDocument()
   })
 
-  it('submitting LAN form calls registerLan and navigates', async () => {
+  it('submitting LAN form calls registerLan and shows success screen', async () => {
     vi.mocked(printersApi.registerLan).mockResolvedValue({} as never)
     renderPage()
     goToConnection()
@@ -109,12 +110,14 @@ describe('AddPrinterPage', () => {
     fireEvent.change(screen.getByPlaceholderText('192.168.1.100'), { target: { value: '192.168.1.50' } })
     fireEvent.change(screen.getByPlaceholderText('01S00C123456789'), { target: { value: '01S00C000001' } })
     fireEvent.click(screen.getByRole('button', { name: /add printer/i }))
-    await waitFor(() => expect(screen.getByText('Printers list')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Printer connected')).toBeInTheDocument())
     expect(printersApi.registerLan).toHaveBeenCalledWith(expect.objectContaining({
       ipAddress:    '192.168.1.50',
       serialNumber: '01S00C000001',
       brand:        'Bambu Lab',
     }))
+    fireEvent.click(screen.getByRole('button', { name: /done/i }))
+    await waitFor(() => expect(screen.getByText('Printers list')).toBeInTheDocument())
   })
 
   // ── Bambu Cloud login step ────────────────────────────────────

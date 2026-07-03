@@ -296,7 +296,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('settings.title', 'Settings')}</h1>
