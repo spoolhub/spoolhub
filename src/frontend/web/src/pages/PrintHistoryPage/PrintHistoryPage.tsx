@@ -145,7 +145,12 @@ export default function PrintHistoryPage() {
           />
           <span className={styles.k}>⌘K</span>
         </label>
-        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => exportCsv(filtered)}>
+        <button className={`${styles.btn} ${styles.btnIcon}`} title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
+          </svg>
+        </button>
+        <button className={styles.btn} onClick={() => exportCsv(filtered)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3v12M8 11l4 4 4-4M5 21h14" />
           </svg>

@@ -860,7 +860,7 @@
     "statusCompleted": "Completed",
     "statusFailed": "Failed",
     "statusCancelled": "Cancelled",
-    "statusPrinting": "In progress",
+    "statusPrinting": "Printing",
     "statusPaused": "Paused",
     "statusUnknown": "Unknown",
     "job": "job",
