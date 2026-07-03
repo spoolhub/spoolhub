@@ -22,12 +22,12 @@
 }
 .drawerOn { transform: translateX(0) }
 
+.dwSticky { position: sticky; top: 0; background: var(--surface); z-index: 2; border-bottom: 1px solid var(--border-2); }
+
 .dwtop {
-  position: sticky; top: 0;
-  background: var(--surface);
   display: flex; align-items: center; gap: 12px;
   padding: 18px 22px;
-  border-bottom: 1px solid var(--border-2);
+  background: var(--surface);
   z-index: 2;
 }
 .dwtop h2 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; flex: 1; color: var(--text-primary) }
@@ -45,9 +45,9 @@
 
 .dwhero { display: flex; gap: 18px; align-items: center; padding: 24px 22px }
 .dwhero .dwdisc { width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center }
-.dwid .b { font-family: var(--font-display); font-size: 21px; font-weight: 700; letter-spacing: -.02em; color: var(--text-primary) }
-[data-dir="b"] .dwid .b { font-weight: 600 }
-.dwid .c { font-size: 14px; color: var(--muted); margin-top: 1px }
+.dwid .c { font-family: var(--font-display); font-size: 21px; font-weight: 700; letter-spacing: -.02em; color: var(--text-primary) }
+[data-dir="b"] .dwid .c { font-weight: 600 }
+.dwid .b { font-size: 14px; color: var(--muted); margin-top: 1px }
 .dwid .tags { margin-top: 10px }
 
 .dwbar { padding: 0 22px 22px }
@@ -188,6 +188,7 @@
 }
 .placementBtn:hover { background: var(--surface-alt) }
 .placementBtnOn { background: var(--accent); color: #fff }
+.placementBtnOn:hover { background: var(--accent); color: #fff }
 
 /* ── AMS slot layout ── */
 .amsLayout { display: grid; grid-template-columns: 80px 1fr; gap: 10px; align-items: start; margin-top: 4px; }
@@ -238,6 +239,14 @@
 .singleSlotIc { width: 28px; height: 28px; display: grid; place-items: center; flex: none; }
 .singleSlotTitle { font-size: 13px; font-weight: 600; color: var(--text); }
 .singleSlotDesc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* ── Activity timeline ── */
+.dwts .ev { display: flex; gap: 12px; padding: 10px 0; position: relative }
+.dwts .ev .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex: none }
+.dwts .ev:not(:last-child)::before { content: ""; position: absolute; left: 3.5px; top: 18px; bottom: -2px; width: 1.5px; background: var(--border) }
+.dwts .ev .et { flex: 1 }
+.dwts .ev .et .a { font-size: 13px; color: var(--text-primary) }
+.dwts .ev .et .b { font-size: 11.5px; color: var(--faint); font-family: var(--font-num); margin-top: 2px }
 
 .tags { display: flex; gap: 6px; margin-top: 8px }
 .tag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); text-transform: uppercase }
