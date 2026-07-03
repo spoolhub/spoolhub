@@ -153,7 +153,7 @@ export default function LocationsPage() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('spools')
+  const [sortBy, setSortBy] = useState('custom')
   const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
 
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -192,6 +192,8 @@ export default function LocationsPage() {
       saveOrder(next.map(l => l.id))
       return next
     })
+    // A manual drag always wins over an active sort, so the new position sticks.
+    setSortBy('custom')
   }
 
   const statsById = useMemo(() => {
@@ -214,7 +216,7 @@ export default function LocationsPage() {
     list = [...list]
     if (sortBy === 'space') list.sort((a, b) => (statsById.get(b.id)?.free ?? 0) - (statsById.get(a.id)?.free ?? 0))
     else if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name))
-    else list.sort((a, b) => (statsById.get(b.id)?.count ?? 0) - (statsById.get(a.id)?.count ?? 0))
+    else if (sortBy === 'spools') list.sort((a, b) => (statsById.get(b.id)?.count ?? 0) - (statsById.get(a.id)?.count ?? 0))
     return list
   }, [locations, query, activeFilter, sortBy, statsById])
 
@@ -323,6 +325,7 @@ export default function LocationsPage() {
         </div>
         <div className={styles.invtools}>
           <select className={styles.sortsel} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="custom">Sort: Custom order</option>
             <option value="spools">Sort: Most spools</option>
             <option value="space">Sort: Most space</option>
             <option value="name">Sort: Name A–Z</option>

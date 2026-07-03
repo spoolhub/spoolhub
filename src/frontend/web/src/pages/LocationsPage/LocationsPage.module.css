@@ -201,6 +201,7 @@
 }
 .typeseg button svg { width: 18px; height: 18px }
 .typeseg button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink) }
+:global(.dark) .typeseg button.on { color: var(--text-primary) }
 
 .dwact { display: flex; gap: 10px; padding: 16px var(--card-pad); border-top: 1px solid var(--border-2); margin-top: auto; position: sticky; bottom: 0; background: var(--surface) }
 
