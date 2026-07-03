@@ -60,30 +60,6 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('en-GB')
 }
 
-function exportCsv(jobs: PrintJobResponse[]): void {
-  const rows = [['Part', 'Printer', 'Filament', 'Used (g)', 'Duration', 'Date', 'Status']]
-  for (const j of jobs) {
-    const fil = [j.spoolColorName, j.spoolBrand, j.spoolMaterial].filter(Boolean).join(' · ')
-    rows.push([
-      j.printFileName ?? '—',
-      j.printerName ?? '—',
-      fil,
-      String(j.gramsUsed),
-      formatDuration(j.startedAt, j.finishedAt),
-      formatDate(j.finishedAt ?? j.startedAt),
-      j.status,
-    ])
-  }
-  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'print-history.csv'
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 export default function PrintHistoryPage() {
   const { t } = useTranslation()
   const [jobs, setJobs] = useState<PrintJobResponse[]>([])
@@ -149,12 +125,6 @@ export default function PrintHistoryPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
             <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
           </svg>
-        </button>
-        <button className={styles.btn} onClick={() => exportCsv(filtered)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3v12M8 11l4 4 4-4M5 21h14" />
-          </svg>
-          {t('printHistory.exportCsv')}
         </button>
       </header>
 
