@@ -134,7 +134,9 @@
     "hoursAgo_one": "{{count}} h sedan",
     "hoursAgo_other": "{{count}} h sedan",
     "close": "Stäng",
-    "back": "Tillbaka"
+    "back": "Tillbaka",
+    "select": "Select",
+    "loading": "Loading"
   },
   "spoolDetail": {
     "notFound": "Spolen hittades inte.",
@@ -282,7 +284,7 @@
     "sectionSpool": "Spole",
     "assignSpool": "Tilldela spole",
     "unassignSpool": "Ta bort",
-    "selectSpool": "Välj en spole…",
+    "selectSpool": "Välj spole",
     "noSpoolsAvailable": "Inga spolar tillgängliga",
     "assigningTray": "Tilldelar…",
     "locationPromptTitle": "Var ska den här spolen ta vägen?",

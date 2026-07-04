@@ -104,8 +104,15 @@ export default function PrintersPage() {
   }, [])
 
   const handlePrinterDisconnected = useCallback((id: string) => {
-    setPrinters(prev => prev.filter(p => p.id !== id))
-  }, [])
+      setPrinters(prev => prev.filter(p => p.id !== id))
+    }, [])
+
+    const handleTrayAssigned = useCallback(() => {
+      printersApi.getAll().then(p => {
+        printersRef.current = p
+        setPrinters(p)
+      }).catch(() => {})
+    }, [])
 
   const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
     setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
@@ -224,6 +231,7 @@ export default function PrintersPage() {
           onClose={handleDetailClose}
           onSpoolClick={handleSpoolClick}
           onDisconnected={handlePrinterDisconnected}
+          onTrayAssigned={handleTrayAssigned}
         />
       ) : null
     })()}

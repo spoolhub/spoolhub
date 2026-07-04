@@ -149,6 +149,39 @@
 .tray.single .tn { font-size: 12px }
 .tray.empty { border-style: dashed; background: transparent }
 .tray.empty .tn { color: var(--faint) }
+.trayBtn { cursor: pointer; font: inherit; width: 100%; box-sizing: border-box; color: inherit }
+.trayBtn:hover { background: var(--surface-alt); border-color: var(--accent-soft) }
+
+/* Spool picker dropdown */
+.spoolPicker {
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+.spoolPickerHead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--faint);
+  border-bottom: 1px solid var(--border);
+}
+.spoolPickerClose {
+  background: none; border: none; color: var(--faint); cursor: pointer;
+  font-size: 12px; padding: 0; line-height: 1;
+}
+.spoolPickerClose:hover { color: var(--text-primary) }
+.spoolPickerLoading { padding: 8px; text-align: center; font-size: 11px; color: var(--faint) }
+.spoolPickerEmpty { padding: 8px; text-align: center; font-size: 11px; color: var(--faint) }
+.spoolPickerList { max-height: 140px; overflow-y: auto }
+.spoolPickerItem {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 6px 8px;
+  border: none; background: none; font: inherit; font-size: 11px;
+  color: var(--text-primary); cursor: pointer;
+  text-align: left; box-sizing: border-box;
+}
+.spoolPickerItem:hover { background: var(--accent-soft) }
 
 /* Temperatures */
 .pdtemps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }

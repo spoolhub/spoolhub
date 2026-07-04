@@ -50,13 +50,17 @@ interface Props {
   onClose: () => void
   onSpoolClick?: (spool: SpoolResponse) => void
   onDisconnected?: (id: string) => void
+  onTrayAssigned?: () => void
 }
 
-export default function PrinterDrawer({ printer, spools, status, onClose, onSpoolClick, onDisconnected }: Props) {
+export default function PrinterDrawer({ printer, spools, status, onClose, onSpoolClick, onDisconnected, onTrayAssigned }: Props) {
   const { t } = useTranslation()
   const [jobs, setJobs] = useState<PrintJobResponse[]>([])
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [assigningSlot, setAssigningSlot] = useState<number | null>(null)
+  const [assigningExtra, setAssigningExtra] = useState(false)
+  const [assigningId, setAssigningId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -87,6 +91,41 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
 
   const openSpool = (s: SpoolResponse) => (e: MouseEvent) => {
     if (onSpoolClick) { e.preventDefault(); e.stopPropagation(); onSpoolClick(s) }
+  }
+
+  const traySpoolIdsSet = new Set(traySpoolIds.filter(Boolean))
+  const availableSpools = spools.filter(s => !traySpoolIdsSet.has(s.id))
+
+  const handleAssignSlot = (slot: number) => {
+    setAssigningSlot(assigningSlot === slot ? null : slot)
+    setAssigningExtra(false)
+  }
+
+  const handleAssignExtra = () => {
+    setAssigningExtra(!assigningExtra)
+    setAssigningSlot(null)
+  }
+
+  const handleSelectSpoolForSlot = async (slot: number, spoolId: string) => {
+    setAssigningId(spoolId)
+    try {
+      await printersApi.assignTraySpool(printer.id, slot, spoolId)
+      setAssigningSlot(null)
+      onTrayAssigned?.()
+    } finally {
+      setAssigningId(null)
+    }
+  }
+
+  const handleSelectSpoolForExtra = async (spoolId: string) => {
+    setAssigningId(spoolId)
+    try {
+      await printersApi.assignExtraSpool(printer.id, spoolId)
+      setAssigningExtra(false)
+      onTrayAssigned?.()
+    } finally {
+      setAssigningId(null)
+    }
   }
 
   async function handleDisconnect() {
@@ -177,11 +216,45 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
             {printer.hasAms ? (
               <div className={styles.ams}>
                 {amsSlots.map((slot, i) => (
-                  <Link key={i} to={slot ? `/spools/${slot.id}` : '#'} className={slot ? styles.tray : `${styles.tray} ${styles.empty}`} onClick={slot ? openSpool(slot) : e => e.preventDefault()}>
-                    <span className={styles.slotn}>{i + 1}</span>
-                    <div className={styles.ti}>{slot ? <SpoolIcon color={slot.colorHex} size={20} /> : PLUS}</div>
-                    <span className={styles.tn}>{slot ? slot.colorName : t('printerDetail.empty')}</span>
-                  </Link>
+                  <div key={i}>
+                    {slot ? (
+                      <Link to={`/spools/${slot.id}`} className={styles.tray} onClick={openSpool(slot)}>
+                        <span className={styles.slotn}>{i + 1}</span>
+                        <div className={styles.ti}><SpoolIcon color={slot.colorHex} size={20} /></div>
+                        <span className={styles.tn}>{slot.colorName}</span>
+                      </Link>
+                    ) : (
+                      <button className={`${styles.tray} ${styles.empty} ${styles.trayBtn}`} onClick={() => handleAssignSlot(i)}>
+                        <span className={styles.slotn}>{i + 1}</span>
+                        <div className={styles.ti}>{PLUS}</div>
+                        <span className={styles.tn}>{assigningSlot === i ? t('common.select') : t('printerDetail.empty')}</span>
+                      </button>
+                    )}
+                    {assigningSlot === i && (
+                      <div className={styles.spoolPicker}>
+                        <div className={styles.spoolPickerHead}>
+                          <span>{t('printerDetail.selectSpool')}</span>
+                          <button className={styles.spoolPickerClose} onClick={() => setAssigningSlot(null)}>✕</button>
+                        </div>
+                        {assigningId ? (
+                          <div className={styles.spoolPickerLoading}>{t('common.loading')}…</div>
+                        ) : (
+                          <div className={styles.spoolPickerList}>
+                            {availableSpools.length === 0 ? (
+                              <div className={styles.spoolPickerEmpty}>{t('printerDetail.noSpoolsAvailable')}</div>
+                            ) : (
+                              availableSpools.map(s => (
+                                <button key={s.id} className={styles.spoolPickerItem} onClick={() => handleSelectSpoolForSlot(i, s.id)}>
+                                  <SpoolIcon color={s.colorHex} size={18} />
+                                  <span>{s.colorName} · {s.material}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -192,9 +265,35 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                     <span className={styles.tn}>{singleSpool.colorName} &middot; {singleSpool.material}</span>
                   </Link>
                 ) : (
-                  <div className={`${styles.tray} ${styles.empty} ${styles.single}`}>
-                    <div className={styles.ti}>{PLUS}</div>
-                    <span className={styles.tn}>{t('printerDetail.noSpoolLoaded')}</span>
+                  <div>
+                    <button className={`${styles.tray} ${styles.empty} ${styles.single} ${styles.trayBtn}`} onClick={handleAssignExtra}>
+                      <div className={styles.ti}>{PLUS}</div>
+                      <span className={styles.tn}>{assigningExtra ? t('common.select') : t('printerDetail.noSpoolLoaded')}</span>
+                    </button>
+                    {assigningExtra && (
+                      <div className={styles.spoolPicker}>
+                        <div className={styles.spoolPickerHead}>
+                          <span>{t('printerDetail.selectSpool')}</span>
+                          <button className={styles.spoolPickerClose} onClick={() => setAssigningExtra(false)}>✕</button>
+                        </div>
+                        {assigningId ? (
+                          <div className={styles.spoolPickerLoading}>{t('common.loading')}…</div>
+                        ) : (
+                          <div className={styles.spoolPickerList}>
+                            {availableSpools.length === 0 ? (
+                              <div className={styles.spoolPickerEmpty}>{t('printerDetail.noSpoolsAvailable')}</div>
+                            ) : (
+                              availableSpools.map(s => (
+                                <button key={s.id} className={styles.spoolPickerItem} onClick={() => handleSelectSpoolForExtra(s.id)}>
+                                  <SpoolIcon color={s.colorHex} size={18} />
+                                  <span>{s.colorName} · {s.material}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
