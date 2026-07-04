@@ -29,6 +29,18 @@ export default function SettingsPage() {
   const langRef = useRef<HTMLDivElement>(null)
   const [openProviders, setOpenProviders] = useState<Set<string>>(new Set())
 
+  // ── filament settings state ──
+  const [filamentSyncUrl, setFilamentSyncUrl] = useState('https://openfilament.com/api/filaments')
+  const [autoSyncFilaments, setAutoSyncFilaments] = useState(true)
+  const [lastSynced, setLastSynced] = useState<string | null>(null)
+  const [savedFilamentUrl, setSavedFilamentUrl] = useState('https://openfilament.com/api/filaments')
+  const [savedAutoSync, setSavedAutoSync] = useState(true)
+  const [filamentSaving, setFilamentSaving] = useState(false)
+  const [syncingOfd, setSyncingOfd] = useState(false)
+  const [syncOfdDone, setSyncOfdDone] = useState(false)
+
+  const filamentDirty = filamentSyncUrl !== savedFilamentUrl || autoSyncFilaments !== savedAutoSync
+
   // ── app settings form state ──
   const [currency, setCurrency] = useState('USD')
   const [lowStockThreshold, setLowStockThreshold] = useState(120)
@@ -90,6 +102,21 @@ export default function SettingsPage() {
           }
         } catch { /* ignore */ }
       } catch { /* ignore */ }
+        try {
+          const filamentSettings = await settingsApi.getFilaments()
+          if (!cancelled && filamentSettings) {
+            setFilamentSyncUrl(filamentSettings.ofdSourceUrl)
+            setAutoSyncFilaments(filamentSettings.autoSync)
+            setLastSynced(filamentSettings.lastSynced)
+            setSavedFilamentUrl(filamentSettings.ofdSourceUrl)
+            setSavedAutoSync(filamentSettings.autoSync)
+            if (filamentSettings.autoSync) {
+              settingsApi.syncFilaments().then(r => {
+                if (!cancelled) setLastSynced(r.lastSynced)
+              }).catch(() => {})
+            }
+          }
+        } catch { /* ignore */ }
     })()
     return () => { cancelled = true }
   }, [])
@@ -255,6 +282,18 @@ export default function SettingsPage() {
     const id = setTimeout(() => setAlertFail(false), 3000)
     return () => clearTimeout(id)
   }, [alertFail])
+
+  async function handleFilamentSave() {
+    if (filamentSaving) return
+    setFilamentSaving(true)
+    try {
+      await settingsApi.updateFilaments({ autoSync: autoSyncFilaments, ofdSourceUrl: filamentSyncUrl })
+      setSavedFilamentUrl(filamentSyncUrl)
+      setSavedAutoSync(autoSyncFilaments)
+      await settingsApi.syncFilaments()
+    } catch { /* ignore */ }
+    setFilamentSaving(false)
+  }
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -541,13 +580,15 @@ export default function SettingsPage() {
           {/* FILAMENT */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'filament' ? styles.on : ''}`}>
             <div className={styles.ph}><h2>{t('settings.filament', 'Filament')}</h2></div>
+
             <div className={styles.srow}>
               <div className={styles.sl}>
                 <div className={styles.t}>{t('settings.lowStockThresholdAlt', 'Low-stock threshold')}</div>
                 <div className={styles.d}>{t('settings.lowStockThresholdAltDesc', 'Warn when a spool drops below this weight')}</div>
               </div>
               <div className={styles.srange}>
-                <input type="range" min={50} max={300} step={10} value={lowStockThreshold} onChange={e => setLowStockThreshold(Number(e.target.value))} />
+                <input type="range" min={50} max={300} step={10} value={lowStockThreshold} onChange={e => setLowStockThreshold(Number(e.target.value))}
+                  style={{ background: `linear-gradient(to right, #22c55e ${((lowStockThreshold - 50) / 250) * 100}%, var(--border) ${((lowStockThreshold - 50) / 250) * 100}%)` }} />
                 <span className={styles.sval}>{lowStockThreshold} g</span>
               </div>
             </div>
@@ -565,7 +606,66 @@ export default function SettingsPage() {
               </div>
               <button className={`${styles.tg}${emptyReminder ? ` ${styles.on}` : ''}`} onClick={() => setEmptyReminder(v => !v)} aria-label="toggle"></button>
             </div>
-          </section>
+
+            <div className={styles.srow}>
+              <div className={styles.sl}>
+                <div className={styles.t}>OFD source</div>
+                <div className={styles.urlDisplay}>{filamentSyncUrl}</div>
+              </div>
+            </div>
+            <div className={styles.srow}>
+              <div className={styles.sl}>
+                <div className={styles.t}>Auto-sync</div>
+                <div className={styles.d}>Automatically refresh filament profiles from OFD on startup</div>
+              </div>
+              <button className={`${styles.tg}${autoSyncFilaments ? ` ${styles.on}` : ''}`} onClick={() => setAutoSyncFilaments(v => !v)} aria-label="toggle"></button>
+            </div>
+            <div className={styles.srow}>
+              <div className={styles.sl}>
+                <div className={styles.t}>Last OFD sync</div>
+                <div className={styles.d}>
+                  {lastSynced
+                    ? new Date(lastSynced).toLocaleString()
+                    : 'Never synced'}
+                </div>
+              </div>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={async () => {
+                  if (syncingOfd) return
+                  setSyncingOfd(true)
+                  setSyncOfdDone(false)
+                  try {
+                    const result = await settingsApi.syncFilaments()
+                    setLastSynced(result.lastSynced)
+                    setSyncOfdDone(true)
+                    setTimeout(() => setSyncOfdDone(false), 3000)
+                  } catch { /* ignore */ }
+                  setSyncingOfd(false)
+                }}
+              >
+                {syncingOfd ? (
+                  <><span className={styles.spin}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></span> Syncing...</>
+                ) : syncOfdDone ? (
+                  <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg> Synced</>
+                ) : (
+                  <><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></span> Sync now</>
+                )}
+              </button>
+            </div>
+
+            <div className={styles.setfoot}>
+              <button
+                className={`${styles.btn} ${filamentDirty ? styles.btnPrimary : styles.btnSaved}`}
+                onClick={handleFilamentSave}
+                disabled={filamentSaving}
+              >
+                {!filamentDirty && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>}
+                {filamentSaving ? 'Saving…' : filamentDirty ? 'Save changes' : 'Saved'}
+              </button>
+            </div>
+
+            </section>
 
           {/* LOGS */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'logs' ? styles.on : ''}`}>

@@ -562,7 +562,12 @@
     "selectError": "Select a brand from the search results.",
     "addError": "Failed to add brand. Please try again.",
     "duplicateError": "This brand is already in your library.",
-    "adding": "Adding"
+    "adding": "Adding",
+    "editTitle": "Edit brand",
+    "nameLabel": "Brand name",
+    "noSpoolsNote": "No spools are logged under this brand yet.",
+    "deleteBrand": "Delete brand",
+    "deleteError": "Failed to delete brand. Please try again."
   },
   "settings": {
     "pageTitle": "Settings",

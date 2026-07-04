@@ -4,102 +4,119 @@
   position: fixed; inset: 0; z-index: 50;
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
-  background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+  background: oklch(0.2 0.02 60 / .42); backdrop-filter: blur(2px);
 }
 
 .modal {
   background: var(--surface);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--r);
   border: 1px solid var(--border);
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  width: 100%; max-width: 28rem;
+  box-shadow: 0 30px 70px -20px oklch(0 0 0 / .4);
+  width: 100%; max-width: 420px;
 }
 
 .header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 1.25rem 1.25rem 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-2);
 }
 
-.title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.title { font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; color: var(--text-primary); }
 
 .closeBtn {
-  color: var(--text-secondary); background: none; border: none; cursor: pointer;
-  transition: color var(--t-fast);
+  width: 34px; height: 34px; flex: none;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: .15s var(--ease);
 }
-.closeBtn:hover { color: var(--text-primary); }
-.closeBtn svg { width: 1rem; height: 1rem; }
+.closeBtn:hover { background: var(--surface-alt); color: var(--text-primary); }
+.closeBtn svg { width: 17px; height: 17px; }
 
-.form { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.form { padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; }
 
 .fieldWrap { position: relative; }
 
-.label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.375rem; }
+.label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
 
 .input {
-  width: 100%; padding: 0.5rem 0.75rem;
-  font-size: 0.875rem; border-radius: var(--radius-lg);
+  width: 100%; height: 40px; padding: 0 12px;
+  font: inherit; font-size: 13.5px; border-radius: var(--r-sm);
   border: 1px solid var(--border);
   background: var(--surface); color: var(--text-primary);
   outline: none;
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
-.input::placeholder { color: var(--text-secondary); }
-.input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(6,182,212,0.2); }
+.input::placeholder { color: var(--faint); }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 .spinner {
-  position: absolute; right: 0.75rem; top: 2rem;
-  width: 1rem; height: 1rem;
+  position: absolute; right: 12px; top: 34px;
+  width: 16px; height: 16px;
   border: 2px solid var(--accent); border-top-color: transparent;
-  border-radius: var(--radius-full);
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .dropdown {
-  position: absolute; z-index: 10; margin-top: 0.25rem;
+  position: absolute; z-index: 10; margin-top: 4px;
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
   overflow: hidden; max-height: 13rem; overflow-y: auto;
 }
 
 .option {
   width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 0.625rem 0.75rem; text-align: left;
+  padding: 10px 12px; text-align: left;
   background: none; border: none; cursor: pointer;
   transition: background var(--t-fast);
 }
-.option:hover { background: var(--surface-hover); }
+.option:hover { background: var(--surface-alt); }
 
 .optionDisabled { cursor: default; opacity: 0.5; }
 .optionDisabled:hover { background: none; }
 
-.optionName { font-size: 0.875rem; color: var(--text-primary); }
-.optionMeta { font-size: 0.75rem; color: var(--text-secondary); }
+.optionName { font-size: 13.5px; color: var(--text-primary); }
+.optionMeta { font-size: 12px; color: var(--muted); }
 
-.warning { font-size: 0.75rem; color: var(--color-warning); }
+.warning { font-size: 12px; color: var(--color-warning); }
 :global(.dark) .warning { color: #fbbf24; }
 
-.error { font-size: 0.75rem; color: var(--color-error); }
+.note { font-size: 12.5px; color: var(--faint); }
 
-.footer { display: flex; gap: 0.5rem; padding-top: 0.25rem; }
+.error { font-size: 12px; color: var(--color-error); }
+
+.footer { display: flex; gap: 10px; padding: 18px 22px; border-top: 1px solid var(--border-2); }
 
 .btnCancel {
-  flex: 1; padding: 0.5rem; font-size: 0.75rem; font-weight: 600;
-  border-radius: var(--radius-xl);
-  background: var(--bg-secondary); color: var(--text-secondary);
-  border: none; cursor: pointer; transition: background var(--t-fast);
+  flex: 1; height: 42px; font: inherit; font-size: 13.5px; font-weight: 600;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  cursor: pointer; transition: background var(--t-fast);
 }
-.btnCancel:hover { background: var(--bg-tertiary); }
+.btnCancel:hover { background: var(--surface-alt); }
 
 .btnSubmit {
-  flex: 1; padding: 0.5rem; font-size: 0.75rem; font-weight: 600;
-  border-radius: var(--radius-xl);
+  flex: 1; height: 42px; font: inherit; font-size: 13.5px; font-weight: 600;
+  border-radius: var(--r-sm);
   background: var(--accent); color: #fff;
   border: none; cursor: pointer;
-  transition: background var(--t-fast), opacity var(--t-fast);
+  transition: filter var(--t-fast), opacity var(--t-fast);
 }
-.btnSubmit:hover:not(:disabled) { background: var(--accent-hover); }
+.btnSubmit:hover:not(:disabled) { filter: brightness(1.06); }
 .btnSubmit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnDelete {
+  flex: 1; height: 42px; font: inherit; font-size: 13.5px; font-weight: 600;
+  border-radius: var(--r-sm);
+  background: oklch(0.55 0.18 25); color: #fff;
+  border: none; cursor: pointer;
+  transition: filter var(--t-fast), opacity var(--t-fast);
+}
+.btnDelete:hover:not(:disabled) { filter: brightness(1.1); }
+.btnDelete:disabled { opacity: 0.5; cursor: not-allowed; }

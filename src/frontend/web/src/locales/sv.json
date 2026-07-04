@@ -552,7 +552,12 @@
     "selectError": "Välj ett märke från sökresultaten.",
     "addError": "Det gick inte att lägga till märket. Försök igen.",
     "duplicateError": "Det här märket finns redan i ditt bibliotek.",
-    "adding": "Lägger till"
+    "adding": "Lägger till",
+    "editTitle": "Redigera märke",
+    "nameLabel": "Märkesnamn",
+    "noSpoolsNote": "Inga spolar är registrerade under det här märket än.",
+    "deleteBrand": "Ta bort märke",
+    "deleteError": "Det gick inte att ta bort märket. Försök igen."
   },
   "settings": {
     "pageTitle": "Inställningar",
