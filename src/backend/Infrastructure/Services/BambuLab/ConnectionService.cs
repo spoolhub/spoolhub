@@ -174,6 +174,24 @@ public class ConnectionService : IHostedService
                 using var msgScope = _scopeFactory.CreateScope();
                 var processor = msgScope.ServiceProvider.GetRequiredService<IMqttMessageProcessor>();
                 await processor.ProcessAsync(payload, printer.Id);
+
+                // After processing, send pushall to any printer that requested it
+                var pushAllIds = _statusService.DrainPushAllRequests();
+                foreach (var pid in pushAllIds)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(serialNumber))
+                        {
+                            await PublishToDeviceAsync(client, serialNumber, PushAllPayload, ct);
+                            _logger.LogInformation("MQTT [{Name}] sent pushall (requested by processor)", printer.Name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("MQTT [{Name}] pushall failed: {Message}", printer.Name, ex.Message);
+                    }
+                }
             }
             catch (Exception ex)
             {

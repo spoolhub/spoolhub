@@ -10,4 +10,10 @@ public interface IPrinterStatusService
     void SaveAmsSnapshot(Guid printerId, AmsSnapshot snapshot);
     AmsSnapshot? GetAmsSnapshot(Guid printerId);
     void ClearAmsSnapshot(Guid printerId);
+    
+    /// <summary>
+    /// Signal that a pushall should be sent to this printer on the next opportunity.
+    /// </summary>
+    void RequestPushAll(Guid printerId);
+    HashSet<Guid> DrainPushAllRequests();
 }

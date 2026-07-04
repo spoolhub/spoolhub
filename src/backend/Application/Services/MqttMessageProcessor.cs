@@ -93,6 +93,13 @@ public class MqttMessageProcessor(
             {
                 logger.LogDebug("MQTT: cloud API filename lookup failed for {Id}: {Message}", printerId, ex.Message);
             }
+
+            // Still missing — ask the printer for a full status update via pushall
+            if (fileName == null)
+            {
+                logger.LogInformation("MQTT: filename missing for printer {Id} — requesting pushall", printerId);
+                statusService.RequestPushAll(printerId);
+            }
         }
 
         var rawTaskId   = print.TryGetProperty("task_id",      out var tidEl)   ? tidEl.GetString()   : null;
