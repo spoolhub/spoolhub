@@ -188,14 +188,11 @@
   align-items: start;
 }
 .botrow > .panel {
-  height: 376px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 @media (max-width: 820px) {
   .botrow { grid-template-columns: 1fr; }
-  .botrow > .panel { height: auto; overflow: visible; }
 }
 
 /* Skeleton */

@@ -105,42 +105,6 @@ html:not(.dark) .main::-webkit-scrollbar-corner {
   background: transparent !important;
 }
 
-/* Botrow panel scrollbar styles (Dashboard panels) */
-html[data-theme] .botrow > .panel,
-html.dark .botrow > .panel,
-html:not(.dark) .botrow > .panel {
-  scrollbar-width: thin !important;
-  scrollbar-color: var(--border) transparent !important;
-}
-html[data-theme] .botrow > .panel::-webkit-scrollbar,
-html.dark .botrow > .panel::-webkit-scrollbar,
-html:not(.dark) .botrow > .panel::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-html[data-theme] .botrow > .panel::-webkit-scrollbar-thumb,
-html.dark .botrow > .panel::-webkit-scrollbar-thumb,
-html:not(.dark) .botrow > .panel::-webkit-scrollbar-thumb {
-  background: var(--border) !important;
-  border-radius: 20px !important;
-  border: 3px solid var(--bg) !important;
-}
-html[data-theme] .botrow > .panel::-webkit-scrollbar-track,
-html.dark .botrow > .panel::-webkit-scrollbar-track,
-html:not(.dark) .botrow > .panel::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-html[data-theme] .botrow > .panel::-webkit-scrollbar-thumb:hover,
-html.dark .botrow > .panel::-webkit-scrollbar-thumb:hover,
-html:not(.dark) .botrow > .panel::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong) !important;
-}
-html[data-theme] .botrow > .panel::-webkit-scrollbar-corner,
-html.dark .botrow > .panel::-webkit-scrollbar-corner,
-html:not(.dark) .botrow > .panel::-webkit-scrollbar-corner {
-  background: transparent !important;
-}
-
 /* Legacy cyan scrollbar class (kept for backward compat) */
 .scrollbar-pretty {
   scrollbar-width: thin;
