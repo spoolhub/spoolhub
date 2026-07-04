@@ -1,6 +1,7 @@
 using API.Controllers;
 using Application.DTOs;
 using Application.Interfaces;
+using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 
@@ -96,26 +97,69 @@ public class PrinterControllerTests
     }
 
     [Fact]
-    public void GetStatus_WhenNoStatus_ReturnsNoContent()
+    public async Task GetStatus_WhenNoStatusAndNoActiveJob_ReturnsNoContent()
     {
         var id = Guid.NewGuid();
         _statusService.GetStatus(id).Returns((PrinterStatus?)null);
+        _printJobRepo.GetActiveByPrinterIdAsync(id).Returns((PrintJob?)null);
 
-        var result = _sut.GetStatus(id);
+        var result = await _sut.GetStatus(id);
 
         Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
-    public void GetStatus_WhenStatusExists_ReturnsOk()
+    public async Task GetStatus_WhenNoMqttStatusButActiveJobInDb_ReturnsRunningFromDb()
+    {
+        var id = Guid.NewGuid();
+        _statusService.GetStatus(id).Returns((PrinterStatus?)null);
+        _printJobRepo.GetActiveByPrinterIdAsync(id).Returns(new PrintJob
+        {
+            Status = PrintJobStatus.Running,
+            PrintFileName = "benchy.gcode",
+            EstimatedFinishTime = 42,
+            LastUpdatedAt = DateTime.UtcNow,
+        });
+
+        var result = await _sut.GetStatus(id);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var status = Assert.IsType<PrinterStatus>(ok.Value);
+        Assert.Equal("RUNNING", status.GcodeState);
+        Assert.Equal("benchy.gcode", status.SubtaskName);
+        Assert.Equal(42, status.RemainingMinutes);
+    }
+
+    [Fact]
+    public async Task GetStatus_WhenNoActiveJob_ReturnsIdleRegardlessOfMqttState()
     {
         var id = Guid.NewGuid();
         _statusService.GetStatus(id).Returns(new PrinterStatus(
             "RUNNING", 50, 10, "test.gcode", 100, 200, 220, 65, DateTime.UtcNow));
+        _printJobRepo.GetActiveByPrinterIdAsync(id).Returns((PrintJob?)null);
 
-        var result = _sut.GetStatus(id);
+        var result = await _sut.GetStatus(id);
 
-        Assert.IsType<OkObjectResult>(result);
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var status = Assert.IsType<PrinterStatus>(ok.Value);
+        Assert.Equal("IDLE", status.GcodeState);
+    }
+
+    [Theory]
+    [InlineData(PrintJobStatus.Running, "RUNNING")]
+    [InlineData(PrintJobStatus.Paused, "PAUSE")]
+    public async Task GetStatus_WhenActiveJobExists_UsesDbJobStatus(PrintJobStatus jobStatus, string expectedGcodeState)
+    {
+        var id = Guid.NewGuid();
+        _statusService.GetStatus(id).Returns(new PrinterStatus(
+            "IDLE", 50, 10, "test.gcode", 100, 200, 220, 65, DateTime.UtcNow));
+        _printJobRepo.GetActiveByPrinterIdAsync(id).Returns(new PrintJob { Status = jobStatus });
+
+        var result = await _sut.GetStatus(id);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var status = Assert.IsType<PrinterStatus>(ok.Value);
+        Assert.Equal(expectedGcodeState, status.GcodeState);
     }
 
     private static PrinterResponse BuildResponse() => new(

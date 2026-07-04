@@ -1,5 +1,6 @@
 using Application.DTOs;
 using Application.Interfaces;
+using Domain.Models;
 using Infrastructure.Services.BambuLab;
 using Microsoft.AspNetCore.Mvc;
 
@@ -157,10 +158,38 @@ public class PrinterController(
     }
 
     [HttpGet("{id:guid}/status")]
-    public IActionResult GetStatus(Guid id)
+    public async Task<IActionResult> GetStatus(Guid id)
     {
         var status = printerStatusService.GetStatus(id);
-        return status is null ? NoContent() : Ok(status);
+
+        // The card's printing/paused/idle state must reflect the persisted PrintJob.Status,
+        // not the raw MQTT gcode_state — MQTT only supplies live telemetry (progress, temps).
+        var activeJob = await printJobRepository.GetActiveByPrinterIdAsync(id);
+        var gcodeState = activeJob?.Status switch
+        {
+            PrintJobStatus.Running => "RUNNING",
+            PrintJobStatus.Paused  => "PAUSE",
+            _                      => status?.ConnectionError != null ? status.GcodeState : "IDLE"
+        };
+
+        if (status is null)
+        {
+            // No live MQTT telemetry cached (e.g. server just restarted, or a seeded/offline
+            // printer) — still surface the DB-backed job status rather than reporting nothing.
+            if (activeJob is null) return NoContent();
+            return Ok(new PrinterStatus(
+                GcodeState:       gcodeState,
+                ProgressPercent:  0,
+                RemainingMinutes: activeJob.EstimatedFinishTime ?? 0,
+                SubtaskName:      activeJob.PrintFileName,
+                LayerNum:         0,
+                TotalLayerNum:    0,
+                NozzleTempC:      0,
+                BedTempC:         0,
+                UpdatedAt:        activeJob.LastUpdatedAt));
+        }
+
+        return Ok(status with { GcodeState = gcodeState });
     }
 
     [HttpPost("{id:guid}/status/mock")]
