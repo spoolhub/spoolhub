@@ -185,7 +185,7 @@
 .srange { display: flex; align-items: center; gap: 10px; }
 .srange input[type="range"] {
   width: 120px; height: 4px; border-radius: 2px;
-  background: var(--border); appearance: none; cursor: pointer;
+  background: transparent; appearance: none; cursor: pointer;
 }
 .srange input[type="range"]::-webkit-slider-thumb {
   appearance: none; width: 16px; height: 16px;
@@ -298,3 +298,18 @@
 .upok { font-size: 12px; font-weight: 600; color: oklch(0.55 0.13 150); margin-left: 10px; }
 .upnew { font-size: 12px; font-weight: 600; color: var(--accent-ink); margin-left: 10px; text-decoration: underline; }
 .uperr { font-size: 12px; font-weight: 600; color: oklch(0.64 0.16 25); margin-left: 10px; }
+
+/* URL input for OFD source */
+.urlInput {
+  width: 200px; height: 34px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: var(--surface); color: var(--text-primary);
+  font: inherit; font-size: 13px;
+}
+.urlInput:focus { outline: none; border-color: var(--accent); }
+
+/* Sync row buttons side by side */
+.syncRow { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Outline button variant */
+.btnOutline { background: var(--surface); border-color: var(--border); color: var(--text-primary); }

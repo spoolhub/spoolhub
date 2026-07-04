@@ -9,13 +9,21 @@ function guessDomain(name: string): string {
   return BRAND_DOMAINS[name] ?? ''
 }
 
+interface EditableBrand {
+  id: string
+  name: string
+  domain: string
+}
+
 interface AddBrandModalProps {
   existingSlugs: Set<string>
   onClose: () => void
   onAdded: (brandName: string) => void
+  brand?: EditableBrand
+  onDeleted?: (id: string) => void
 }
 
-export default function AddBrandModal({ existingSlugs, onClose, onAdded }: AddBrandModalProps) {
+export default function AddBrandModal({ existingSlugs, onClose, onAdded, brand, onDeleted }: AddBrandModalProps) {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<OfdBrandResult[]>([])
@@ -23,6 +31,7 @@ export default function AddBrandModal({ existingSlugs, onClose, onAdded }: AddBr
   const [domain, setDomain] = useState('')
   const [searching, setSearching] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const suppressSearchRef = useRef(false)
@@ -84,6 +93,54 @@ export default function AddBrandModal({ existingSlugs, onClose, onAdded }: AddBr
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleDelete() {
+    if (!brand) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await brandsApi.delete(brand.id)
+      onDeleted?.(brand.id)
+      onClose()
+    } catch {
+      setError(t('addBrand.deleteError'))
+      setDeleting(false)
+    }
+  }
+
+  if (brand) {
+    return (
+      <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+        <div className={styles.modal}>
+          <div className={styles.header}>
+            <h2 className={styles.title}>{t('addBrand.editTitle')}</h2>
+            <button onClick={onClose} className={styles.closeBtn}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          <div className={styles.form}>
+            <div className={styles.fieldWrap}>
+              <label className={styles.label}>{t('addBrand.nameLabel')}</label>
+              <input type="text" value={brand.name} readOnly className={styles.input} />
+            </div>
+            <p className={styles.note}>{t('addBrand.noSpoolsNote')}</p>
+            {error && <p className={styles.error} role="alert">{error}</p>}
+            <div className={styles.footer}>
+              <button type="button" onClick={handleDelete} disabled={deleting} className={styles.btnDelete}>
+                {deleting ? t('common.deleting') : t('addBrand.deleteBrand')}
+              </button>
+              <button type="button" onClick={onClose} className={styles.btnCancel}>
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

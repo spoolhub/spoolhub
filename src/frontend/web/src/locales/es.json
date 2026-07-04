@@ -552,7 +552,12 @@
     "selectError": "Selecciona una marca de los resultados de búsqueda.",
     "addError": "Error al añadir la marca. Por favor, inténtalo de nuevo.",
     "duplicateError": "Esta marca ya está en tu biblioteca.",
-    "adding": "Añadiendo"
+    "adding": "Añadiendo",
+    "editTitle": "Editar marca",
+    "nameLabel": "Nombre de la marca",
+    "noSpoolsNote": "Todavía no hay bobinas registradas bajo esta marca.",
+    "deleteBrand": "Eliminar marca",
+    "deleteError": "Error al eliminar la marca. Por favor, inténtalo de nuevo."
   },
   "settings": {
     "pageTitle": "Configuración",
