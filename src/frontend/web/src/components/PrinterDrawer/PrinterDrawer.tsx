@@ -326,15 +326,14 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
           {confirmDisconnect ? (
             <>
               <button className={styles.btn} onClick={() => setConfirmDisconnect(false)} disabled={disconnecting}>{t('common.cancel')}</button>
-              <button className={`${styles.btn} ${styles.primary}`} onClick={handleDisconnect} disabled={disconnecting}>
+              <button className={`${styles.btn} ${styles.danger}`} onClick={handleDisconnect} disabled={disconnecting}>
                 {disconnecting ? t('common.deleting') : t('printerDetail.disconnectConfirmBtn')}
               </button>
             </>
           ) : (
-            <>
-              <button className={styles.btn} onClick={onClose}>{t('printerDetail.editPrinter')}</button>
-              <button className={`${styles.btn} ${styles.primary}`} onClick={() => setConfirmDisconnect(true)}>{t('printerDetail.disconnectPrinter')}</button>
-            </>
+            <button className={`${styles.btn} ${styles.danger}`} onClick={() => setConfirmDisconnect(true)}>
+              {t('printerDetail.disconnectPrinter')}
+            </button>
           )}
         </div>
       </aside>

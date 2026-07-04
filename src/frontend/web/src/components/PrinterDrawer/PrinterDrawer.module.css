@@ -119,6 +119,8 @@
 .btn:disabled { opacity: .6; cursor: default }
 .primary { background: var(--accent); border-color: transparent; color: #fff }
 .primary:hover { filter: brightness(1.06) }
+.danger { background: oklch(0.55 0.18 25); border-color: transparent; color: #fff }
+.danger:hover { filter: brightness(1.1) }
 
 /* Current job card */
 .pdjob { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px; background: var(--surface-alt) }
@@ -188,7 +190,7 @@
 /* Recent jobs list */
 .pdjoblist {
   display: flex; flex-direction: column; gap: 8px;
-  max-height: 260px; overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto;
   padding-right: 4px; margin-right: -4px;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
