@@ -97,12 +97,12 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
   const availableSpools = spools.filter(s => !traySpoolIdsSet.has(s.id))
 
   const handleAssignSlot = (slot: number) => {
-    setAssigningSlot(assigningSlot === slot ? null : slot)
+    setAssigningSlot(slot)
     setAssigningExtra(false)
   }
 
   const handleAssignExtra = () => {
-    setAssigningExtra(!assigningExtra)
+    setAssigningExtra(true)
     setAssigningSlot(null)
   }
 
@@ -128,6 +128,8 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
     }
   }
 
+  const showPicker = assigningSlot !== null || assigningExtra
+
   async function handleDisconnect() {
     setDisconnecting(true)
     try {
@@ -146,182 +148,168 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
       <aside className={`${styles.drawer} ${styles.drawerOn}`}>
         <div className={styles.pdfixed}>
           <div className={styles.pdtop}>
-            <h2>{t('printerDetail.title')}</h2>
-            <button className={styles.pdclose} onClick={onClose} aria-label="Close">
+            <h2>{showPicker ? t('printerDetail.selectSpool') : t('printerDetail.title')}</h2>
+            <button className={styles.pdclose} onClick={() => {
+              if (showPicker) { setAssigningSlot(null); setAssigningExtra(false) }
+              else onClose()
+            }} aria-label="Close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
           </div>
 
-          <div className={styles.pdheroband}>
-            <div className={styles.pdhero}>
-              {imgSrc && <img className={styles.pimg} src={imgSrc} alt={printer.model} onError={e => { e.currentTarget.remove() }} />}
-            </div>
-            <div className={styles.pdherotext}>
-              <div className={styles.pdbrandrow}><BrandLogo brand={printer.brand} size={14} />{printer.brand}</div>
-              <div className={styles.pdname}>{printer.name}</div>
-              <div className={styles.pdmodel}>{printer.model}</div>
-              <div className={styles.pdstatusrow}>
-                <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}</span>
+          {!showPicker && (
+            <>
+              <div className={styles.pdheroband}>
+                <div className={styles.pdhero}>
+                  {imgSrc && <img className={styles.pimg} src={imgSrc} alt={printer.model} onError={e => { e.currentTarget.remove() }} />}
+                </div>
+                <div className={styles.pdherotext}>
+                  <div className={styles.pdbrandrow}><BrandLogo brand={printer.brand} size={14} />{printer.brand}</div>
+                  <div className={styles.pdname}>{printer.name}</div>
+                  <div className={styles.pdmodel}>{printer.model}</div>
+                  <div className={styles.pdstatusrow}>
+                    <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         <div className={styles.pdbody}>
-          <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionCurrentJob')}</div>
-            {isActive ? (
-              <div className={styles.pdjob}>
-                <div className={styles.jname}>{status?.subtaskName ?? t('printerDetail.unnamed')}</div>
-                <div className={styles.pprogtrack}><div className={`${styles.pprogfill}${isPaused ? ` ${styles.pprogfillPaused}` : ''}`} style={{ width: `${progressPct}%` }} /></div>
-                <div className={styles.jmeta}>
-                  {status && status.totalLayerNum > 0 && <span>{t('printerDetail.labelLayer')} <b>{status.layerNum}/{status.totalLayerNum}</b></span>}
-                  {eta && <span>ETA <b>{eta}</b></span>}
-                  <span><b>{progressPct}%</b></span>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.pdnone}>{t('printerDetail.noActiveJob')}</div>
-            )}
-          </div>
-
-          <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
-            <div className={styles.pdgrid}>
-              <div className={styles.pdtemp}>
-                <span className={styles.ic}>{NOZZLE_ICON}</span>
-                <div><div className={styles.v}>{status && status.nozzleTempC > 0 ? `${status.nozzleTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelNozzle')}</div></div>
-              </div>
-              <div className={styles.pdtemp}>
-                <span className={styles.ic}>{BED_ICON}</span>
-                <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
-              </div>
-              {printer.serialNumber && (
-                <div className={styles.pdinfo}>
-                  <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
-                  <span className={styles.pdinfoValue}>{printer.serialNumber}</span>
+          {showPicker ? (
+            <div className={styles.pickerDrawer}>
+              {assigningId ? (
+                <div className={styles.pickerLoading}>{t('common.loading')}…</div>
+              ) : availableSpools.length === 0 ? (
+                <div className={styles.pickerEmpty}>{t('printerDetail.noSpoolsAvailable')}</div>
+              ) : (
+                <div className={styles.pickerList}>
+                  {availableSpools.map(s => {
+                    const handlePick = assigningSlot !== null
+                      ? () => handleSelectSpoolForSlot(assigningSlot, s.id)
+                      : () => handleSelectSpoolForExtra(s.id)
+                    return (
+                      <button key={s.id} className={styles.pickerItem} onClick={handlePick}>
+                        <SpoolIcon color={s.colorHex} size={22} />
+                        <div className={styles.pickerItemInfo}>
+                          <div className={styles.pickerItemName}>{s.colorName}</div>
+                          <div className={styles.pickerItemMeta}>{s.brand} · {s.material} · {s.currentWeightG}g</div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
-              <div className={styles.pdinfo}>
-                <span className={styles.pdinfoLabel}>{t('printerDetail.labelIpAddress')}</span>
-                <span className={styles.pdinfoValue}>{printer.ipAddress}{printer.port ? `:${printer.port}` : ''}</span>
+            </div>
+          ) : (
+            <>
+              <div>
+                <div className={styles.pdsec}>{t('printerDetail.sectionCurrentJob')}</div>
+                {isActive ? (
+                  <div className={styles.pdjob}>
+                    <div className={styles.jname}>{status?.subtaskName ?? t('printerDetail.unnamed')}</div>
+                    <div className={styles.pprogtrack}><div className={`${styles.pprogfill}${isPaused ? ` ${styles.pprogfillPaused}` : ''}`} style={{ width: `${progressPct}%` }} /></div>
+                    <div className={styles.jmeta}>
+                      {status && status.totalLayerNum > 0 && <span>{t('printerDetail.labelLayer')} <b>{status.layerNum}/{status.totalLayerNum}</b></span>}
+                      {eta && <span>ETA <b>{eta}</b></span>}
+                      <span><b>{progressPct}%</b></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.pdnone}>{t('printerDetail.noActiveJob')}</div>
+                )}
               </div>
-            </div>
-          </div>
 
-          <div>
-            <div className={styles.pdsec}>
-              {printer.hasAms ? `AMS · ${t('printerCard.amsLoaded', { count: loadedCount })}` : t('printerDetail.sectionSpool')}
-            </div>
-            {printer.hasAms ? (
-              <div className={styles.ams}>
-                {amsSlots.map((slot, i) => (
-                  <div key={i}>
-                    {slot ? (
-                      <Link to={`/spools/${slot.id}`} className={styles.tray} onClick={openSpool(slot)}>
-                        <span className={styles.slotn}>{i + 1}</span>
-                        <div className={styles.ti}><SpoolIcon color={slot.colorHex} size={20} /></div>
-                        <span className={styles.tn}>{slot.colorName}</span>
-                      </Link>
-                    ) : (
-                      <button className={`${styles.tray} ${styles.empty} ${styles.trayBtn}`} onClick={() => handleAssignSlot(i)}>
-                        <span className={styles.slotn}>{i + 1}</span>
-                        <div className={styles.ti}>{PLUS}</div>
-                        <span className={styles.tn}>{assigningSlot === i ? t('common.select') : t('printerDetail.empty')}</span>
-                      </button>
-                    )}
-                    {assigningSlot === i && (
-                      <div className={styles.spoolPicker}>
-                        <div className={styles.spoolPickerHead}>
-                          <span>{t('printerDetail.selectSpool')}</span>
-                          <button className={styles.spoolPickerClose} onClick={() => setAssigningSlot(null)}>✕</button>
-                        </div>
-                        {assigningId ? (
-                          <div className={styles.spoolPickerLoading}>{t('common.loading')}…</div>
+              <div>
+                <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
+                <div className={styles.pdgrid}>
+                  <div className={styles.pdtemp}>
+                    <span className={styles.ic}>{NOZZLE_ICON}</span>
+                    <div><div className={styles.v}>{status && status.nozzleTempC > 0 ? `${status.nozzleTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelNozzle')}</div></div>
+                  </div>
+                  <div className={styles.pdtemp}>
+                    <span className={styles.ic}>{BED_ICON}</span>
+                    <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
+                  </div>
+                  {printer.serialNumber && (
+                    <div className={styles.pdinfo}>
+                      <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
+                      <span className={styles.pdinfoValue}>{printer.serialNumber}</span>
+                    </div>
+                  )}
+                  <div className={styles.pdinfo}>
+                    <span className={styles.pdinfoLabel}>{t('printerDetail.labelIpAddress')}</span>
+                    <span className={styles.pdinfoValue}>{printer.ipAddress}{printer.port ? `:${printer.port}` : ''}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className={styles.pdsec}>
+                  {printer.hasAms ? `AMS · ${t('printerCard.amsLoaded', { count: loadedCount })}` : t('printerDetail.sectionSpool')}
+                </div>
+                {printer.hasAms ? (
+                  <div className={styles.ams}>
+                    {amsSlots.map((slot, i) => (
+                      <div key={i}>
+                        {slot ? (
+                          <Link to={`/spools/${slot.id}`} className={styles.tray} onClick={openSpool(slot)}>
+                            <span className={styles.slotn}>{i + 1}</span>
+                            <div className={styles.ti}><SpoolIcon color={slot.colorHex} size={20} /></div>
+                            <span className={styles.tn}>{slot.colorName}</span>
+                          </Link>
                         ) : (
-                          <div className={styles.spoolPickerList}>
-                            {availableSpools.length === 0 ? (
-                              <div className={styles.spoolPickerEmpty}>{t('printerDetail.noSpoolsAvailable')}</div>
-                            ) : (
-                              availableSpools.map(s => (
-                                <button key={s.id} className={styles.spoolPickerItem} onClick={() => handleSelectSpoolForSlot(i, s.id)}>
-                                  <SpoolIcon color={s.colorHex} size={18} />
-                                  <span>{s.colorName} · {s.material}</span>
-                                </button>
-                              ))
-                            )}
-                          </div>
+                          <button className={`${styles.tray} ${styles.empty} ${styles.trayBtn}`} onClick={() => handleAssignSlot(i)}>
+                            <span className={styles.slotn}>{i + 1}</span>
+                            <div className={styles.ti}>{PLUS}</div>
+                            <span className={styles.tn}>{t('printerDetail.empty')}</span>
+                          </button>
                         )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className={`${styles.ams} ${styles.single}`}>
-                {singleSpool ? (
-                  <Link to={`/spools/${singleSpool.id}`} className={`${styles.tray} ${styles.single}`} onClick={openSpool(singleSpool)}>
-                    <div className={styles.ti}><SpoolIcon color={singleSpool.colorHex} size={24} /></div>
-                    <span className={styles.tn}>{singleSpool.colorName} &middot; {singleSpool.material}</span>
-                  </Link>
                 ) : (
                   <div>
-                    <button className={`${styles.tray} ${styles.empty} ${styles.single} ${styles.trayBtn}`} onClick={handleAssignExtra}>
-                      <div className={styles.ti}>{PLUS}</div>
-                      <span className={styles.tn}>{assigningExtra ? t('common.select') : t('printerDetail.noSpoolLoaded')}</span>
-                    </button>
-                    {assigningExtra && (
-                      <div className={styles.spoolPicker}>
-                        <div className={styles.spoolPickerHead}>
-                          <span>{t('printerDetail.selectSpool')}</span>
-                          <button className={styles.spoolPickerClose} onClick={() => setAssigningExtra(false)}>✕</button>
-                        </div>
-                        {assigningId ? (
-                          <div className={styles.spoolPickerLoading}>{t('common.loading')}…</div>
-                        ) : (
-                          <div className={styles.spoolPickerList}>
-                            {availableSpools.length === 0 ? (
-                              <div className={styles.spoolPickerEmpty}>{t('printerDetail.noSpoolsAvailable')}</div>
-                            ) : (
-                              availableSpools.map(s => (
-                                <button key={s.id} className={styles.spoolPickerItem} onClick={() => handleSelectSpoolForExtra(s.id)}>
-                                  <SpoolIcon color={s.colorHex} size={18} />
-                                  <span>{s.colorName} · {s.material}</span>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
-                      </div>
+                    {singleSpool ? (
+                      <Link to={`/spools/${singleSpool.id}`} className={`${styles.tray} ${styles.single}`} onClick={openSpool(singleSpool)}>
+                        <div className={styles.ti}><SpoolIcon color={singleSpool.colorHex} size={24} /></div>
+                        <span className={styles.tn}>{singleSpool.colorName} &middot; {singleSpool.material}</span>
+                      </Link>
+                    ) : (
+                      <button className={`${styles.tray} ${styles.empty} ${styles.single} ${styles.trayBtn}`} onClick={handleAssignExtra}>
+                        <div className={styles.ti}>{PLUS}</div>
+                        <span className={styles.tn}>{t('printerDetail.noSpoolLoaded')}</span>
+                      </button>
                     )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionRecentJobs')}</div>
-            {jobs.length === 0 ? (
-              <div className={styles.pdnone}>{t('printerDetail.noJobs')}</div>
-            ) : (
-              <>
-                <div className={styles.pdjoblist}>
-                  {jobs.slice(0, 10).map(job => (
-                    <div key={job.id} className={`${styles.pdjobrow} ${jobRowClass(job)}`}>
-                      <i></i>
-                      <div className={styles.jrMain}>
-                        <div className={styles.jrName}>{job.printFileName ?? t('printerDetail.unnamed')}</div>
-                        <div className={styles.jrSub}><span>{jobDate(job.finishedAt ?? job.startedAt)}</span><span>{jobDuration(job)}</span></div>
-                      </div>
-                      <span className={styles.jrUsed}>{job.gramsUsed.toFixed(1)} g</span>
+              <div>
+                <div className={styles.pdsec}>{t('printerDetail.sectionRecentJobs')}</div>
+                {jobs.length === 0 ? (
+                  <div className={styles.pdnone}>{t('printerDetail.noJobs')}</div>
+                ) : (
+                  <>
+                    <div className={styles.pdjoblist}>
+                      {jobs.slice(0, 10).map(job => (
+                        <div key={job.id} className={`${styles.pdjobrow} ${jobRowClass(job)}`}>
+                          <i></i>
+                          <div className={styles.jrMain}>
+                            <div className={styles.jrName}>{job.printFileName ?? t('printerDetail.unnamed')}</div>
+                            <div className={styles.jrSub}><span>{jobDate(job.finishedAt ?? job.startedAt)}</span><span>{jobDuration(job)}</span></div>
+                          </div>
+                          <span className={styles.jrUsed}>{job.gramsUsed.toFixed(1)} g</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <Link className={styles.pdhistlink} to="/print-history">{t('printerDetail.viewAllHistory')}</Link>
-              </>
-            )}
-          </div>
+                    <Link className={styles.pdhistlink} to="/print-history">{t('printerDetail.viewAllHistory')}</Link>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className={styles.pdact}>

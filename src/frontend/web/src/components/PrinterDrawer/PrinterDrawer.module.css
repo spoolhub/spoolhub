@@ -152,36 +152,23 @@
 .trayBtn { cursor: pointer; font: inherit; width: 100%; box-sizing: border-box; color: inherit }
 .trayBtn:hover { background: var(--surface-alt); border-color: var(--accent-soft) }
 
-/* Spool picker dropdown */
-.spoolPicker {
-  margin-top: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-xs);
-  background: var(--surface-alt);
-  overflow: hidden;
+/* Spool selection drawer (full-height list replacing body content) */
+.pickerDrawer { display: flex; flex-direction: column; flex: 1 }
+.pickerLoading { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
+.pickerEmpty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
+.pickerList { display: flex; flex-direction: column; gap: 6px; flex: 1 }
+.pickerItem {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface-alt); font: inherit; color: var(--text-primary);
+  cursor: pointer; text-align: left; box-sizing: border-box;
+  transition: .15s var(--ease);
 }
-.spoolPickerHead {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .05em; color: var(--faint);
-  border-bottom: 1px solid var(--border);
-}
-.spoolPickerClose {
-  background: none; border: none; color: var(--faint); cursor: pointer;
-  font-size: 12px; padding: 0; line-height: 1;
-}
-.spoolPickerClose:hover { color: var(--text-primary) }
-.spoolPickerLoading { padding: 8px; text-align: center; font-size: 11px; color: var(--faint) }
-.spoolPickerEmpty { padding: 8px; text-align: center; font-size: 11px; color: var(--faint) }
-.spoolPickerList { max-height: 140px; overflow-y: auto }
-.spoolPickerItem {
-  display: flex; align-items: center; gap: 6px;
-  width: 100%; padding: 6px 8px;
-  border: none; background: none; font: inherit; font-size: 11px;
-  color: var(--text-primary); cursor: pointer;
-  text-align: left; box-sizing: border-box;
-}
-.spoolPickerItem:hover { background: var(--accent-soft) }
+.pickerItem:hover { border-color: var(--accent-soft); background: var(--accent-soft) }
+.pickerItemInfo { flex: 1; min-width: 0 }
+.pickerItemName { font-weight: 600; font-size: 13px }
+.pickerItemMeta { font-size: 11px; color: var(--faint); margin-top: 2px }
 
 /* Temperatures */
 .pdtemps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
