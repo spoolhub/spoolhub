@@ -119,9 +119,8 @@ export default function Dashboard() {
   const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div className={`${styles.page} page`}>
-        {/* ════ TOPBAR ════ */}
+    <div className={`${styles.page} page`}>
+      {/* ════ TOPBAR ════ */}
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1 className={styles.title}>Filament Inventory</h1>
@@ -234,7 +233,6 @@ export default function Dashboard() {
       </div>
 
       <div style={{ height: 80 }} />
-      </div>
       {detailSpool && (
         <SpoolDetailDrawer
           spool={detailSpool}
