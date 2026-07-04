@@ -126,26 +126,21 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
               </div>
             </div>
           </div>
+
+          {isActive && (
+            <div className={styles.pdjobinline}>
+              <div className={styles.jiname}>{status?.subtaskName ?? t('printerDetail.unnamed')}</div>
+              <div className={styles.pprogtrack}><div className={`${styles.pprogfill}${isPaused ? ` ${styles.pprogfillPaused}` : ''}`} style={{ width: `${progressPct}%` }} /></div>
+              <div className={styles.jimeta}>
+                {status && status.totalLayerNum > 0 && <span>{t('printerDetail.labelLayer')} <b>{status.layerNum}/{status.totalLayerNum}</b></span>}
+                {eta && <span>ETA <b>{eta}</b></span>}
+                <span><b>{progressPct}%</b></span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={styles.pdbody}>
-          <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionCurrentJob')}</div>
-            {isActive ? (
-              <div className={styles.pdjob}>
-                <div className={styles.jname}>{status?.subtaskName ?? t('printerDetail.unnamed')}</div>
-                <div className={styles.pprogtrack}><div className={`${styles.pprogfill}${isPaused ? ` ${styles.pprogfillPaused}` : ''}`} style={{ width: `${progressPct}%` }} /></div>
-                <div className={styles.jmeta}>
-                  {status && status.totalLayerNum > 0 && <span>{t('printerDetail.labelLayer')} <b>{status.layerNum}/{status.totalLayerNum}</b></span>}
-                  {eta && <span>ETA <b>{eta}</b></span>}
-                  <span><b>{progressPct}%</b></span>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.pdnone}>{t('printerDetail.noActiveJob')}</div>
-            )}
-          </div>
-
           <div>
             <div className={styles.pdsec}>
               {printer.hasAms ? `AMS · ${t('printerCard.amsLoaded', { count: loadedCount })}` : t('printerDetail.sectionSpool')}
