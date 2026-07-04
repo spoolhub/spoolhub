@@ -139,6 +139,54 @@ public class BambuCloudTaskService(
         }
     }
 
+    public async Task<string?> GetActiveTaskTitleAsync(string serialNumber, string encryptedToken, CancellationToken ct = default)
+    {
+        string token;
+        try { token = _protector.Unprotect(encryptedToken); }
+        catch { return null; }
+
+        try
+        {
+            using var http = new HttpClient { BaseAddress = new Uri("https://api.bambulab.com") };
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            http.DefaultRequestHeaders.Add("User-Agent", "bambu_network_agent/01.09.05.01");
+
+            var response = await http.GetAsync("/v1/user-service/my/tasks?limit=5", ct);
+            if (!response.IsSuccessStatusCode) return null;
+
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+
+            JsonElement hits;
+            if (!doc.RootElement.TryGetProperty("hits", out hits) &&
+                !doc.RootElement.TryGetProperty("tasks", out hits))
+                return null;
+
+            foreach (var task in hits.EnumerateArray())
+            {
+                var deviceId = task.TryGetProperty("deviceId", out var devEl) ? devEl.GetString() : null;
+                if (!string.Equals(deviceId, serialNumber, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var status = task.TryGetProperty("status", out var statusEl) ? statusEl.GetInt32() : 0;
+                // 0 = created/queued, 1 = running, 2 = finished, 3 = failed, 4 = cancelled
+                if (status is not 0 and not 1) continue;
+
+                var title = task.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null;
+                if (!string.IsNullOrEmpty(title))
+                {
+                    logger.LogInformation("Cloud API: resolved active task title '{Title}' for {Serial}", title, serialNumber);
+                    return title;
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Bambu cloud task API error fetching title for {Serial}: {Message}", serialNumber, ex.Message);
+            return null;
+        }
+    }
+
     private static bool TitlesMatch(string? apiTitle, string mqttName)
     {
         if (string.IsNullOrEmpty(apiTitle)) return false;
