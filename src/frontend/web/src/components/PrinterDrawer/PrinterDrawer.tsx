@@ -122,7 +122,7 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
               <div className={styles.pdname}>{printer.name}</div>
               <div className={styles.pdmodel}>{printer.model}</div>
               <div className={styles.pdstatusrow}>
-                <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}{isActive ? ` · ${progressPct}%` : ''}</span>
+                <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}</span>
               </div>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
 
           <div>
             <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
-            <div className={styles.pdtemps}>
+            <div className={styles.pdgrid}>
               <div className={styles.pdtemp}>
                 <span className={styles.ic}>{NOZZLE_ICON}</span>
                 <div><div className={styles.v}>{status && status.nozzleTempC > 0 ? `${status.nozzleTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelNozzle')}</div></div>
@@ -188,8 +188,6 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                 <span className={styles.ic}>{BED_ICON}</span>
                 <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
               </div>
-            </div>
-            <div className={styles.pdinfos}>
               {printer.serialNumber && (
                 <div className={styles.pdinfo}>
                   <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
