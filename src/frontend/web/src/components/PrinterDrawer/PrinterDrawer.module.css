@@ -159,6 +159,12 @@
 .pdtemp .v { font-family: var(--font-num); font-weight: 700; font-size: 15px; line-height: 1.25; color: var(--text-primary) }
 .pdtemp .l { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px }
 
+/* Detail info rows (serial, IP) */
+.pdinfos { display: flex; flex-direction: column; gap: 6px; margin-top: 10px }
+.pdinfo { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-xs); background: var(--surface-alt); min-width: 0 }
+.pdinfoLabel { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; flex: none }
+.pdinfoValue { font-family: var(--font-num); font-size: 13px; color: var(--text-primary); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+
 /* Recent jobs list */
 .pdjoblist {
   display: flex; flex-direction: column; gap: 8px;

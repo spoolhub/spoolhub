@@ -178,7 +178,7 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
           </div>
 
           <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionTemperatures')}</div>
+            <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
             <div className={styles.pdtemps}>
               <div className={styles.pdtemp}>
                 <span className={styles.ic}>{NOZZLE_ICON}</span>
@@ -187,6 +187,18 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
               <div className={styles.pdtemp}>
                 <span className={styles.ic}>{BED_ICON}</span>
                 <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
+              </div>
+            </div>
+            <div className={styles.pdinfos}>
+              {printer.serialNumber && (
+                <div className={styles.pdinfo}>
+                  <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
+                  <span className={styles.pdinfoValue}>{printer.serialNumber}</span>
+                </div>
+              )}
+              <div className={styles.pdinfo}>
+                <span className={styles.pdinfoLabel}>{t('printerDetail.labelIpAddress')}</span>
+                <span className={styles.pdinfoValue}>{printer.ipAddress}{printer.port ? `:${printer.port}` : ''}</span>
               </div>
             </div>
           </div>
