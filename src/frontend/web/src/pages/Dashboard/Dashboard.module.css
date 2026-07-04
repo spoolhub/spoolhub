@@ -171,13 +171,10 @@
 /* Printers inside panel */
 .printerGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(346px, 1fr));
   gap: var(--gap);
   padding: var(--card-pad);
   align-items: start;
-}
-@media (max-width: 880px) {
-  .printerGrid { grid-template-columns: 1fr; }
 }
 
 /* Bottom row — Low Stock + Recent Activity, capped height */
