@@ -101,6 +101,13 @@ export default function Dashboard() {
     }
   }, [refreshSpools, refreshKey])
 
+  const handleTrayAssigned = useCallback(() => {
+    printersApi.getAll().then(p => {
+      printersRef.current = p
+      setPrinters(p)
+    }).catch(() => {})
+  }, [])
+
   const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
     fetchGen.current++
     setSpools(prev => {
@@ -258,8 +265,9 @@ export default function Dashboard() {
             spools={spools}
             status={statuses.get(detailPrinterId)}
             onClose={() => setDetailPrinterId(null)}
-            onSpoolClick={(s) => setDetailSpool(s)}
+            onSpoolClick={(s) => { setDetailPrinterId(null); setDetailSpool(s) }}
             onDisconnected={(id) => setPrinters(prev => prev.filter(p => p.id !== id))}
+            onTrayAssigned={handleTrayAssigned}
           />
         ) : null
       })()}

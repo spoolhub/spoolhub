@@ -16,10 +16,16 @@ const PLUS = (
   <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
 )
 const NOZZLE_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6v6l-2 3v6a1 1 0 0 1-1 1h-0a1 1 0 0 1-1-1v-6L9 9V3Z"/><path d="M11 19v2M13 19v2"/></svg>
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M7,2H17V7H19V13H16.5L13,17H11L7.5,13H5V7H7V2M10,22H2V20H10A1,1 0 0,0 11,19V18H13V19A3,3 0 0,1 10,22M7,9V11H8.5L12,15L15.5,11H17V9H15V4H9V9H7Z"/>
+  </svg>
 )
 const BED_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="10" rx="1.5"/><path d="M3 20h18M7 6V3.5M12 6V3.5M17 6V3.5"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="4" rx="1"/>
+    <path d="M6 8c.5-1 1.5-1 2 0s1.5 1 2 0M14 8c.5-1 1.5-1 2 0s1.5 1 2 0"/>
+    <path d="M4.5 18.5h15"/>
+  </svg>
 )
 
 function jobDate(iso: string) {
