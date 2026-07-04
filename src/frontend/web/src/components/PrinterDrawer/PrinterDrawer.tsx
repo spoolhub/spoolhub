@@ -147,6 +147,30 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
           </div>
 
           <div>
+            <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
+            <div className={styles.pdgrid}>
+              <div className={styles.pdtemp}>
+                <span className={styles.ic}>{NOZZLE_ICON}</span>
+                <div><div className={styles.v}>{status && status.nozzleTempC > 0 ? `${status.nozzleTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelNozzle')}</div></div>
+              </div>
+              <div className={styles.pdtemp}>
+                <span className={styles.ic}>{BED_ICON}</span>
+                <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
+              </div>
+              {printer.serialNumber && (
+                <div className={styles.pdinfo}>
+                  <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
+                  <span className={styles.pdinfoValue}>{printer.serialNumber}</span>
+                </div>
+              )}
+              <div className={styles.pdinfo}>
+                <span className={styles.pdinfoLabel}>{t('printerDetail.labelIpAddress')}</span>
+                <span className={styles.pdinfoValue}>{printer.ipAddress}{printer.port ? `:${printer.port}` : ''}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
             <div className={styles.pdsec}>
               {printer.hasAms ? `AMS · ${t('printerCard.amsLoaded', { count: loadedCount })}` : t('printerDetail.sectionSpool')}
             </div>
@@ -175,30 +199,6 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                 )}
               </div>
             )}
-          </div>
-
-          <div>
-            <div className={styles.pdsec}>{t('printerDetail.sectionDetails')}</div>
-            <div className={styles.pdgrid}>
-              <div className={styles.pdtemp}>
-                <span className={styles.ic}>{NOZZLE_ICON}</span>
-                <div><div className={styles.v}>{status && status.nozzleTempC > 0 ? `${status.nozzleTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelNozzle')}</div></div>
-              </div>
-              <div className={styles.pdtemp}>
-                <span className={styles.ic}>{BED_ICON}</span>
-                <div><div className={styles.v}>{status && status.bedTempC > 0 ? `${status.bedTempC}°C` : '—'}</div><div className={styles.l}>{t('printerDetail.labelBed')}</div></div>
-              </div>
-              {printer.serialNumber && (
-                <div className={styles.pdinfo}>
-                  <span className={styles.pdinfoLabel}>{t('printerDetail.labelSerialNumber')}</span>
-                  <span className={styles.pdinfoValue}>{printer.serialNumber}</span>
-                </div>
-              )}
-              <div className={styles.pdinfo}>
-                <span className={styles.pdinfoLabel}>{t('printerDetail.labelIpAddress')}</span>
-                <span className={styles.pdinfoValue}>{printer.ipAddress}{printer.port ? `:${printer.port}` : ''}</span>
-              </div>
-            </div>
           </div>
 
           <div>
