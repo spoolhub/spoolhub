@@ -1,0 +1,219 @@
+/* ── Printer drawer (matches handoff .pdrawer) ── */
+.scrim {
+  position: fixed; inset: 0;
+  background: oklch(0.2 0.02 60 / .42);
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease);
+  z-index: 72;
+}
+.scrimOn { opacity: 1; pointer-events: auto }
+
+.drawer {
+  position: fixed; top: 0; right: 0;
+  height: 100vh; width: 460px; max-width: 94vw;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 60px -30px oklch(0 0 0 / .5);
+  transform: translateX(100%);
+  z-index: 73;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: transform .3s var(--ease);
+}
+.drawerOn { transform: translateX(0) }
+
+.pdfixed { flex: none; background: var(--surface); z-index: 2 }
+
+.pdtop {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-2);
+}
+.pdtop h2 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; flex: 1; color: var(--text-primary) }
+[data-dir="b"] .pdtop h2 { font-weight: 600 }
+.pdclose {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: .15s var(--ease);
+  flex-shrink: 0;
+}
+.pdclose:hover { background: var(--surface-alt); color: var(--text-primary) }
+.pdclose svg { width: 17px; height: 17px }
+
+.pdheroband { display: flex; gap: 16px; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border-2) }
+.pdhero {
+  position: relative; width: 120px; height: 96px; flex: none;
+  background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.pdhero::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 36%, var(--accent-soft), transparent 72%);
+}
+.pdhero::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent 0 7px, var(--surface) 7px 8px);
+  opacity: .5;
+}
+.pdhero .pimg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; padding: 8px; box-sizing: border-box;
+  z-index: 2;
+}
+.pdherotext { min-width: 0; flex: 1 }
+
+.pdbody {
+  padding: 20px 22px; display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto; flex: 1;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.pdbody::-webkit-scrollbar { width: 8px }
+.pdbody::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px }
+.pdbody::-webkit-scrollbar-track { background: transparent }
+
+.pdbrandrow {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--muted);
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.pdname { font-weight: 700; font-size: 19px; letter-spacing: -.01em; margin-top: 2px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+[data-dir="b"] .pdname { font-weight: 600 }
+.pdmodel { font-size: 13px; color: var(--faint) }
+
+.pdstatusrow { display: flex; align-items: center; gap: 10px; margin-top: 8px }
+.pstatus {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.pstatus i { width: 6px; height: 6px; border-radius: 50%; flex: none }
+.pstatus.printing { background: oklch(0.6 0.13 150/.14); color: oklch(0.48 0.12 150) }
+[data-theme="dark"] .pstatus.printing { color: oklch(0.74 0.13 150) }
+.pstatus.printing i { background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150/.2) }
+.pstatus.idle { background: var(--surface); border: 1px solid var(--border); color: var(--muted) }
+.pstatus.idle i { background: var(--faint) }
+.pstatus.offline { background: oklch(0.62 0.16 25/.12); color: oklch(0.52 0.15 25) }
+[data-theme="dark"] .pstatus.offline { color: oklch(0.74 0.15 25) }
+.pstatus.offline i { background: oklch(0.62 0.16 25) }
+.pstatus.paused { background: rgb(234 179 8 / .16); color: #a16207 }
+[data-theme="dark"] .pstatus.paused { color: #fde047 }
+.pstatus.paused i { background: #eab308; box-shadow: 0 0 0 3px rgb(234 179 8 / .2) }
+
+.pdsec { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700; margin-bottom: 10px }
+
+.pdact { display: flex; gap: 10px; padding: 18px 22px; flex: none; background: var(--surface); border-top: 1px solid var(--border-2) }
+.btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-primary); font: inherit; font-weight: 600; font-size: 13.5px;
+  cursor: pointer; transition: .15s var(--ease);
+}
+.btn:hover { background: var(--surface-alt) }
+.btn:disabled { opacity: .6; cursor: default }
+.primary { background: var(--accent); border-color: transparent; color: #fff }
+.primary:hover { filter: brightness(1.06) }
+.danger { background: oklch(0.55 0.18 25); border-color: transparent; color: #fff }
+.danger:hover { filter: brightness(1.1) }
+
+/* Current job card */
+.pdjob { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px; background: var(--surface-alt) }
+.pdjob .jname { font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; margin-bottom: 10px; color: var(--text-primary) }
+[data-dir="b"] .pdjob .jname { font-weight: 600 }
+.pprogtrack { height: 6px; border-radius: 20px; background: var(--track); overflow: hidden }
+.pprogfill { height: 100%; background: var(--accent); border-radius: inherit; transition: width .3s var(--ease) }
+.pprogfillPaused { background: #eab308 }
+.pdjob .jmeta { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-top: 8px }
+.pdjob .jmeta b { color: var(--text-primary); font-family: var(--font-num); font-weight: 700 }
+.pdnone { font-size: 12.5px; color: var(--faint); padding: 16px; text-align: center; border: 1px dashed var(--border); border-radius: var(--r-sm) }
+
+/* AMS / extra spool tray grid (shared look with the printer card) */
+.ams { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.ams.single { grid-template-columns: 1fr }
+.tray {
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: var(--surface); padding: 6px 3px 5px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 0; text-decoration: none; color: inherit;
+}
+.tray.single { flex-direction: row; justify-content: flex-start; gap: 10px; padding: 9px 12px }
+.tray .slotn { font-size: 8px; color: var(--faint); font-family: var(--font-num); font-weight: 600 }
+.tray .ti { width: 24px; height: 24px; display: grid; place-items: center; color: var(--faint) }
+.tray.single .ti { width: 30px; height: 30px }
+.tray .ti svg { display: block; width: 100%; height: 100% }
+.tray .tn { font-size: 8px; font-weight: 600; color: var(--muted); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100% }
+.tray.single .tn { font-size: 12px }
+.tray.empty { border-style: dashed; background: transparent }
+.tray.empty .tn { color: var(--faint) }
+.trayBtn { cursor: pointer; font: inherit; width: 100%; box-sizing: border-box; color: inherit }
+.trayBtn:hover { background: var(--surface-alt); border-color: var(--accent-soft) }
+
+/* Spool selection drawer (full-height list replacing body content) */
+.pickerDrawer { display: flex; flex-direction: column; flex: 1 }
+.pickerLoading { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
+.pickerEmpty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
+.pickerList { display: flex; flex-direction: column; gap: 6px; flex: 1 }
+.pickerItem {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface-alt); font: inherit; color: var(--text-primary);
+  cursor: pointer; text-align: left; box-sizing: border-box;
+  transition: .15s var(--ease);
+}
+.pickerItem:hover { border-color: var(--accent-soft); background: var(--accent-soft) }
+.pickerItemInfo { flex: 1; min-width: 0 }
+.pickerItemName { font-weight: 600; font-size: 13px }
+.pickerItemMeta { font-size: 11px; color: var(--faint); margin-top: 2px }
+
+/* Temperatures */
+.pdtemps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.pdtemp { border: 1px solid var(--border); border-radius: var(--r-xs); padding: 12px; background: var(--surface-alt); display: flex; align-items: center; gap: 10px; min-width: 0 }
+.pdtemp .ic { width: 32px; height: 32px; border-radius: var(--r-xs); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); flex: none }
+[data-theme="dark"] .pdtemp .ic { color: var(--accent) }
+.pdtemp .ic svg { width: 17px; height: 17px }
+.pdtemp .v { font-family: var(--font-num); font-weight: 700; font-size: 15px; line-height: 1.25; color: var(--text-primary) }
+.pdtemp .l { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px }
+
+/* Details grid — 2 columns × 2 rows (temps + serial/IP) */
+.pdgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.pdinfo { border: 1px solid var(--border); border-radius: var(--r-xs); padding: 12px; background: var(--surface-alt); display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.pdinfoLabel { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em }
+.pdinfoValue { font-family: var(--font-num); font-size: 14px; color: var(--text-primary); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+
+/* Recent jobs list */
+.pdjoblist {
+  display: flex; flex-direction: column; gap: 8px;
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding-right: 4px; margin-right: -4px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.pdjoblist::-webkit-scrollbar { width: 6px }
+.pdjoblist::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px }
+.pdjoblist::-webkit-scrollbar-track { background: transparent }
+.pdjobrow { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--r-xs); padding: 10px 12px; background: var(--surface-alt) }
+.pdjobrow i { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--faint) }
+.pdjobrow.done i { background: oklch(0.6 0.13 150) }
+.pdjobrow.failed i { background: oklch(0.62 0.16 25) }
+.pdjobrow.printing i { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+.jrMain { flex: 1; min-width: 0 }
+.jrName { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary) }
+.jrSub { display: flex; gap: 8px; font-size: 10.5px; color: var(--faint); margin-top: 2px }
+.jrFilaments { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px }
+.jrFil { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; color: var(--faint); font-family: var(--font-num); font-weight: 600 }
+.jrFil svg { flex: none }
+.jrUsed {
+  font-size: 10.5px; color: var(--accent-ink); font-family: var(--font-num); font-weight: 700;
+  flex: none; background: var(--accent-soft); padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+}
+[data-theme="dark"] .jrUsed { color: var(--accent) }
+
+.pdhistlink { display: block; text-align: center; font-size: 12px; font-weight: 600; color: var(--accent-ink); text-decoration: none; margin-top: 4px }
+[data-theme="dark"] .pdhistlink { color: var(--accent) }
+.pdhistlink:hover { text-decoration: underline }

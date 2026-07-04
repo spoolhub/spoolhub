@@ -71,6 +71,37 @@ public class MqttMessageProcessor(
         var subtaskName = print.TryGetProperty("subtask_name", out var nameEl) ? nameEl.GetString() : null;
         var gcodeFile   = print.TryGetProperty("gcode_file",   out var gcodeEl) ? gcodeEl.GetString() : null;
         var fileName    = ResolveFileName(subtaskName, gcodeFile);
+
+        // If the filename is missing and we're running, try the Bambu cloud API
+        if (fileName == null && state == "RUNNING")
+        {
+            try
+            {
+                var printer = await printerRepository.GetByIdAsync(printerId);
+                if (printer?.SerialNumber != null && !string.IsNullOrEmpty(printer.CloudToken))
+                {
+                    var cloudName = await cloudTaskService.GetActiveTaskTitleAsync(
+                        printer.SerialNumber, printer.CloudToken);
+                    if (!string.IsNullOrEmpty(cloudName))
+                    {
+                        logger.LogInformation("MQTT: resolved missing filename from cloud API → '{Name}' for printer {Id}", cloudName, printerId);
+                        fileName = cloudName;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug("MQTT: cloud API filename lookup failed for {Id}: {Message}", printerId, ex.Message);
+            }
+
+            // Still missing — ask the printer for a full status update via pushall
+            if (fileName == null)
+            {
+                logger.LogInformation("MQTT: filename missing for printer {Id} — requesting pushall", printerId);
+                statusService.RequestPushAll(printerId);
+            }
+        }
+
         var rawTaskId   = print.TryGetProperty("task_id",      out var tidEl)   ? tidEl.GetString()   : null;
         var mqttTaskId  = string.IsNullOrEmpty(rawTaskId) || rawTaskId == "0"  ? null : rawTaskId;
 

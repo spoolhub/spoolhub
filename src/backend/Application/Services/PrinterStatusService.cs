@@ -9,6 +9,7 @@ public class PrinterStatusService : IPrinterStatusService
     private readonly ConcurrentDictionary<Guid, PrinterStatus> _statuses = new();
     private readonly ConcurrentDictionary<Guid, string> _knownIps = new();
     private readonly ConcurrentDictionary<Guid, AmsSnapshot?> _amsSnapshots = new();
+    private readonly ConcurrentDictionary<Guid, byte> _pushAllRequests = new();
 
     public PrinterStatus? GetStatus(Guid printerId) =>
         _statuses.TryGetValue(printerId, out var s) ? s : null;
@@ -32,4 +33,14 @@ public class PrinterStatusService : IPrinterStatusService
 
     public void ClearAmsSnapshot(Guid printerId) =>
         _amsSnapshots.TryRemove(printerId, out _);
+
+    public void RequestPushAll(Guid printerId) =>
+        _pushAllRequests[printerId] = 1;
+
+    public HashSet<Guid> DrainPushAllRequests()
+    {
+        var ids = new HashSet<Guid>(_pushAllRequests.Keys);
+        _pushAllRequests.Clear();
+        return ids;
+    }
 }

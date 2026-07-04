@@ -13,5 +13,8 @@ appsettings.*.json
 src/agent/SpoolHubAgent/publish/
 src/agent/Output/
 
+# Node.js
+node_modules/
+
 # Local-only dev seed data - never ship demo data in the repo or Docker image
 seed-data.local.json

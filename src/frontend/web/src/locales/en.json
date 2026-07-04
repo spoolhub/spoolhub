@@ -136,7 +136,9 @@
     "hoursAgo_one": "{{count}} hr ago",
     "hoursAgo_other": "{{count}} hrs ago",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "select": "Select",
+    "loading": "Loading"
   },
   "spoolDetail": {
     "notFound": "Spool not found.",
@@ -239,6 +241,15 @@
     "to": "to"
   },
   "printerDetail": {
+    "title": "Printer details",
+    "sectionCurrentJob": "Current job",
+    "noActiveJob": "No active print job",
+    "sectionTemperatures": "Temperatures",
+    "sectionRecentJobs": "Recent jobs",
+    "viewAllHistory": "View all print history →",
+    "editPrinter": "Edit printer",
+    "disconnectPrinter": "Disconnect",
+    "disconnectConfirmBtn": "Yes, disconnect",
     "notFound": "Printer not found.",
     "sectionDetails": "Details",
     "labelIpAddress": "IP Address",
@@ -249,6 +260,8 @@
     "labelNozzle": "Nozzle",
     "labelBed": "Bed",
     "empty": "Empty",
+    "selectSpool": "Select spool",
+    "noSpoolsAvailable": "No spools available",
     "noSpoolLoaded": "No spool loaded",
     "noJobs": "No print jobs recorded yet.",
     "spoolLoaded": "{{count}} loaded",
@@ -276,8 +289,6 @@
     "sectionSpool": "Spool",
     "assignSpool": "Assign spool",
     "unassignSpool": "Unassign",
-    "selectSpool": "Select a spool…",
-    "noSpoolsAvailable": "No spools available",
     "assigningTray": "Assigning…",
     "locationPromptTitle": "Where will this spool go?",
     "locationPromptBody": "Spool will be unassigned from the printer.",

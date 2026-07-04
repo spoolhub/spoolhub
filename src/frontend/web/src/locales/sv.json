@@ -134,7 +134,9 @@
     "hoursAgo_one": "{{count}} h sedan",
     "hoursAgo_other": "{{count}} h sedan",
     "close": "Stäng",
-    "back": "Tillbaka"
+    "back": "Tillbaka",
+    "select": "Select",
+    "loading": "Loading"
   },
   "spoolDetail": {
     "notFound": "Spolen hittades inte.",
@@ -236,6 +238,15 @@
     "to": "till"
   },
   "printerDetail": {
+    "title": "Skrivardetaljer",
+    "sectionCurrentJob": "Aktuellt jobb",
+    "noActiveJob": "Inget aktivt utskriftsjobb",
+    "sectionTemperatures": "Temperaturer",
+    "sectionRecentJobs": "Senaste jobb",
+    "viewAllHistory": "Visa hela utskriftshistoriken →",
+    "editPrinter": "Redigera skrivare",
+    "disconnectPrinter": "Koppla från",
+    "disconnectConfirmBtn": "Ja, koppla från",
     "notFound": "Skrivaren hittades inte.",
     "sectionDetails": "Detaljer",
     "labelIpAddress": "IP-adress",
@@ -273,7 +284,7 @@
     "sectionSpool": "Spole",
     "assignSpool": "Tilldela spole",
     "unassignSpool": "Ta bort",
-    "selectSpool": "Välj en spole…",
+    "selectSpool": "Välj spole",
     "noSpoolsAvailable": "Inga spolar tillgängliga",
     "assigningTray": "Tilldelar…",
     "locationPromptTitle": "Var ska den här spolen ta vägen?",
