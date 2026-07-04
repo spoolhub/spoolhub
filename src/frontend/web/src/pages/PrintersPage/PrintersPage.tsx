@@ -73,6 +73,21 @@ export default function PrintersPage() {
     return () => { cancelled = true; clearInterval(dataTimer); clearInterval(statusTimer) }
   }, [refreshKey])
 
+  // Printer cards look up live spool data (color, weight) from `spools` — refresh
+  // immediately when a spool changes elsewhere instead of waiting for the next poll.
+  useEffect(() => {
+    function handleSpoolsUpdated(e: Event) {
+      const deletedId = (e as CustomEvent).detail?.deletedId as string | undefined
+      if (deletedId) {
+        setSpools(prev => prev.filter(s => s.id !== deletedId))
+        return
+      }
+      spoolsApi.getAll().then(setSpools).catch(() => {})
+    }
+    window.addEventListener('spools-updated', handleSpoolsUpdated)
+    return () => window.removeEventListener('spools-updated', handleSpoolsUpdated)
+  }, [])
+
   useEffect(() => { localStorage.setItem(VIEW_KEY, view) }, [view])
 
   const handleAddPrinter = useCallback(() => setShowAddModal(true), [])
@@ -88,6 +103,7 @@ export default function PrintersPage() {
   }, [])
 
   const handleSpoolClick = useCallback((spool: SpoolResponse) => {
+    setSelectedPrinterId(null)
     setSelectedSpool(spool)
   }, [])
 
