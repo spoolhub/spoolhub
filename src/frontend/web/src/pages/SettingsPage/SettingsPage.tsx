@@ -41,11 +41,6 @@ export default function SettingsPage() {
 
   const filamentDirty = filamentSyncUrl !== savedFilamentUrl || autoSyncFilaments !== savedAutoSync
 
-  // Reset sync-done indicator when leaving/entering filament tab
-  useEffect(() => {
-    if (activeTab === 'filament') setSyncOfdDone(false)
-  }, [activeTab])
-
   // ── app settings form state ──
   const [currency, setCurrency] = useState('USD')
   const [lowStockThreshold, setLowStockThreshold] = useState(120)

@@ -296,7 +296,7 @@ export default function BrandsPage() {
             })))
             setSelectedSpool(updated)
           }}
-          onDeleted={(_id: string) => {
+          onDeleted={() => {
             setSelectedSpool(null)
             refresh().catch(() => {})
           }}
