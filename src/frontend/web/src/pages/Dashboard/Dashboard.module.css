@@ -119,12 +119,9 @@
 /* ── Metrics ── */
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--gap);
   flex-shrink: 0;
-}
-@media (max-width: 900px) {
-  .metrics { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Panel ── */
@@ -171,28 +168,22 @@
 /* Printers inside panel */
 .printerGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(346px, 1fr));
   gap: var(--gap);
   padding: var(--card-pad);
   align-items: start;
-}
-@media (max-width: 880px) {
-  .printerGrid { grid-template-columns: 1fr; }
 }
 
 /* Bottom row — Low Stock + Recent Activity, capped height */
 .botrow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: var(--gap);
   align-items: start;
 }
 .botrow > .panel {
   display: flex;
   flex-direction: column;
-}
-@media (max-width: 820px) {
-  .botrow { grid-template-columns: 1fr; }
 }
 
 /* Skeleton */

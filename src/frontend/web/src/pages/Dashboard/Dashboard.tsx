@@ -132,7 +132,7 @@ export default function Dashboard() {
       {/* ════ TOPBAR ════ */}
       <header className={styles.topbar}>
         <div className={styles.h}>
-          <h1 className={styles.title}>Filament Inventory</h1>
+          <h1 className={styles.title}>{t('home.title', 'Dashboard')}</h1>
           <div className={styles.sub}>
             {spools.length} spools tracked · {filamentBrands} brands · {onlineCount} printers online
           </div>
