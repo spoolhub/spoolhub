@@ -109,7 +109,7 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
   const handleSelectSpoolForSlot = async (slot: number, spoolId: string) => {
     setAssigningId(spoolId)
     try {
-      await printersApi.assignTraySpool(printer.id, slot, spoolId)
+      await printersApi.assignTraySpool(printer.id, slot + 1, spoolId)
       setAssigningSlot(null)
       onTrayAssigned?.()
     } finally {
