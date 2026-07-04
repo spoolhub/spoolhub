@@ -69,10 +69,10 @@ describe('PrinterDrawer', () => {
     expect(screen.getAllByText('54%').length).toBeGreaterThan(0)
   })
 
-  it('shows the status pill with percent when paused', () => {
+  it('shows the status pill without percent when paused', () => {
     const status: PrinterStatus = { gcodeState: 'PAUSE', progressPercent: 37, remainingMinutes: 20, subtaskName: 'Test_file', layerNum: 10, totalLayerNum: 62, nozzleTempC: 0, bedTempC: 0, updatedAt: '2026-01-01T00:00:00Z' }
     renderDrawer({ status })
-    expect(screen.getByText('Paused · 37%')).toBeInTheDocument()
+    expect(screen.getByText('Paused')).toBeInTheDocument()
     expect(screen.getByText('Test_file')).toBeInTheDocument()
   })
 
