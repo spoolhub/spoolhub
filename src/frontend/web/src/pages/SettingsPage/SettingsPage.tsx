@@ -36,8 +36,15 @@ export default function SettingsPage() {
   const [savedFilamentUrl, setSavedFilamentUrl] = useState('https://openfilament.com/api/filaments')
   const [savedAutoSync, setSavedAutoSync] = useState(true)
   const [filamentSaving, setFilamentSaving] = useState(false)
+  const [syncingOfd, setSyncingOfd] = useState(false)
+  const [syncOfdDone, setSyncOfdDone] = useState(false)
 
   const filamentDirty = filamentSyncUrl !== savedFilamentUrl || autoSyncFilaments !== savedAutoSync
+
+  // Reset sync-done indicator when leaving/entering filament tab
+  useEffect(() => {
+    if (activeTab === 'filament') setSyncOfdDone(false)
+  }, [activeTab])
 
   // ── app settings form state ──
   const [currency, setCurrency] = useState('USD')
@@ -605,21 +612,11 @@ export default function SettingsPage() {
               <button className={`${styles.tg}${emptyReminder ? ` ${styles.on}` : ''}`} onClick={() => setEmptyReminder(v => !v)} aria-label="toggle"></button>
             </div>
 
-            <div className={styles.subhdr}>
-              <div className={styles.t}>Open Filament Database</div>
-              <div className={styles.d}>Sync filament profiles from the Open Filament Database (OFD)</div>
-            </div>
             <div className={styles.srow}>
               <div className={styles.sl}>
-                <div className={styles.t}>OFD source URL</div>
-                <div className={styles.d}>API endpoint used to fetch filament specifications</div>
+                <div className={styles.t}>OFD source</div>
+                <div className={styles.urlDisplay}>{filamentSyncUrl}</div>
               </div>
-              <input
-                className={styles.urlInput}
-                type="text"
-                value={filamentSyncUrl}
-                onChange={e => setFilamentSyncUrl(e.target.value)}
-              />
             </div>
             <div className={styles.srow}>
               <div className={styles.sl}>
@@ -640,13 +637,25 @@ export default function SettingsPage() {
               <button
                 className={`${styles.btn} ${styles.btnPrimary}`}
                 onClick={async () => {
+                  if (syncingOfd) return
+                  setSyncingOfd(true)
+                  setSyncOfdDone(false)
                   try {
                     const result = await settingsApi.syncFilaments()
                     setLastSynced(result.lastSynced)
+                    setSyncOfdDone(true)
+                    setTimeout(() => setSyncOfdDone(false), 3000)
                   } catch { /* ignore */ }
+                  setSyncingOfd(false)
                 }}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg> Sync now
+                {syncingOfd ? (
+                  <><span className={styles.spin}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></span> Syncing...</>
+                ) : syncOfdDone ? (
+                  <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg> Synced</>
+                ) : (
+                  <><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></span> Sync now</>
+                )}
               </button>
             </div>
 
