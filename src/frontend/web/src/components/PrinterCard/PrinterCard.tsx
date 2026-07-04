@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getPrinterStatusClass, getPrinterStatusLabel } from '@/utils/printerStatus'
 import { SpoolIcon } from '@/components/icons'
-import StatusRing from '@/components/StatusRing'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './PrinterCard.module.css'
@@ -45,7 +44,7 @@ function BrandFavicon({ brand }: { brand: string }) {
   )
 }
 
-export default function PrinterCard({ printer, spools, status, onSpoolClick }: { printer: PrinterResponse; spools: SpoolResponse[]; status?: PrinterStatus | null; onSpoolClick?: (spool: SpoolResponse) => void }) {
+export default function PrinterCard({ printer, spools, status, onSpoolClick, onOpenDetail }: { printer: PrinterResponse; spools: SpoolResponse[]; status?: PrinterStatus | null; onSpoolClick?: (spool: SpoolResponse) => void; onOpenDetail?: (printer: PrinterResponse) => void }) {
   const [expanded, setExpanded] = useState(false)
   const imgSrc = getPrinterImage(printer.brand, printer.model)
 
@@ -54,8 +53,10 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick }: {
   }
 
   const stLabel = getPrinterStatusLabel(status)
-  const stExtra = status?.gcodeState?.toUpperCase() === 'RUNNING' ? ` · ${status.progressPercent ?? 0}%` : ''
   const stClass = getPrinterStatusClass(status)
+  const isRunning = status?.gcodeState?.toUpperCase() === 'RUNNING'
+  const isPaused = status?.gcodeState?.toUpperCase() === 'PAUSE'
+  const progressPct = status?.progressPercent ?? 0
 
   // Resolve tray spools
   const traySpoolIds = [printer.tray1Spool?.id, printer.tray2Spool?.id, printer.tray3Spool?.id, printer.tray4Spool?.id]
@@ -181,7 +182,7 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick }: {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} onClick={() => onOpenDetail?.(printer)}>
       <div className={styles.phead}>
         <div className={styles.pphoto}>
           {imgSrc && <img className={styles.pimg} src={imgSrc} alt={printer.model} onError={e => { e.currentTarget.remove() }} />}
@@ -191,15 +192,23 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick }: {
             <BrandFavicon brand={printer.brand} />
             {printer.brand}
           </div>
-          <Link to={`/printers/${printer.id}`} className={styles.pname}>{printer.name}</Link>
+          <div className={styles.pname}>{printer.name}</div>
           <div className={styles.pmodel}>{printer.model}</div>
-          <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}{stExtra}</span>
-        </div>
-        <div className={styles.sring}>
-          <StatusRing status={status} size={52} />
+          <span className={`${styles.pstatus} ${styles[stClass]}`}><i></i>{stLabel}</span>
         </div>
       </div>
-      {body}
+      <div className={`${styles.pprog}${(isRunning || isPaused) ? '' : ` ${styles.pprogHidden}`}`}>
+        <div className={styles.pprogtrack}>
+          <div className={`${styles.pprogfill}${isPaused ? ` ${styles.pprogfillPaused}` : ''}`} style={{ width: `${progressPct}%` }} />
+        </div>
+        <div className={styles.pprogmeta}>
+          <span>{isPaused ? 'Paused' : (status?.subtaskName || 'Printing')}</span>
+          <span className={`${styles.pprogmetaPct}${isPaused ? ` ${styles.pprogmetaPctPaused}` : ''}`}>{progressPct}%</span>
+        </div>
+      </div>
+      <div className={styles.bodyWrap} onClick={e => e.stopPropagation()}>
+        {body}
+      </div>
     </div>
   )
 }

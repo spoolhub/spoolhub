@@ -6,6 +6,7 @@ import { spoolsApi } from '@/api/spools'
 import PrinterCard from '@/components/PrinterCard'
 import { getPrinterStatusClass } from '@/utils/printerStatus'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
+import PrinterDrawer from '@/components/PrinterDrawer'
 import AddPrinterModal from './AddPrinterModal'
 import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
@@ -36,6 +37,7 @@ export default function PrintersPage() {
   const [view, setView]           = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedSpool, setSelectedSpool] = useState<SpoolResponse | null>(null)
+  const [selectedPrinterId, setSelectedPrinterId] = useState<string | null>(null)
   const printersRef               = useRef<PrinterResponse[]>([])
 
   useEffect(() => {
@@ -91,6 +93,18 @@ export default function PrintersPage() {
 
   const handleSpoolClose = useCallback(() => {
     setSelectedSpool(null)
+  }, [])
+
+  const handleOpenDetail = useCallback((printer: PrinterResponse) => {
+    setSelectedPrinterId(printer.id)
+  }, [])
+
+  const handleDetailClose = useCallback(() => {
+    setSelectedPrinterId(null)
+  }, [])
+
+  const handlePrinterDisconnected = useCallback((id: string) => {
+    setPrinters(prev => prev.filter(p => p.id !== id))
   }, [])
 
   const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
@@ -178,7 +192,7 @@ export default function PrintersPage() {
         ) : (
           <div className={`${styles.grid}${view === 'list' ? ` ${styles.gridList}` : ''}`}>
             {filtered.map(p => (
-              <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} onSpoolClick={handleSpoolClick} />
+              <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} onSpoolClick={handleSpoolClick} onOpenDetail={handleOpenDetail} />
             ))}
           </div>
         )}
@@ -199,6 +213,20 @@ export default function PrintersPage() {
         onDeleted={handleSpoolDeleted}
       />
     )}
+
+    {selectedPrinterId && (() => {
+      const selectedPrinter = printers.find(p => p.id === selectedPrinterId)
+      return selectedPrinter ? (
+        <PrinterDrawer
+          printer={selectedPrinter}
+          spools={spools}
+          status={statuses.get(selectedPrinterId)}
+          onClose={handleDetailClose}
+          onSpoolClick={handleSpoolClick}
+          onDisconnected={handlePrinterDisconnected}
+        />
+      ) : null
+    })()}
     </>
   )
 }

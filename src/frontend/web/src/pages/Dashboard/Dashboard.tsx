@@ -12,6 +12,7 @@ import { MetricCard } from '@/components/MetricCard/MetricCard'
 import PrinterCard from '@/components/PrinterCard'
 import RecentActivity from '@/components/RecentActivity'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
+import PrinterDrawer from '@/components/PrinterDrawer'
 import { printJobsApi } from '@/api/printJobs'
 import LowStockSpools from '@/components/LowStockSpools'
 import type { SpoolResponse } from '@/types/spool'
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const { refreshKey } = useConnection()
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
+  const [detailPrinterId, setDetailPrinterId] = useState<string | null>(null)
   const [, setFilamentLibraryCount] = useState(0)
   const [filamentBrands, setFilamentBrands] = useState(0)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
@@ -207,7 +209,7 @@ export default function Dashboard() {
                 </div>
               )
               : printers.map(p => (
-                <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} onSpoolClick={(s) => setDetailSpool(s)} />
+                <PrinterCard key={p.id} printer={p} spools={spools} status={statuses.get(p.id)} onSpoolClick={(s) => setDetailSpool(s)} onOpenDetail={(pr) => setDetailPrinterId(pr.id)} />
               ))
           }
         </div>
@@ -247,6 +249,20 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      {detailPrinterId && (() => {
+        const detailPrinter = printers.find(p => p.id === detailPrinterId)
+        return detailPrinter ? (
+          <PrinterDrawer
+            printer={detailPrinter}
+            spools={spools}
+            status={statuses.get(detailPrinterId)}
+            onClose={() => setDetailPrinterId(null)}
+            onSpoolClick={(s) => setDetailSpool(s)}
+            onDisconnected={(id) => setPrinters(prev => prev.filter(p => p.id !== id))}
+          />
+        ) : null
+      })()}
     </div>
   )
 }

@@ -33,7 +33,6 @@ export { default as SpoolDetailsForm } from './SpoolDetailsForm/SpoolDetailsForm
 export { default as SpoolEditor } from './SpoolEditor/SpoolEditor'
 export { default as SpoolFilterDropdown } from './SpoolFilterDropdown/SpoolFilterDropdown'
 export { default as SpoolSearchBar } from './SpoolSearchBar/SpoolSearchBar'
-export { default as StatusRing } from './StatusRing/StatusRing'
 export { default as UnassignedTagPanel } from './UnassignedTagPanel/UnassignedTagPanel'
 export { default as AndroidScanner } from './scan/AndroidScanner/AndroidScanner'
 export { default as DesktopScanner } from './scan/DesktopScanner/DesktopScanner'

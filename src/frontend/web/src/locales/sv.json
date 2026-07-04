@@ -236,6 +236,15 @@
     "to": "till"
   },
   "printerDetail": {
+    "title": "Skrivardetaljer",
+    "sectionCurrentJob": "Aktuellt jobb",
+    "noActiveJob": "Inget aktivt utskriftsjobb",
+    "sectionTemperatures": "Temperaturer",
+    "sectionRecentJobs": "Senaste jobb",
+    "viewAllHistory": "Visa hela utskriftshistoriken →",
+    "editPrinter": "Redigera skrivare",
+    "disconnectPrinter": "Koppla från",
+    "disconnectConfirmBtn": "Ja, koppla från",
     "notFound": "Skrivaren hittades inte.",
     "sectionDetails": "Detaljer",
     "labelIpAddress": "IP-adress",

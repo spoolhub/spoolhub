@@ -6,8 +6,11 @@
   padding: 16px;
   transition: .2s var(--ease);
   min-width: 0;
+  cursor: pointer;
 }
 .card:hover { border-color: var(--accent) }
+
+.bodyWrap { cursor: default }
 
 .phead {
   display: flex;
@@ -80,13 +83,14 @@
 .blogo.fb { background: var(--surface-alt); }
 .blogo.fb b { display: block; }
 
-.sring { margin-left: auto; }
 .pname {
   font-weight: 700; font-size: 16px;
   letter-spacing: -.01em;
   margin-top: 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: var(--text-primary);
+  display: block; width: 100%; text-align: left;
+  border: 0; background: none; padding: 0; font-family: inherit; cursor: pointer;
 }
 [data-dir="b"] .pname { font-weight: 600; }
 .pmodel {
@@ -116,6 +120,23 @@
 .pstatus.offline { background: oklch(0.62 0.16 25/.12); color: oklch(0.52 0.15 25); }
 [data-theme="dark"] .pstatus.offline { color: oklch(0.74 0.15 25); }
 .pstatus.offline i { background: oklch(0.62 0.16 25); }
+.pstatus.paused { background: rgb(234 179 8 / .16); color: #a16207; }
+[data-theme="dark"] .pstatus.paused { color: #fde047; }
+.pstatus.paused i { background: #eab308; box-shadow: 0 0 0 3px rgb(234 179 8 / .2); }
+
+/* Print progress bar (shown while printing / paused; kept in flow but hidden otherwise so card height stays constant) */
+.pprog { padding: 0 2px; margin-top: 12px; }
+.pprogHidden { visibility: hidden; }
+.pprogtrack { height: 6px; border-radius: 20px; background: var(--track); overflow: hidden; }
+[data-dir="b"] .pprogtrack { height: 5px; border-radius: 3px; }
+.pprogfill { height: 100%; background: var(--accent); border-radius: inherit; transition: width .3s var(--ease); }
+.pprogfillPaused { background: #eab308; }
+.pprogmeta { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 6px; }
+.pprogmeta span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%; }
+.pprogmetaPct { font-family: var(--font-num); font-weight: 700; color: var(--accent-ink); }
+[data-theme="dark"] .pprogmetaPct { color: var(--accent); }
+.pprogmetaPctPaused { color: #a16207; }
+[data-theme="dark"] .pprogmetaPctPaused { color: #fde047; }
 
 /* AMS / Extra spool section */
 .amshead {

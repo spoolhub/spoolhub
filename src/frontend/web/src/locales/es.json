@@ -236,6 +236,15 @@
     "to": "a"
   },
   "printerDetail": {
+    "title": "Detalles de la impresora",
+    "sectionCurrentJob": "Trabajo actual",
+    "noActiveJob": "No hay ningún trabajo de impresión activo",
+    "sectionTemperatures": "Temperaturas",
+    "sectionRecentJobs": "Trabajos recientes",
+    "viewAllHistory": "Ver todo el historial de impresión →",
+    "editPrinter": "Editar impresora",
+    "disconnectPrinter": "Desconectar",
+    "disconnectConfirmBtn": "Sí, desconectar",
     "notFound": "Impresora no encontrada.",
     "sectionDetails": "Detalles",
     "labelIpAddress": "Dirección IP",

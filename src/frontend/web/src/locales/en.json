@@ -239,6 +239,15 @@
     "to": "to"
   },
   "printerDetail": {
+    "title": "Printer details",
+    "sectionCurrentJob": "Current job",
+    "noActiveJob": "No active print job",
+    "sectionTemperatures": "Temperatures",
+    "sectionRecentJobs": "Recent jobs",
+    "viewAllHistory": "View all print history →",
+    "editPrinter": "Edit printer",
+    "disconnectPrinter": "Disconnect",
+    "disconnectConfirmBtn": "Yes, disconnect",
     "notFound": "Printer not found.",
     "sectionDetails": "Details",
     "labelIpAddress": "IP Address",

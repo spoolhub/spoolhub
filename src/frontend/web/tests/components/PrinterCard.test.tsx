@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import PrinterCard from '@/components/PrinterCard'
 import type { PrinterResponse } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
@@ -176,9 +176,32 @@ describe('PrinterCard', () => {
     expect(screen.getByText('0 assigned')).toBeInTheDocument()
   })
 
-  it('card header links to printer detail page', () => {
-    render_(basePrinter)
-    const links = screen.getAllByRole('link')
-    expect(links.some(l => l.getAttribute('href') === '/printers/printer-1')).toBe(true)
+  it('clicking printer name calls onOpenDetail with the printer', () => {
+    const onOpenDetail = vi.fn()
+    render(<PrinterCard printer={basePrinter} spools={[]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
+    fireEvent.click(screen.getByText('My P1S'))
+    expect(onOpenDetail).toHaveBeenCalledWith(basePrinter)
+  })
+
+  it('clicking anywhere else on the card also calls onOpenDetail', () => {
+    const onOpenDetail = vi.fn()
+    render(<PrinterCard printer={basePrinter} spools={[]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
+    fireEvent.click(screen.getByText('P1S'))
+    expect(onOpenDetail).toHaveBeenCalledWith(basePrinter)
+  })
+
+  it('clicking the AMS accordion does not call onOpenDetail', () => {
+    const onOpenDetail = vi.fn()
+    render(<PrinterCard printer={printerWithSpool} spools={[activeSpool]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
+    clickAccordion('1 of 4 loaded')
+    expect(onOpenDetail).not.toHaveBeenCalled()
+  })
+
+  it('clicking an expanded AMS spool link does not call onOpenDetail', () => {
+    const onOpenDetail = vi.fn()
+    render(<PrinterCard printer={printerWithSpool} spools={[activeSpool]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
+    clickAccordion('1 of 4 loaded')
+    fireEvent.click(screen.getByText('Jade White'))
+    expect(onOpenDetail).not.toHaveBeenCalled()
   })
 })

@@ -12,7 +12,6 @@ import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import AddSpoolPage from '@/pages/AddSpoolPage'
 import Dashboard from '@/pages/Dashboard'
 import PrintersPage from '@/pages/PrintersPage'
-import PrinterDetailPage from '@/pages/PrinterDetailPage'
 import AddPrinterPage from '@/pages/AddPrinterPage'
 import LowStockPage from '@/pages/LowStockPage'
 import ActiveSpoolsPage from '@/pages/ActiveSpoolsPage'
@@ -57,7 +56,6 @@ function AppShell() {
               <Route path="/scan" element={<ScanPage />} />
               <Route path="/printers" element={<PrintersPage />} />
               <Route path="/printers/addprinter" element={<AddPrinterPage />} />
-              <Route path="/printers/:id" element={<PrinterDetailPage />} />
               <Route path="/spools/add" element={<AddSpoolPage />} />
               <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
               <Route path="/spools/add/manual" element={<AddSpoolPage />} />
