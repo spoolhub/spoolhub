@@ -49,13 +49,22 @@ body {
 }
 
 /* Global scrollbar styling - matches handoff design */
-.page::-webkit-scrollbar { width: 10px; }
-.page::-webkit-scrollbar-thumb {
+.page, .main {
+  overflow-y: auto;
+}
+.page::-webkit-scrollbar, .main::-webkit-scrollbar { width: 10px; }
+.page::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 20px;
   border: 3px solid var(--bg);
 }
-.page::-webkit-scrollbar-track { background: transparent; }
+.page::-webkit-scrollbar-track, .main::-webkit-scrollbar-track { background: var(--bg); }
+
+/* Firefox scrollbar support */
+.page, .main {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--bg);
+}
 
 /* Legacy cyan scrollbar class (kept for backward compat) */
 .scrollbar-pretty {
