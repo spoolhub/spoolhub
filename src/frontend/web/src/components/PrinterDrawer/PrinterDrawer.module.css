@@ -121,7 +121,7 @@
 .primary:hover { filter: brightness(1.06) }
 
 /* Current job — inline under hero, no card */
-.pdjobinline { padding: 12px 22px 16px; border-top: 1px solid var(--border-2) }
+.pdjobinline { padding: 14px 22px 16px }
 .jiname { font-weight: 700; font-size: 14px; letter-spacing: -.01em; margin-bottom: 8px; color: var(--text-primary) }
 [data-dir="b"] .jiname { font-weight: 600 }
 .pprogtrack { height: 6px; border-radius: 20px; background: var(--track); overflow: hidden }
