@@ -108,6 +108,11 @@ export default function SettingsPage() {
             setLastSynced(filamentSettings.lastSynced)
             setSavedFilamentUrl(filamentSettings.ofdSourceUrl)
             setSavedAutoSync(filamentSettings.autoSync)
+            if (filamentSettings.autoSync) {
+              settingsApi.syncFilaments().then(r => {
+                if (!cancelled) setLastSynced(r.lastSynced)
+              }).catch(() => {})
+            }
           }
         } catch { /* ignore */ }
     })()

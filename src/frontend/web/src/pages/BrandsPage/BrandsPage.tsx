@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import AddBrandModal from '@/components/AddBrandModal'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
+import { settingsApi } from '@/api/settings'
 import type { BrandApiResponse as Brand } from '@/types/brand'
 import type { SpoolResponse } from '@/types/spool'
 import type { FilamentProfile } from '@/types/filament'
@@ -64,7 +65,11 @@ export default function BrandsPage() {
   }, [refresh])
 
   const handleBrandAdded = useCallback(() => {
-    refresh().catch(() => {})
+    refresh().then(() => {
+      settingsApi.getFilaments().then(s => {
+        if (s.autoSync) settingsApi.syncFilaments().catch(() => {})
+      }).catch(() => {})
+    }).catch(() => {})
   }, [refresh])
 
   const handleBrandDeleted = useCallback(() => {
