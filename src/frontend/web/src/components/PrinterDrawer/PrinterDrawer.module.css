@@ -203,6 +203,9 @@
 .jrMain { flex: 1; min-width: 0 }
 .jrName { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary) }
 .jrSub { display: flex; gap: 8px; font-size: 10.5px; color: var(--faint); margin-top: 2px }
+.jrFilaments { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px }
+.jrFil { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; color: var(--faint); font-family: var(--font-num); font-weight: 600 }
+.jrFil svg { flex: none }
 .jrUsed {
   font-size: 10.5px; color: var(--accent-ink); font-family: var(--font-num); font-weight: 700;
   flex: none; background: var(--accent-soft); padding: 2px 7px; border-radius: 20px; white-space: nowrap;

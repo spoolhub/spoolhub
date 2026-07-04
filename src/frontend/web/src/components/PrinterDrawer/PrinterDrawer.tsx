@@ -299,6 +299,16 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                           <div className={styles.jrMain}>
                             <div className={styles.jrName}>{job.printFileName ?? t('printerDetail.unnamed')}</div>
                             <div className={styles.jrSub}><span>{jobDate(job.finishedAt ?? job.startedAt)}</span><span>{jobDuration(job)}</span></div>
+                            {job.filaments.length > 0 && (
+                              <div className={styles.jrFilaments}>
+                                {job.filaments.map(f => (
+                                  <span key={f.id} className={styles.jrFil}>
+                                    <SpoolIcon color={f.colorHex ?? '#888'} size={10} />
+                                    <span>{f.gramsUsed.toFixed(0)}g{f.slotIndex >= 0 ? ` (S${f.slotIndex + 1})` : ''}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <span className={styles.jrUsed}>{job.gramsUsed.toFixed(1)} g</span>
                         </div>
