@@ -43,7 +43,7 @@
 .pdclose:hover { background: var(--surface-alt); color: var(--text-primary) }
 .pdclose svg { width: 17px; height: 17px }
 
-.pdheroband { display: flex; gap: 16px; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border-2) }
+.pdheroband { display: flex; gap: 16px; align-items: center; padding: 18px 22px 0 }
 .pdhero {
   position: relative; width: 120px; height: 96px; flex: none;
   background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--r-sm);
@@ -121,7 +121,7 @@
 .primary:hover { filter: brightness(1.06) }
 
 /* Current job — inline under hero, no card */
-.pdjobinline { padding: 0 22px 18px; border-bottom: 1px solid var(--border-2) }
+.pdjobinline { padding: 0 22px 18px }
 .jiname { font-weight: 700; font-size: 14px; letter-spacing: -.01em; margin-bottom: 8px; color: var(--text-primary) }
 [data-dir="b"] .jiname { font-weight: 600 }
 .pprogtrack { height: 6px; border-radius: 20px; background: var(--track); overflow: hidden }
