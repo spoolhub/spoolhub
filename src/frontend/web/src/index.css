@@ -48,41 +48,14 @@ body {
   animation: shake 0.45s ease-in-out;
 }
 
-/* Global scrollbar styling (matches Spools page) - high specificity to override module CSS */
-html[data-theme] .page,
-html.dark .page,
-html:not(.dark) .page {
-  scrollbar-width: thin !important;
-  scrollbar-color: var(--border) transparent !important;
+/* Global scrollbar styling - matches handoff design */
+.page::-webkit-scrollbar { width: 10px; }
+.page::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+  border: 3px solid var(--bg);
 }
-html[data-theme] .page::-webkit-scrollbar,
-html.dark .page::-webkit-scrollbar,
-html:not(.dark) .page::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-html[data-theme] .page::-webkit-scrollbar-track,
-html.dark .page::-webkit-scrollbar-track,
-html:not(.dark) .page::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-html[data-theme] .page::-webkit-scrollbar-thumb,
-html.dark .page::-webkit-scrollbar-thumb,
-html:not(.dark) .page::-webkit-scrollbar-thumb {
-  background: var(--border) !important;
-  border-radius: 20px !important;
-  border: 3px solid var(--bg) !important;
-}
-html[data-theme] .page::-webkit-scrollbar-thumb:hover,
-html.dark .page::-webkit-scrollbar-thumb:hover,
-html:not(.dark) .page::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong) !important;
-}
-html[data-theme] .page::-webkit-scrollbar-corner,
-html.dark .page::-webkit-scrollbar-corner,
-html:not(.dark) .page::-webkit-scrollbar-corner {
-  background: transparent !important;
-}
+.page::-webkit-scrollbar-track { background: transparent; }
 
 /* Legacy cyan scrollbar class (kept for backward compat) */
 .scrollbar-pretty {
