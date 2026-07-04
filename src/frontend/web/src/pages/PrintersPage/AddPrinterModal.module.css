@@ -35,6 +35,7 @@
   width: 100%; max-width: 720px;
   margin-left: auto; margin-right: auto;
 }
+.card > .body { padding-top: 64px }
 .card::-webkit-scrollbar { width: 10px }
 .card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px; border: 3px solid var(--surface) }
 
@@ -60,13 +61,25 @@
 .back svg { width: 17px; height: 17px }
 
 /* ── Body ── */
-.body { flex: 1; padding: 8px 24px 24px; display: flex; flex-direction: column; gap: 16px }
+.body { padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 20px }
 
 /* ── Heading ── */
 .heading { margin-bottom: 6px }
-.heading h1 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -.03em }
+.heading h1 { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.03em }
 [data-dir="b"] .heading h1 { font-weight: 600; letter-spacing: -.01em }
 .heading p { margin: 6px 0 0; font-size: 14px; color: var(--muted) }
+
+/* ── Centered hero (Sign in / Verify cards) ── */
+.hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 4px 4px 22px }
+.hero h1 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--text) }
+[data-dir="b"] .hero h1 { font-weight: 600 }
+.hero p { margin: 0; font-size: 12.5px; color: var(--muted) }
+.heroIcon {
+  width: 48px; height: 48px; border-radius: 13px;
+  background: var(--surface-alt); border: 1px solid var(--border);
+  color: var(--text); display: grid; place-items: center;
+}
+.heroIcon svg { width: 24px; height: 24px }
 
 /* ── Choice grid ── */
 .choose { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
@@ -122,6 +135,17 @@
 }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
 
+.pwWrap { position: relative; display: block }
+.pwWrap input { width: 100%; box-sizing: border-box; padding-right: 44px !important }
+.pwToggle {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; padding: 0; border: 0; background: none;
+  color: var(--faint); cursor: pointer; border-radius: var(--r-xs);
+  display: grid; place-items: center; transition: .15s var(--ease);
+}
+.pwToggle:hover { color: var(--muted); background: var(--surface-alt) }
+.pwToggle svg { width: 17px; height: 17px }
+
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
 @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr } }
 
@@ -137,11 +161,6 @@
 .success .ck svg { width: 32px; height: 32px }
 .success h2 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -.02em }
 .success p { margin: 0; color: var(--muted); font-size: 13.5px }
-
-/* ── Footer ── */
-.foot { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-2) }
-.foot .btn { flex: 1; justify-content: center }
-.foot .back { flex: none }
 
 /* ── Form card ── */
 .formCard { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow-card); padding: 24px }
@@ -208,7 +227,10 @@
 .btnWide { width: 100%; justify-content: center }
 
 /* ── OTP ── */
-.otpWrap { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 2px }
+.otpWrap { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 2px; text-align: center }
+.otpWrap h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em }
+[data-dir="b"] .otpWrap h1 { font-weight: 600 }
+.otpWrap p { margin: 0 0 8px; font-size: 12.5px; color: var(--muted) }
 .otp { display: flex; gap: 9px }
 .otpInput {
   width: 46px; height: 54px; text-align: center;
@@ -225,6 +247,15 @@
 }
 [data-theme="dark"] .otpIcon { color: var(--accent) }
 .otpIcon svg { width: 26px; height: 26px }
+
+.otpTimer { font-size: 12px; color: var(--faint); margin-top: 10px }
+.otpTimer b { color: var(--text); font-weight: 600; font-family: var(--font-num) }
+.otpResend {
+  color: var(--accent-ink); font-weight: 600; font: inherit; font-size: inherit;
+  background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none;
+}
+[data-theme="dark"] .otpResend { color: var(--accent) }
+.otpResend:hover { text-decoration: underline }
 
 /* ── Cloud printer list ── */
 .cloudList { display: flex; flex-direction: column; gap: 8px }
@@ -259,7 +290,3 @@
 }
 
 .emptyNote { padding: 40px 24px; text-align: center; color: var(--faint); font-size: 14px; grid-column: 1 / -1 }
-
-@media (max-width: 900px) {
-  .modal { left: 0 }
-}
