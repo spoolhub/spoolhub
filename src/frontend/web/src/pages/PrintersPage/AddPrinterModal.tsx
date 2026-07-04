@@ -60,6 +60,19 @@ const CLOSE_X = (
   </svg>
 )
 
+const EYE_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+)
+
+const EYE_OFF_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+)
+
 type Step = 'choose' | 'connect' | 'lan_scan' | 'lan_form' | 'login' | 'verify' | 'cloud_select' | 'connecting' | 'success'
 
 export default function AddPrinterModal({ onClose, onAdded }: Props) {
@@ -79,6 +92,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
   /* Cloud state */
   const [email, setEmail]                   = useState('')
   const [password, setPassword]             = useState('')
+  const [showPassword, setShowPassword]     = useState(false)
   const [otpDigits, setOtpDigits]           = useState<string[]>(Array(6).fill(''))
   const otpRefs                             = useRef<(HTMLInputElement | null)[]>([])
   const [cloudPrinters, setCloudPrinters]   = useState<CloudDiscoveredPrinter[]>([])
@@ -227,6 +241,17 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     }
   }
 
+  async function handleResend() {
+    setError(null)
+    try {
+      await printersApi.registerCloud({ brand: 'Bambu Lab', email, password })
+      setCountdown(300)
+      setOtpDigits(Array(6).fill(''))
+    } catch {
+      setError(t('addPrinter.signInError'))
+    }
+  }
+
   /* ---- OTP ---- */
   function handleOtpChange(i: number, val: string) {
     const d = val.replace(/\D/g, '').slice(-1)
@@ -240,6 +265,9 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     if (e.key === 'Backspace' && !otpDigits[i] && i > 0) {
       otpRefs.current[i - 1]?.focus()
     }
+    if (e.key === 'Enter' && !submitting && countdown > 0 && otpDigits.join('').length === 6) {
+      handleVerify(e)
+    }
   }
 
   function handleOtpPaste(e: React.ClipboardEvent) {
@@ -251,7 +279,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     otpRefs.current[Math.min(pasted.length, 5)]?.focus()
   }
 
-  async function handleVerify(e: React.FormEvent) {
+  async function handleVerify(e: React.SyntheticEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
@@ -287,7 +315,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     }
   }
 
-  const nav = (title: string, sub: string | undefined, body: React.ReactNode, foot?: React.ReactNode) => (
+  const nav = (title: string | null, sub: string | undefined, body: React.ReactNode) => (
     <>
       <div className={styles.nav}>
         {canGoBack ? (
@@ -296,13 +324,14 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
         <button className={styles.close} onClick={onClose} aria-label="Close">{CLOSE_X}</button>
       </div>
       <div className={styles.body}>
-        <div className={styles.heading}>
-          <h1>{title}</h1>
-          {sub && <p>{sub}</p>}
-        </div>
+        {title && (
+          <div className={styles.heading}>
+            <h1>{title}</h1>
+            {sub && <p>{sub}</p>}
+          </div>
+        )}
         {body}
       </div>
-      {foot && <div className={styles.foot}>{foot}</div>}
     </>
   )
 
@@ -433,24 +462,45 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
 
   function renderLogin() {
     return nav(
-      'Connect via Cloud',
-      'Sign in with your Bambu Lab account',
+      null, undefined,
       <div className={styles.formCard}>
+        <div className={styles.hero}>
+          <div className={styles.heroIcon}>{BAMBU_ICON}</div>
+          <h1>{t('addPrinter.bambuCloudSignInTitle')}</h1>
+          <p>{t('addPrinter.bambuCloudSignInDesc')}</p>
+        </div>
         <div className={styles.field}>
-          <label>Email</label>
-          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+          <label>{t('addPrinter.labelEmail')}</label>
+          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus autoComplete="email" />
         </div>
         <div className={styles.field} style={{ marginTop: 4 }}>
-          <label>Password</label>
-          <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+          <label>{t('addPrinter.labelPassword')}</label>
+          <div className={styles.pwWrap}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              className={styles.pwToggle}
+              onClick={() => setShowPassword(v => !v)}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? EYE_OFF_ICON : EYE_ICON}
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className={`${styles.btn} ${styles.back}`} onClick={goBack}>Back</button>
           <button className={`${styles.btn} ${styles.btnPrimary}`} style={{ flex: 1, justifyContent: 'center' }} onClick={handleLogin} disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign In'}
+            {submitting ? t('addPrinter.signingIn') : t('addPrinter.signIn')}
           </button>
         </div>
-        {error && <div className={styles.error} style={{ marginTop: 8 }}>{error}</div>}
+        {error && <div className={styles.error} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }
@@ -460,11 +510,12 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     const secs = countdown % 60
     const timeStr = `${mins}:${String(secs).padStart(2, '0')}`
     return nav(
-      t('addPrinter.verifyTitle'),
-      `Verify the code that sends to ${email}`,
+      null, undefined,
       <div className={styles.formCard}>
         <div className={styles.otpWrap}>
           <div className={styles.otpIcon}>{LOCK_ICON}</div>
+          <h1>{t('addPrinter.verifyTitle')}</h1>
+          <p>{t('addPrinter.verifySubtitleGeneric')}</p>
           <div className={styles.otp}>
             {otpDigits.map((d, i) => (
               <input
@@ -480,9 +531,15 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
               />
             ))}
           </div>
-          <div style={{ fontFamily: 'var(--font-num)', fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>{timeStr}</div>
+          <div className={styles.otpTimer}>
+            {countdown > 0 ? (
+              <>{t('addPrinter.codeExpiresInLabel')} <b>{timeStr}</b></>
+            ) : (
+              <>{t('addPrinter.codeExpiredLabel')} — <button type="button" className={styles.otpResend} onClick={handleResend}>{t('addPrinter.resendCode')}</button></>
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className={`${styles.btn} ${styles.back}`} onClick={goBack}>Back</button>
           <button
             className={`${styles.btn} ${styles.btnPrimary}`}
@@ -490,10 +547,10 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             onClick={handleVerify}
             disabled={submitting || otpDigits.join('').length < 6 || countdown === 0}
           >
-            {submitting ? 'Verifying\u2026' : 'Verify & Connect'}
+            {submitting ? t('addPrinter.verifying') : t('addPrinter.verifyAndConnect')}
           </button>
         </div>
-        {error && <div className={styles.error} style={{ marginTop: 8 }}>{error}</div>}
+        {error && <div className={styles.error} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }
