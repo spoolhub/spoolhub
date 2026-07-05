@@ -48,7 +48,7 @@
   text-overflow: ellipsis;
 }
 
-/* ── Actions wrapper (search + primary btn) ── */
+/* ── Actions wrapper (search + bell[desktop] + primary btn) ── */
 .topbarActions {
   display: flex;
   align-items: center;
@@ -183,6 +183,16 @@
   display: none;
 }
 
+/* ── Bell mobile (row 1, hidden desktop) ── */
+.bellMobile {
+  display: none;
+}
+
+/* ── Bell desktop (between search and button, hidden mobile) ── */
+.bellDesktop {
+  display: inline-flex;
+}
+
 /* ══════════════════ RESPONSIVE ════════════════════════ */
 
 /* ≤ 900px — mobile wrap layout */
@@ -195,6 +205,12 @@
   }
   .searchMobile {
     display: inline-flex;
+  }
+  .bellMobile {
+    display: inline-flex;
+  }
+  .bellDesktop {
+    display: none;
   }
   .topbar {
     flex-wrap: wrap;
