@@ -152,6 +152,7 @@
   .metrics { grid-template-columns: repeat(2, 1fr); }
   .search { display: none; }
   .iconBtn { display: none; }
+  .page { padding-top: calc(var(--pad) + 56px + 14px); }
 }
 
 /* ── Panel ── */

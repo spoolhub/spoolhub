@@ -129,10 +129,9 @@ export default function Dashboard() {
   const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
 
   return (
-    <div className={`${styles.page} page`}>
-      {/* ════ HEADER — mobile only (hamburger + logo + search + bell) ════ */}
+    <>
       <Header />
-
+      <div className={`${styles.page} page`}>
       {/* ════ PAGE TITLE ROW — Dashboard · search · bell · Add Spool (desktop) ════ */}
       <div className={styles.titleRow}>
         <h1 className={styles.pageTitle}>Dashboard</h1>
@@ -272,5 +271,6 @@ export default function Dashboard() {
         ) : null
       })()}
     </div>
+    </>
   )
 }
