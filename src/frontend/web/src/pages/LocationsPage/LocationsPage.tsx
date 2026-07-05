@@ -23,7 +23,6 @@ import type { SpoolResponse } from '@/types/spool'
 import styles from './LocationsPage.module.css'
 
 const ORDER_KEY = 'locations-order'
-const VIEW_KEY = 'spoolhub-locations-view'
 
 const SHELF_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -81,11 +80,10 @@ function computeStats(loc: LocationResponse, spools: SpoolResponse[]): LocationS
 interface CardProps {
   location: LocationResponse
   stats: LocationStats
-  view: 'grid' | 'list'
   onOpen: (loc: LocationResponse) => void
 }
 
-function LocationCard({ location, stats, view, onOpen }: CardProps) {
+function LocationCard({ location, stats, onOpen }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: location.id })
 
@@ -101,7 +99,7 @@ function LocationCard({ location, stats, view, onOpen }: CardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`${styles.card}${view === 'list' ? ` ${styles.cardList}` : ''}`}
+      className={styles.card}
       onClick={() => onOpen(location)}
     >
       <button className={styles.dragHandle} {...attributes} {...listeners} onClick={e => e.stopPropagation()} aria-label="Drag to reorder">
@@ -154,7 +152,6 @@ export default function LocationsPage() {
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [sortBy, setSortBy] = useState('custom')
-  const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem(VIEW_KEY) as 'grid' | 'list') || 'grid')
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isNew, setIsNew] = useState(false)
@@ -179,8 +176,6 @@ export default function LocationsPage() {
       })
       .catch(() => setLoading(false))
   }, [])
-
-  useEffect(() => { localStorage.setItem(VIEW_KEY, view) }, [view])
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -210,7 +205,6 @@ export default function LocationsPage() {
       const stats = statsById.get(l.id)
       if (!stats) return true
       if (activeFilter === 'full') return stats.fillPct >= 80
-      if (activeFilter === 'empty') return stats.free > 0
       return true
     })
     list = [...list]
@@ -321,7 +315,6 @@ export default function LocationsPage() {
           <button className={`${styles.chip} ${activeFilter === 'shelf' ? styles.on : ''}`} onClick={() => setActiveFilter('shelf')}>Shelves</button>
           <button className={`${styles.chip} ${activeFilter === 'drybox' ? styles.on : ''}`} onClick={() => setActiveFilter('drybox')}>Dryboxes</button>
           <button className={`${styles.chip} ${activeFilter === 'full' ? styles.on : ''}`} onClick={() => setActiveFilter('full')}>Near full</button>
-          <button className={`${styles.chip} ${activeFilter === 'empty' ? styles.on : ''}`} onClick={() => setActiveFilter('empty')}>Has space</button>
         </div>
         <div className={styles.invtools}>
           <select className={styles.sortsel} value={sortBy} onChange={e => setSortBy(e.target.value)}>
@@ -330,14 +323,6 @@ export default function LocationsPage() {
             <option value="space">Sort: Most space</option>
             <option value="name">Sort: Name A–Z</option>
           </select>
-          <div className={styles.seg2}>
-            <button className={view === 'grid' ? styles.on : ''} onClick={() => setView('grid')} title="Grid view">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            </button>
-            <button className={view === 'list' ? styles.on : ''} onClick={() => setView('list')} title="List view">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -355,13 +340,12 @@ export default function LocationsPage() {
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={visible.map(l => l.id)} strategy={rectSortingStrategy}>
-              <div className={`${styles.grid}${view === 'list' ? ` ${styles.gridList}` : ''}`}>
+              <div className={styles.grid}>
                 {visible.map(loc => (
                   <LocationCard
                     key={loc.id}
                     location={loc}
                     stats={statsById.get(loc.id)!}
-                    view={view}
                     onOpen={openEditDrawer}
                   />
                 ))}
