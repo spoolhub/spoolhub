@@ -9,7 +9,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100%;
+  height: 100dvh;
   width: var(--sidebar-width, 248px);
   min-width: 248px;
   z-index: 30;
@@ -20,6 +20,7 @@
   transition: transform var(--t-slow);
   transform: translateX(-100%);
   padding: 22px 16px;
+  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
 }
 .asideOpen { transform: translateX(0); }
 

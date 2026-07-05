@@ -153,9 +153,6 @@
   .search { display: none; }
   .iconBtn { display: none; }
 }
-@media (max-width: 430px) {
-  .metrics { grid-template-columns: 1fr; }
-}
 
 /* ── Panel ── */
 .panel {

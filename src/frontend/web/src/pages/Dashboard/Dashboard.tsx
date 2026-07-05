@@ -165,15 +165,15 @@ export default function Dashboard() {
           trend={{ text: `+${spools.length}`, muted: t('dashboard.thisMonth'), variant: 'positive' }}
         />
         <MetricCard
-          label="Active Filament"
+          label="Filament On Stock"
           value={parseFloat(totalWeightKg)}
           suffix={<span>kg</span>}
           to="/spools/active"
           loading={loading}
           icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 7c3 0 3 10 6 10s3-10 6-10 3 10 6 10" /></svg>}
           trend={weeklyUsedKg != null && weeklyUsedKg > 0
-            ? { text: `−${weeklyUsedKg.toFixed(1)}kg`, muted: t('dashboard.usedThisWeek'), variant: 'warning' }
-            : { text: '−0.0kg', muted: t('dashboard.usedThisWeek'), variant: 'neutral' }
+            ? { text: `−${weeklyUsedKg.toFixed(1)}kg`, muted: 'Used', variant: 'warning' }
+            : { text: '−0.0kg', muted: 'Used', variant: 'neutral' }
           }
         />
         <MetricCard
