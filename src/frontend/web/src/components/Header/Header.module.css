@@ -185,9 +185,3 @@
   }
 }
 
-/* ≤ 430px — tiny screen */
-@media (max-width: 430px) {
-  .topbarLogoName {
-    display: none;
-  }
-}
