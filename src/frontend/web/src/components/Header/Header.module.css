@@ -131,7 +131,7 @@
   height: 16px;
 }
 
-/* ── Icon button (bell, hamburger) ── */
+/* ── Icon button (bell, hamburger, search mobile) ── */
 .btnIcon {
   width: 42px;
   padding: 0;
@@ -178,6 +178,11 @@
   color: var(--accent);
 }
 
+/* ── Search icon button (hidden desktop, shown on mobile) ── */
+.searchMobile {
+  display: none;
+}
+
 /* ══════════════════ RESPONSIVE ════════════════════════ */
 
 /* ≤ 900px — mobile wrap layout */
@@ -187,6 +192,9 @@
   }
   .topbarLogo {
     display: flex;
+  }
+  .searchMobile {
+    display: inline-flex;
   }
   .topbar {
     flex-wrap: wrap;
@@ -198,9 +206,7 @@
     gap: 10px;
   }
   .topbarActions .search {
-    flex: 1 1 180px;
-    width: auto;
-    max-width: none;
+    display: none;
   }
   .h {
     flex: 1 1 100%;
@@ -214,13 +220,6 @@
     font-size: 21px;
   }
   .sub {
-    display: none;
-  }
-  .topbarActions .search {
-    flex: 1 1 120px;
-    min-width: 0;
-  }
-  .topbarActions .k {
     display: none;
   }
   .btnPrimary {

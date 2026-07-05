@@ -87,6 +87,14 @@ export default function Header({
         <div className={styles.topbarLogoName}>Spool<b>Hub</b></div>
       </div>
 
+      {/* Search icon button — mobile only, left of bell */}
+      <button className={`${styles.btn} ${styles.btnIcon} ${styles.searchMobile}`} title="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3-3" />
+        </svg>
+      </button>
+
       {/* Bell notification — pushed to right edge */}
       <button className={`${styles.btn} ${styles.btnIcon}`} style={{ marginLeft: 'auto' }} title="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
@@ -94,7 +102,7 @@ export default function Header({
         </svg>
       </button>
 
-      {/* Actions wrapper — search + primary button */}
+      {/* Actions wrapper — search + primary button (search hidden on mobile) */}
       <div className={styles.topbarActions}>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
