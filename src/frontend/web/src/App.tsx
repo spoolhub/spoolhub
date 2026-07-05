@@ -4,6 +4,7 @@ import { ConnectionProvider, useConnection } from '@/context/ConnectionContext'
 import { DesignProvider } from '@/context/DesignContext'
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
 import Sidebar from '@/components/Sidebar'
+import Header from '@/components/Header'
 import SpoolsPage from '@/pages/SpoolsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import ScanPage from '@/pages/ScanPage'
@@ -50,6 +51,7 @@ function AppShell() {
           <main
             className={`flex-1 min-h-0 overflow-y-auto ${isOffline ? styles.mainOffline : styles.mainOnline}`}
           >
+            <Header />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/spools" element={<SpoolsPage />} />

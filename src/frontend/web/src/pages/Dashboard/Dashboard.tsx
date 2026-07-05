@@ -8,7 +8,6 @@ import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
-import Header from '@/components/Header'
 
 import PrinterCard from '@/components/PrinterCard'
 import RecentActivity from '@/components/RecentActivity'
@@ -130,7 +129,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header />
       <div className={`${styles.page} page`}>
         {/* ════ PAGE TITLE ROW — Dashboard · search · bell · Add Spool (desktop) ════ */}
         <div className={styles.titleRow}>
