@@ -102,6 +102,9 @@ export default function Header({
         </svg>
       </button>
 
+      {/* Flex break — forces row 2 below row 1 on mobile */}
+      <div className={styles.flexBreak} />
+
       {/* Actions wrapper — search + bell(desktop) + primary button */}
       <div className={styles.topbarActions}>
         <label className={styles.search}>
