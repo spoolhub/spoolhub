@@ -148,6 +148,14 @@
   gap: var(--gap);
   flex-shrink: 0;
 }
+@media (max-width: 920px) {
+  .search {
+    width: 200px;
+    max-width: 200px;
+    flex: 1 1 120px;
+    min-width: 80px;
+  }
+}
 @media (max-width: 767px) {
   .metrics { grid-template-columns: repeat(2, 1fr); }
   .search { display: none; }
