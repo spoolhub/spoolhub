@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ConnectionProvider, useConnection } from '@/context/ConnectionContext'
 import { DesignProvider } from '@/context/DesignContext'
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
 import Sidebar from '@/components/Sidebar'
 import SpoolsPage from '@/pages/SpoolsPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -24,7 +25,7 @@ import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
 
 function AppShell() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isOpen: sidebarOpen, close: closeSidebar } = useSidebar()
   const [spoolCount, setSpoolCount] = useState<number | undefined>(undefined)
   const { isOffline } = useConnection()
 
@@ -44,7 +45,7 @@ function AppShell() {
       <ConnectionBanner />
       <div className="min-h-dvh sm:h-dvh flex flex-col bg-[var(--bg)] transition-colors duration-200">
         <div className="sm:h-dvh sm:flex sm:overflow-hidden bg-[var(--bg)]">
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} spoolCount={spoolCount} />
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} spoolCount={spoolCount} />
 
           <main
             className={`flex-1 min-h-0 overflow-y-auto ${isOffline ? styles.mainOffline : styles.mainOnline}`}
@@ -84,9 +85,11 @@ export default function App() {
   return (
     <ConnectionProvider>
       <DesignProvider>
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
+        <SidebarProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </SidebarProvider>
       </DesignProvider>
     </ConnectionProvider>
   )

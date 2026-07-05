@@ -1,36 +1,38 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import Header from '@/components/Header'
+import { SidebarProvider } from '@/context/SidebarContext'
 
-function renderHeader(onOpenSidebar = vi.fn()) {
+function renderHeader() {
   return render(
     <MemoryRouter>
-      <Header onOpenSidebar={onOpenSidebar} />
+      <SidebarProvider>
+        <Header />
+      </SidebarProvider>
     </MemoryRouter>
   )
 }
 
 describe('Header', () => {
-  it('renders the SpoolHub logo link', () => {
+  it('renders the hamburger menu button', () => {
     renderHeader()
-    expect(screen.getByRole('link', { name: 'SpoolHub' })).toBeInTheDocument()
+    expect(screen.getByTitle('Menu')).toBeInTheDocument()
   })
 
-  it('logo links to /', () => {
+  it('renders the SpoolHub brand name', () => {
     renderHeader()
-    expect(screen.getByRole('link', { name: 'SpoolHub' })).toHaveAttribute('href', '/')
+    expect(screen.getByText(/Spool/)).toBeInTheDocument()
+    expect(screen.getByText(/Hub/)).toBeInTheDocument()
   })
 
-  it('renders the language selector', () => {
+  it('renders the search bar (desktop)', () => {
     renderHeader()
-    expect(screen.getByLabelText('Select language')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search spools, brands, colors…')).toBeInTheDocument()
   })
 
-  it('calls onOpenSidebar when hamburger clicked', () => {
-    const onOpenSidebar = vi.fn()
-    renderHeader(onOpenSidebar)
-    fireEvent.click(screen.getByLabelText('Open sidebar'))
-    expect(onOpenSidebar).toHaveBeenCalledTimes(1)
+  it('renders the notification bell (mobile + desktop)', () => {
+    renderHeader()
+    expect(screen.getAllByTitle('Notifications')).toHaveLength(2)
   })
 })

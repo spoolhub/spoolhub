@@ -192,3 +192,25 @@ html.dark {
   --spool-axle:       #71717a;
   --spool-bg:         #161b22;
 }
+
+/* ════════════════════════════════════════════════════════════
+   Mobile spacing — reduce spacing tokens at ≤600px
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  [data-dir="a"] {
+    --pad: 16px;
+    --gap: 14px;
+    --card-pad: 16px;
+    --r: 14px;
+    --r-sm: 9px;
+    --r-xs: 6px;
+  }
+  [data-dir="b"] {
+    --pad: 16px;
+    --gap: 14px;
+    --card-pad: 16px;
+    --r: 8px;
+    --r-sm: 6px;
+    --r-xs: 5px;
+  }
+}
