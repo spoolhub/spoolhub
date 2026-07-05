@@ -8,6 +8,7 @@ import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
+import MenuButton from '@/components/MenuButton/MenuButton'
 
 import PrinterCard from '@/components/PrinterCard'
 import RecentActivity from '@/components/RecentActivity'
@@ -128,31 +129,46 @@ export default function Dashboard() {
   const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
 
   return (
-    <div className={`${styles.page} page`}>
-      {/* ════ TOPBAR ════ */}
-      <header className={styles.topbar}>
-        <div className={styles.h}>
-          <h1 className={styles.title}>{t('home.title', 'Dashboard')}</h1>
-          <div className={styles.sub}>
-            {spools.length} spools tracked · {filamentBrands} brands · {onlineCount} printers online
+      <div className={`${styles.page} page`}>
+        {/* ════ TOPBAR ════ */}
+        <header className={styles.topbar}>
+          <MenuButton />
+          <div className="topbar-logo">
+            <svg viewBox="47 22 136 136" fill="none" aria-label="SpoolHub">
+              <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3" />
+              <g transform="translate(115,90)">
+                <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".4" />
+                <circle r="43" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".65" />
+                <circle r="33" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".9" />
+                <circle r="17" fill="#15803D" />
+                <circle r="9" fill="none" stroke="#fff" strokeWidth="2" opacity=".6" />
+              </g>
+            </svg>
           </div>
-        </div>
+          <div className={styles.h}>
+            <h1 className={styles.title}>{t('home.title', 'Dashboard')}</h1>
+            <div className={styles.sub}>
+              {spools.length} spools tracked · {filamentBrands} brands · {onlineCount} printers online
+            </div>
+          </div>
 
-        <label className={styles.search}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3" /></svg>
-          <input placeholder="Search spools, brands, colors…" />
-          <span className={styles.k}>⌘K</span>
-        </label>
+          <button className={styles.iconBtn} title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" /></svg>
+          </button>
 
-        <button className={styles.iconBtn} title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" /></svg>
-        </button>
+          <div className={styles.topbarActions}>
+            <label className={styles.search}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3" /></svg>
+              <input placeholder="Search spools, brands, colors…" />
+              <span className={styles.k}>⌘K</span>
+            </label>
 
-        <Link to="/spools/add" className={styles.primaryBtn}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg>
-          Add Spool
-        </Link>
-      </header>
+            <Link to="/spools/add" className={styles.primaryBtn}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg>
+              Add Spool
+            </Link>
+          </div>
+        </header>
 
       {/* ════ METRICS ════ */}
       <section className={styles.metrics}>
@@ -165,7 +181,7 @@ export default function Dashboard() {
           trend={{ text: `+${spools.length}`, muted: t('dashboard.thisMonth'), variant: 'positive' }}
         />
         <MetricCard
-          label="Active Filament"
+          label="Filament On Stock"
           value={parseFloat(totalWeightKg)}
           suffix={<span>kg</span>}
           to="/spools/active"

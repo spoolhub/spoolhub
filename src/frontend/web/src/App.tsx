@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ConnectionProvider, useConnection } from '@/context/ConnectionContext'
 import { DesignProvider } from '@/context/DesignContext'
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
 import Sidebar from '@/components/Sidebar'
 import SpoolsPage from '@/pages/SpoolsPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -24,9 +25,9 @@ import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
 
 function AppShell() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [spoolCount, setSpoolCount] = useState<number | undefined>(undefined)
   const { isOffline } = useConnection()
+  const { isOpen, close, isCollapsed } = useSidebar()
 
   useEffect(() => {
     let cancelled = false
@@ -42,40 +43,38 @@ function AppShell() {
   return (
     <>
       <ConnectionBanner />
-      <div className="min-h-dvh sm:h-dvh flex flex-col bg-[var(--bg)] transition-colors duration-200">
-        <div className="sm:h-dvh sm:flex sm:overflow-hidden bg-[var(--bg)]">
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} spoolCount={spoolCount} />
+      <div className={`app${isCollapsed ? ' rail-collapsed' : ''}`}>
+        <Sidebar isOpen={isOpen} onClose={close} spoolCount={spoolCount} />
+        <div className={`navscrim${isOpen ? ' open' : ''}`} onClick={close} aria-hidden="true" />
 
-          <main
-            className={`flex-1 min-h-0 overflow-y-auto ${isOffline ? styles.mainOffline : styles.mainOnline}`}
-          >
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/spools" element={<SpoolsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/scan" element={<ScanPage />} />
-              <Route path="/printers" element={<PrintersPage />} />
-              <Route path="/printers/addprinter" element={<AddPrinterPage />} />
-              <Route path="/spools/add" element={<AddSpoolPage />} />
-              <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
-              <Route path="/spools/add/manual" element={<AddSpoolPage />} />
-              <Route path="/spools/select" element={<SelectSpoolPage />} />
-              <Route path="/spools/active" element={<ActiveSpoolsPage />} />
-              <Route path="/spools/low" element={<LowStockPage />} />
-              <Route path="/brands" element={<BrandsPage />} />
-              <Route path="/brands" element={<BrandsPage />} />
-              <Route path="/brands/:brand" element={<BrandsPage />} />
-              <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
-              <Route path="/spool-profiles" element={<SpoolProfilePage />} />
-              <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
-              <Route path="/print-history" element={<PrintHistoryPage />} />
-              <Route path="/activity" element={<ActivityPage />} />
-              <Route path="/locations" element={<LocationsPage />} />
-            </Routes>
-          </main>
-        </div>
+        <main
+          className={`main ${isOffline ? styles.mainOffline : styles.mainOnline}`}
+        >
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/spools" element={<SpoolsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/scan" element={<ScanPage />} />
+            <Route path="/printers" element={<PrintersPage />} />
+            <Route path="/printers/addprinter" element={<AddPrinterPage />} />
+            <Route path="/spools/add" element={<AddSpoolPage />} />
+            <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
+            <Route path="/spools/add/manual" element={<AddSpoolPage />} />
+            <Route path="/spools/select" element={<SelectSpoolPage />} />
+            <Route path="/spools/active" element={<ActiveSpoolsPage />} />
+            <Route path="/spools/low" element={<LowStockPage />} />
+            <Route path="/brands" element={<BrandsPage />} />
+            <Route path="/brands" element={<BrandsPage />} />
+            <Route path="/brands/:brand" element={<BrandsPage />} />
+            <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
+            <Route path="/spool-profiles" element={<SpoolProfilePage />} />
+            <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
+            <Route path="/print-history" element={<PrintHistoryPage />} />
+            <Route path="/activity" element={<ActivityPage />} />
+            <Route path="/locations" element={<LocationsPage />} />
+          </Routes>
+        </main>
       </div>
-
     </>
   )
 }
@@ -84,9 +83,11 @@ export default function App() {
   return (
     <ConnectionProvider>
       <DesignProvider>
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
+        <SidebarProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </SidebarProvider>
       </DesignProvider>
     </ConnectionProvider>
   )

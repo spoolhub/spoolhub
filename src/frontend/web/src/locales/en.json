@@ -904,7 +904,7 @@
     "jobs": "jobs"
   },
   "dashboard": {
-    "usedThisWeek": "used this week",
+    "usedThisWeek": "used",
     "thisMonth": "this month"
   }
 }

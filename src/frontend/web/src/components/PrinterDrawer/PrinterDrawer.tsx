@@ -1,4 +1,5 @@
 import { useState, useEffect, type MouseEvent } from 'react'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { printersApi } from '@/api/printers'
@@ -73,6 +74,8 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
     printJobsApi.getByPrinter(printer.id).then(j => { if (!cancelled) setJobs(j) }).catch(() => {})
     return () => { cancelled = true }
   }, [printer.id])
+
+  useBodyScrollLock()
 
   const imgSrc = getPrinterImage(printer.brand, printer.model)
   const stLabel = getPrinterStatusLabel(status)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
@@ -40,6 +41,7 @@ interface Props {
 
 export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated, onDeleted }: Props) {
   const { t } = useTranslation()
+  useBodyScrollLock()
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState<EditForm>({})
   const [showAddLocation, setShowAddLocation] = useState(false)

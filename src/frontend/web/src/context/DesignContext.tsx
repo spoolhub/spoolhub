@@ -65,7 +65,19 @@ export function DesignProvider({ children }: { children?: React.ReactNode }) {
   useEffect(() => {
     const theme = mode === 'system' ? (getSystemDark() ? 'dark' : 'light') : mode
     document.documentElement.setAttribute('data-theme', theme)
-  }, [mode])
+    requestAnimationFrame(() => {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+      // Safari's theme-color parser doesn't resolve oklch()/color() — force
+      // the browser to resolve it to rgb(...) via a throwaway element first,
+      // otherwise it silently falls back to white.
+      const probe = document.createElement('div')
+      probe.style.color = bg
+      document.body.appendChild(probe)
+      const resolved = getComputedStyle(probe).color
+      document.body.removeChild(probe)
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved)
+    })
+  }, [mode, dir])
 
   useEffect(() => {
     function sync() {

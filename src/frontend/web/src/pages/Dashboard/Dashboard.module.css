@@ -6,8 +6,6 @@
   flex-direction: column;
   gap: var(--gap);
   height: 100%;
-  overflow-y: auto;
-  padding: var(--pad);
   padding-bottom: 80px;
 }
 @media (min-width: 640px) {
@@ -116,15 +114,19 @@
 .primaryBtn:hover { filter: brightness(1.06); }
 .primaryBtn svg { width: 16px; height: 16px; }
 
+/* ── Topbar Actions (handoff: wraps search + add button) ── */
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 /* ── Metrics ── */
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--gap);
   flex-shrink: 0;
-}
-@media (max-width: 900px) {
-  .metrics { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Panel ── */
@@ -168,13 +170,16 @@
 }
 .viewAll:hover { color: var(--text-primary); }
 
-/* Printers inside panel */
+/* Printers inside panel — handoff: 2 columns */
 .printerGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(346px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--gap);
   padding: var(--card-pad);
   align-items: start;
+}
+@media (max-width: 880px) {
+  .printerGrid { grid-template-columns: 1fr; }
 }
 
 /* Bottom row — Low Stock + Recent Activity, capped height */
@@ -224,3 +229,35 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* ═══ RESPONSIVE — mobile (≤ 900px) ═══ */
+@media (max-width: 900px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .topbarActions {
+    order: 8;
+    flex: 1 0 100%;
+    gap: 10px;
+  }
+  .topbarActions .search {
+    flex: 1 1 180px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* ═══ RESPONSIVE — small (≤ 600px) ═══ */
+@media (max-width: 600px) {
+  .topbar h1 { font-size: 21px; }
+  .topbar .sub { display: none; }
+  .topbarActions .search {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .topbarActions .search .k { display: none; }
+  .topbarActions > .primaryBtn { flex: 0 0 auto; padding: 0 12px; }
+}
+
+/* ═══ RESPONSIVE — tiny (≤ 430px) ═══ */

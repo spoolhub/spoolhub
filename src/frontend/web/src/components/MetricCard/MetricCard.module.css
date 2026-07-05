@@ -72,6 +72,7 @@
   font-size: 12px;
   font-weight: 600;
   margin-top: 9px;
+  min-height: 1.5em;
 }
 .positive { color: oklch(0.6 0.13 150); }
 .warning { color: oklch(0.62 0.16 25); }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
+import MenuButton from '@/components/MenuButton/MenuButton'
 import AddBrandModal from '@/components/AddBrandModal'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import { settingsApi } from '@/api/settings'
@@ -118,7 +119,20 @@ export default function BrandsPage() {
   return (
     <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
-        <div className={styles.h}>
+              <MenuButton />
+              <div className="topbar-logo">
+                <svg viewBox="47 22 136 136" fill="none" aria-label="SpoolHub">
+                  <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3" />
+                  <g transform="translate(115,90)">
+                    <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".4" />
+                    <circle r="43" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".65" />
+                    <circle r="33" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".9" />
+                    <circle r="17" fill="#15803D" />
+                    <circle r="9" fill="none" stroke="#fff" strokeWidth="2" opacity=".6" />
+                  </g>
+                </svg>
+              </div>
+              <div className={styles.h}>
           <h1>{t('brands.title', 'Brands')}</h1>
           <div className={styles.sub}>{brands.length} brands · {totalSpools} spools · {totalKg} kg filament on hand</div>
         </div>
