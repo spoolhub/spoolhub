@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import Header from '@/components/Header'
 import { SidebarProvider } from '@/context/SidebarContext'
 
