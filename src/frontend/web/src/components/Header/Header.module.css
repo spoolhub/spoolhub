@@ -1,41 +1,237 @@
-.header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+/* ════════════════════════════════════════════════════════
+   Topbar — matches SpoolHub Dashboard.html handoff
+   Each page renders this via the <Header> component.
+   ════════════════════════════════════════════════════════ */
+
+/* ── Container ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
   position: sticky;
-  top: 0;
-  z-index: 10;
-  height: var(--header-height);
-  display: flex;
-  align-items: center;
+  top: calc(var(--pad) * -1);
+  z-index: 20;
+  background: var(--bg);
+  padding-top: var(--pad);
+  margin-top: calc(var(--pad) * -1);
+  padding-bottom: 14px;
 }
 
-.inner {
+/* ── Title block  (ALWAYS LAST in JSX) ── */
+.h {
+  flex: 1;
+  min-width: 0;
+  order: 2;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+[data-dir="b"] .title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Actions wrapper (search + primary btn) ── */
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  order: 3;
+}
+
+/* ── Search bar ── */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 13px;
+  height: 42px;
+  width: 280px;
+  max-width: 280px;
+  flex: 1 1 160px;
+  min-width: 120px;
+  color: var(--muted);
+  transition: 0.18s var(--ease);
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.search input {
+  border: 0;
+  background: 0;
+  outline: 0;
+  color: var(--text);
+  font: inherit;
   width: 100%;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
+}
+.search input::placeholder {
+  color: var(--faint);
+}
+.k {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  flex-shrink: 0;
 }
 
-.hamburger {
-  display: none;
-  background: none;
-  border: none;
+/* ── Button base ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
   cursor: pointer;
-  color: var(--text-secondary);
+  transition: 0.16s var(--ease);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Icon button (bell, hamburger) ── */
+.btnIcon {
+  width: 42px;
   padding: 0;
+  justify-content: center;
+  color: var(--muted);
 }
-.hamburger:hover { color: var(--text-primary); }
 
-.logoLink { display: none; }
+/* ── Primary action button ── */
+.btnPrimary {
+  composes: btn;
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.btnPrimary:hover {
+  filter: brightness(1.06);
+}
 
-.actions {
-  display: flex;
+/* ── Hamburger (hidden desktop, shown ≤900px) ── */
+.menubtn {
+  display: none;
+}
+
+/* ── Brand logo in topbar (hidden desktop, shown ≤900px) ── */
+.topbarLogo {
+  display: none;
   align-items: center;
-  gap: 1rem;
-  margin-left: auto;
+  gap: 9px;
+  flex: none;
+}
+.topbarLogo svg {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+.topbarLogoName {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.topbarLogoName b {
+  color: var(--accent);
 }
 
-@media (max-width: 767px) {
-  .hamburger { display: block; }
-  .logoLink  { display: block; }
+/* ══════════════════ RESPONSIVE ════════════════════════ */
+
+/* ≤ 900px — mobile wrap layout */
+@media (max-width: 900px) {
+  .menubtn {
+    display: inline-flex;
+  }
+  .topbarLogo {
+    display: flex;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .topbarActions {
+    order: 8;
+    flex: 1 0 100%;
+    gap: 10px;
+  }
+  .topbarActions .search {
+    flex: 1 1 180px;
+    width: auto;
+    max-width: none;
+  }
+  .h {
+    flex: 1 1 100%;
+    order: 99;
+  }
+}
+
+/* ≤ 600px — small screen */
+@media (max-width: 600px) {
+  .title {
+    font-size: 21px;
+  }
+  .sub {
+    display: none;
+  }
+  .topbarActions .search {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .topbarActions .k {
+    display: none;
+  }
+  .btnPrimary {
+    flex: 0 0 auto;
+    padding: 0 12px;
+  }
+}
+
+/* ≤ 430px — tiny screen */
+@media (max-width: 430px) {
+  .topbarLogoName {
+    display: none;
+  }
 }

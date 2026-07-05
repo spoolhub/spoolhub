@@ -8,6 +8,7 @@ import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
+import Header from '@/components/Header'
 
 import PrinterCard from '@/components/PrinterCard'
 import RecentActivity from '@/components/RecentActivity'
@@ -129,30 +130,13 @@ export default function Dashboard() {
 
   return (
     <div className={`${styles.page} page`}>
-      {/* ════ TOPBAR ════ */}
-      <header className={styles.topbar}>
-        <div className={styles.h}>
-          <h1 className={styles.title}>{t('home.title', 'Dashboard')}</h1>
-          <div className={styles.sub}>
-            {spools.length} spools tracked · {filamentBrands} brands · {onlineCount} printers online
-          </div>
-        </div>
-
-        <label className={styles.search}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3" /></svg>
-          <input placeholder="Search spools, brands, colors…" />
-          <span className={styles.k}>⌘K</span>
-        </label>
-
-        <button className={styles.iconBtn} title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" /></svg>
-        </button>
-
-        <Link to="/spools/add" className={styles.primaryBtn}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg>
-          Add Spool
-        </Link>
-      </header>
+      {/* ════ TOPBAR — sticky top of page, matches handoff ════ */}
+      <Header
+        title="Filament Inventory"
+        subtitle={`${spools.length} spools tracked · ${filamentBrands} brands · ${onlineCount} printers online`}
+        actionLabel="Add Spool"
+        actionLink="/spools/add"
+      />
 
       {/* ════ METRICS ════ */}
       <section className={styles.metrics}>
@@ -241,7 +225,7 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <div style={{ height: 80 }} />
+      <div style={{ height: 70 }} />
       {detailSpool && (
         <SpoolDetailDrawer
           spool={detailSpool}
