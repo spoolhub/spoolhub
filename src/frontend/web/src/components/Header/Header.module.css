@@ -143,8 +143,8 @@
 
 /* ══════════════════ RESPONSIVE ════════════════════════ */
 
-/* ≤ 900px — mobile */
-@media (max-width: 900px) {
+/* ≤ 767px — mobile */
+@media (max-width: 767px) {
   .menubtn {
     display: inline-flex;
   }

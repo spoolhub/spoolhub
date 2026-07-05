@@ -148,7 +148,7 @@
   gap: var(--gap);
   flex-shrink: 0;
 }
-@media (max-width: 900px) {
+@media (max-width: 767px) {
   .metrics { grid-template-columns: repeat(2, 1fr); }
   .search { display: none; }
   .iconBtn { display: none; }
