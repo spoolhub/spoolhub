@@ -15,7 +15,7 @@ export default function Header() {
 
       {/* Brand logo — hidden on desktop, shown on mobile */}
       <div className={styles.topbarLogo}>
-        <svg viewBox="47 22 136 136" fill="none" aria-label="SpoolHub" width="28" height="28">
+        <svg width="38" height="38" viewBox="47 22 136 136" fill="none" aria-label="SpoolHub">
           <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3" />
           <g transform="translate(115,90)">
             <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".4" />

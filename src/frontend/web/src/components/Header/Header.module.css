@@ -107,23 +107,23 @@
 .topbarLogo {
   display: none;
   align-items: center;
-  gap: 9px;
+  gap: 11px;
   flex: none;
 }
 .topbarLogo svg {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   flex: none;
 }
 .topbarLogoName {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -.02em;
   color: var(--text);
   white-space: nowrap;
 }
 .topbarLogoName b {
-  color: var(--accent);
+  color: #16A34A;
 }
 
 /* ── Search icon button (hidden desktop, shown on mobile) ── */
@@ -164,20 +164,18 @@
     display: none;
   }
   .topbar {
-          flex-wrap: wrap;
-          row-gap: 12px;
-          background: var(--surface);
-          margin-left: calc(var(--pad) * -1);
-          margin-right: calc(var(--pad) * -1);
-          padding-left: var(--pad);
-          padding-right: var(--pad);
-          border-bottom: 1px solid var(--border);
-          display: flex;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-        }
+            flex-wrap: wrap;
+            row-gap: 12px;
+            background: var(--surface);
+            padding-left: var(--pad);
+            padding-right: var(--pad);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+          }
 }
 
 /* ≤ 600px — small screen */
