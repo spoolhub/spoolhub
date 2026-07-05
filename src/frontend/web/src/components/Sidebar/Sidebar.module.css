@@ -3,16 +3,14 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 20;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100dvh;
 }
 
 .aside {
   position: fixed;
   top: 0;
   left: 0;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100dvh;
   width: var(--sidebar-width, 248px);
   min-width: 248px;
   z-index: 30;
