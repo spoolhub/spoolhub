@@ -355,6 +355,28 @@
   .invbar { flex-direction: column; align-items: stretch }
 }
 
+@media (max-width: 767px) {
+  .sub { display: none }
+  .sortsel { display: none }
+  .invbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+  }
+  .chips {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+  .chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .invtools {
+    flex-shrink: 0;
+  }
+}
+
 /* ── Delete confirmation modal ── */
 .modalScrim {
   position: fixed; inset: 0;
@@ -390,11 +412,6 @@
 .modalText strong { color: var(--text-primary) }
 .modalActions { display: flex; gap: 12px }
 .modalActions .btn { flex: 1 }
-
-@media (max-width: 900px) {
-  .search { display: none }
-  .invbar { flex-direction: column; align-items: stretch }
-}
 
 /* ── Inline add location ── */
 .addNew { font-style: italic; color: var(--accent) }
