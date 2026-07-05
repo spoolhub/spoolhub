@@ -132,7 +132,10 @@ export default function Dashboard() {
       <div className={`${styles.page} page`}>
         {/* ════ PAGE TITLE ROW — Dashboard · search · bell · Add Spool (desktop) ════ */}
         <div className={styles.titleRow}>
-          <h1 className={styles.pageTitle}>Dashboard</h1>
+          <div className={styles.h}>
+            <h1 className={styles.pageTitle}>Dashboard</h1>
+            <div className={styles.pageSub}>{spools.length} spools · {totalWeightKg} kg filament on hand · {onlineCount} / {printers.length} printers online</div>
+          </div>
           <button className={styles.searchBtn} title="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />

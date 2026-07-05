@@ -356,7 +356,6 @@
 }
 
 @media (max-width: 767px) {
-  .sub { display: none }
   .sortsel { display: none }
   .invbar {
     flex-direction: row;
@@ -374,6 +373,7 @@
   }
   .invtools {
     flex-shrink: 0;
+    margin-left: auto;
   }
 }
 
