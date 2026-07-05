@@ -1,11 +1,12 @@
 /* ════════════════════════════════════════════════════════
    Topbar — matches SpoolHub Dashboard.html handoff
-   Each page renders this via the <Header> component.
+   Desktop: [Search input... ⌘K] [🔔]
+   Mobile:  [menu] Logo [🔍][🔔]
    ════════════════════════════════════════════════════════ */
 
 /* ── Container ── */
 .topbar {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
@@ -16,44 +17,6 @@
   padding-top: var(--pad);
   margin-top: calc(var(--pad) * -1);
   padding-bottom: 14px;
-}
-
-/* ── Title block  (ALWAYS LAST in JSX) ── */
-.h {
-  flex: 1;
-  min-width: 0;
-  order: 2;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 25px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-[data-dir="b"] .title {
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.sub {
-  color: var(--muted);
-  font-size: 13.5px;
-  margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Actions wrapper (search + bell[desktop] + primary btn) ── */
-.topbarActions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  order: 3;
 }
 
 /* ── Search bar ── */
@@ -139,17 +102,6 @@
   color: var(--muted);
 }
 
-/* ── Primary action button ── */
-.btnPrimary {
-  composes: btn;
-  background: var(--accent);
-  border-color: transparent;
-  color: #fff;
-}
-.btnPrimary:hover {
-  filter: brightness(1.06);
-}
-
 /* ── Hamburger (hidden desktop, shown ≤900px) ── */
 .menubtn {
   display: none;
@@ -183,24 +135,19 @@
   display: none;
 }
 
-/* ── Bell mobile (row 1, hidden desktop) ── */
+/* ── Bell mobile (hidden desktop, shown on mobile) ── */
 .bellMobile {
   display: none;
 }
 
-/* ── Bell desktop (between search and button, hidden mobile) ── */
+/* ── Bell desktop (shown on desktop, hidden on mobile) ── */
 .bellDesktop {
   display: inline-flex;
 }
 
-/* ── Flex break — forces row 2 below row 1 on mobile ── */
-.flexBreak {
-  display: none;
-}
-
 /* ══════════════════ RESPONSIVE ════════════════════════ */
 
-/* ≤ 900px — mobile wrap layout */
+/* ≤ 900px — mobile */
 @media (max-width: 900px) {
   .menubtn {
     display: inline-flex;
@@ -217,40 +164,26 @@
   .bellDesktop {
     display: none;
   }
-  .flexBreak {
-    display: block;
-    flex: 0 0 100%;
-    height: 0;
-    order: 5;
-  }
-  .topbar {
-    flex-wrap: wrap;
-    row-gap: 12px;
-  }
-  .topbarActions {
-    order: 8;
-    flex: 0 0 auto;
-  }
-  .topbarActions .search {
+  .search {
     display: none;
   }
-  .h {
-    flex: 1;
-    order: 8;
-  }
+  .topbar {
+        flex-wrap: wrap;
+        row-gap: 12px;
+        background: var(--surface);
+        margin-left: calc(var(--pad) * -1);
+        margin-right: calc(var(--pad) * -1);
+        padding-left: var(--pad);
+        padding-right: var(--pad);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+      }
 }
 
 /* ≤ 600px — small screen */
 @media (max-width: 600px) {
-  .title {
-    font-size: 21px;
-  }
-  .sub {
-    display: none;
-  }
-  .btnPrimary {
-    flex: 0 0 auto;
-    padding: 0 12px;
+  .searchMobile {
+    margin-left: auto;
   }
 }
 

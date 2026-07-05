@@ -1,67 +1,8 @@
-import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { useSidebar } from '@/context/SidebarContext'
 import styles from './Header.module.css'
 
-interface HeaderProps {
-  title: string
-  subtitle?: string
-  searchPlaceholder?: string
-  onSearch?: (value: string) => void
-  /** Primary action button label (e.g. "Add Spool", "Add Printer") */
-  actionLabel?: string
-  /** If set, action links to this route */
-  actionLink?: string
-  /** If set, action runs this callback instead of navigating */
-  actionOnClick?: () => void
-  /** Custom icon for the action button (default: plus icon) */
-  actionIcon?: ReactNode
-}
-
-export default function Header({
-  title,
-  subtitle,
-  searchPlaceholder = 'Search spools, brands, colors…',
-  onSearch,
-  actionLabel,
-  actionLink,
-  actionOnClick,
-  actionIcon,
-}: HeaderProps) {
+export default function Header() {
   const { toggle: toggleSidebar } = useSidebar()
-  const [searchValue, setSearchValue] = useState('')
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value
-    setSearchValue(v)
-    onSearch?.(v)
-  }
-
-  const renderAction = () => {
-    if (!actionLabel) return null
-    const children = (
-      <>
-        {actionIcon ?? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        )}
-        {actionLabel}
-      </>
-    )
-    if (actionLink) {
-      return (
-        <Link to={actionLink} className={styles.btnPrimary}>
-          {children}
-        </Link>
-      )
-    }
-    return (
-      <button className={styles.btnPrimary} onClick={actionOnClick}>
-        {children}
-      </button>
-    )
-  }
 
   return (
     <header className={styles.topbar}>
@@ -87,52 +28,37 @@ export default function Header({
         <div className={styles.topbarLogoName}>Spool<b>Hub</b></div>
       </div>
 
-      {/* Search icon button — mobile only, left of bell */}
-      <button className={`${styles.btn} ${styles.btnIcon} ${styles.searchMobile}`} title="Search">
+      {/* Search bar — desktop only */}
+      <label className={styles.search}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3-3" />
+        </svg>
+        <input placeholder="Search spools, brands, colors…" />
+        <span className={styles.k}>⌘K</span>
+      </label>
+
+      {/* Search icon button — mobile only, pushed right with bell */}
+      <button className={`${styles.btn} ${styles.btnIcon} ${styles.searchMobile}`} style={{ marginLeft: 'auto' }} title="Search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3-3" />
         </svg>
       </button>
 
-      {/* Bell notification — mobile only (row 1) */}
-      <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellMobile}`} style={{ marginLeft: 'auto' }} title="Notifications">
+      {/* Bell — mobile only */}
+      <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellMobile}`} title="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
           <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
         </svg>
       </button>
 
-      {/* Flex break — forces row 2 below row 1 on mobile */}
-      <div className={styles.flexBreak} />
-
-      {/* Actions wrapper — search + bell(desktop) + primary button */}
-      <div className={styles.topbarActions}>
-        <label className={styles.search}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3-3" />
-          </svg>
-          <input
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={handleSearch}
-          />
-          <span className={styles.k}>⌘K</span>
-        </label>
-        {/* Bell notification — desktop only, between search and button */}
-        <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellDesktop}`} title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
-          </svg>
-        </button>
-        {renderAction()}
-      </div>
-
-      {/* Title + subtitle — ALWAYS LAST in markup for correct mobile wrap */}
-      <div className={styles.h}>
-        <h1 className={styles.title}>{title}</h1>
-        {subtitle && <div className={styles.sub}>{subtitle}</div>}
-      </div>
+      {/* Bell — desktop only */}
+      <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellDesktop}`} title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
+        </svg>
+      </button>
     </header>
   )
 }

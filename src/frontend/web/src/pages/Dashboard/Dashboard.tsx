@@ -26,7 +26,7 @@ export default function Dashboard() {
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [detailPrinterId, setDetailPrinterId] = useState<string | null>(null)
   const [, setFilamentLibraryCount] = useState(0)
-  const [filamentBrands, setFilamentBrands] = useState(0)
+  const [, setFilamentBrands] = useState(0)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [statuses, setStatuses] = useState<Map<string, PrinterStatus>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -130,15 +130,31 @@ export default function Dashboard() {
 
   return (
     <div className={`${styles.page} page`}>
-      {/* ════ TOPBAR — sticky top of page, matches handoff ════ */}
-      <Header
-        title="Filament Inventory"
-        subtitle={`${spools.length} spools tracked · ${filamentBrands} brands · ${onlineCount} printers online`}
-        actionLabel="Add Spool"
-        actionLink="/spools/add"
-      />
+      {/* ════ HEADER — mobile only (hamburger + logo + search + bell) ════ */}
+      <Header />
 
-      {/* ════ METRICS ════ */}
+      {/* ════ PAGE TITLE ROW — Dashboard · search · bell · Add Spool (desktop) ════ */}
+      <div className={styles.titleRow}>
+        <h1 className={styles.pageTitle}>Dashboard</h1>
+        <label className={styles.search}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3-3" />
+          </svg>
+          <input placeholder="Search spools, brands, colors…" />
+          <span className={styles.k}>⌘K</span>
+        </label>
+        <button className={styles.iconBtn} title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
+          </svg>
+        </button>
+        <Link to="/spools/add" className={styles.addBtn}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg>
+          Add Spool
+        </Link>
+      </div>
+      
       <section className={styles.metrics}>
         <MetricCard
           label={t('home.totalSpools')}
