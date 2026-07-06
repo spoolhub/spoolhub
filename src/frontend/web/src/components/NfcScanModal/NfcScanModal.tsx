@@ -30,13 +30,6 @@ const ASSIGN_ICON = (
   </svg>
 )
 
-const CHECK_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
-    strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
-    <path d="M5 13l4 4L19 7" />
-  </svg>
-)
-
 const CLOSE_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
     strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
@@ -50,7 +43,7 @@ interface Props {
   onViewDetails?: (spool: SpoolResponse) => void
 }
 
-type Step = 'info' | 'assign' | 'done-assigned'
+type Step = 'info' | 'assign'
 
 export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
@@ -97,7 +90,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
         await spoolsApi.update(spool.id, { stockLocation: stockLocation ?? '' })
       }
       window.dispatchEvent(new CustomEvent('spools-updated'))
-      setStep('done-assigned')
+      onClose()
     } finally {
       setSaving(false)
     }
@@ -106,7 +99,6 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const pct = Math.min(100, Math.round((spool.currentWeightG / spool.initialWeightG) * 100))
   const isLow = spool.currentWeightG <= spool.lowStockThresholdG
 
-  const selectedPrinterName = selectedPrinter?.name
   const canActivate = isLoadedInPrinter ? !!printerId : !!stockLocation
 
   return createPortal(
@@ -400,15 +392,6 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                   {saving ? '…' : t('scan.activate')}
                 </button>
               </div>
-            </div>
-          )}
-
-          {step === 'done-assigned' && (
-            <div className={styles.assigned}>
-              {CHECK_ICON}
-              {selectedPrinterName
-                ? `${t('scan.assignedConfirm')} · ${selectedPrinterName}${amsSlot != null ? ` · AMS ${amsSlot}` : ''}`
-                : t('scan.assignedConfirm')}
             </div>
           )}
         </div>
