@@ -105,14 +105,13 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
           {platform === 'pc' && (
             <DesktopScanner
               isHubConnected={isConnected}
-              onSpoolFound={handleSpoolFound}
               onUnknownTag={onUnknownTag}
             />
           )}
         </>
       )}
 
-      {foundSpool && (
+      {foundSpool && platform !== 'pc' && (
         <NfcScanModal
           spool={foundSpool}
           onClose={() => setFoundSpool(null)}

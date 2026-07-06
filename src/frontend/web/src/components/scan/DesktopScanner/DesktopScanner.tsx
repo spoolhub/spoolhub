@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
@@ -8,7 +9,8 @@ import UsbOffIcon from '@/components/icons/UsbOffIcon'
 import NfcIcon from '@/components/icons/NfcIcon'
 import ReloadIcon from '@/components/icons/ReloadIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
-
+import { SpoolIcon } from '@/components/icons'
+import NfcScanModal from '@/components/NfcScanModal'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './DesktopScanner.module.css'
 
@@ -18,64 +20,34 @@ const AGENT_RELEASES_URL = 'https://github.com/Coding252/spoolhub/releases/lates
 type DownloadPhase = 'idle' | 'waiting' | 'error'
 type ScanPhase     = 'polling' | 'looking-up' | 'unknown' | 'error'
 
-interface LastTag { uid: string; scannedAt: Date }
-
-const STORAGE_KEY = 'spoolhub.lastTag'
-
-function loadLastTag(): LastTag | null {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { uid: string; scannedAt: string }
-    return { uid: parsed.uid, scannedAt: new Date(parsed.scannedAt) }
-  } catch { return null }
+interface RecentScan {
+  spool: SpoolResponse
+  scannedAt: Date
 }
 
-function saveLastTag(tag: LastTag) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ uid: tag.uid, scannedAt: tag.scannedAt.toISOString() }))
+function formatRelativeTime(date: Date, t: TFunction): string {
+  const diffMs   = Date.now() - date.getTime()
+  const diffSec  = Math.floor(diffMs / 1_000)
+  const diffMin  = Math.floor(diffSec / 60)
+  const diffHr   = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHr / 24)
+  if (diffSec < 60)   return t('scan.timeJustNow')
+  if (diffMin < 60)   return t('scan.timeMinAgo',   { count: diffMin })
+  if (diffHr  < 24)   return t('scan.timeHoursAgo', { count: diffHr })
+  if (diffDays === 1) return t('scan.timeYesterday')
+  if (diffDays < 7)   return t('scan.timeDayName',  { day: date.toLocaleDateString('en', { weekday: 'short' }) })
+  return t('scan.timeDate', { date: date.toLocaleDateString('en', { month: 'short', day: 'numeric' }) })
 }
 
-function useRelativeTime(date: Date | null, t: TFunction): string {
-  const [label, setLabel] = useState('')
-  useEffect(() => {
-    if (!date) return
-    const d = date
-    function update() {
-      const now = new Date()
-      const diffMs = now.getTime() - d.getTime()
-      const diffSec = Math.floor(diffMs / 1000)
-      const diffMin = Math.floor(diffSec / 60)
-      const diffHr = Math.floor(diffMin / 60)
-      const diffDays = Math.floor(diffHr / 24)
+/* ── Sub-components ───────────────────────────────────────── */
 
-      if (diffSec < 60) setLabel(t('scan.timeJustNow'))
-      else if (diffMin < 60) setLabel(t('scan.timeMinAgo', { count: diffMin }))
-      else if (diffHr < 24) setLabel(t('scan.timeHoursAgo', { count: diffHr }))
-      else if (diffDays === 1) setLabel(t('scan.timeYesterday'))
-      else if (diffDays < 7) {
-        const dayName = d.toLocaleDateString('en', { weekday: 'short' })
-        setLabel(t('scan.timeDayName', { day: dayName }))
-      } else {
-        const dateStr = d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
-        setLabel(t('scan.timeDate', { date: dateStr }))
-      }
-    }
-    update()
-    const id = setInterval(update, 15_000)
-    return () => clearInterval(id)
-  }, [date, t])
-  return label
-}
-
-function NfcPulse() {
+function NfcPulse({ scanning }: { scanning: boolean }) {
   return (
-    <div className={styles.nfcWrap}>
-      <div className={styles.pingRing1} />
-      <div className={styles.pingRing2} />
-      <div className={styles.pingRing3} />
-      <div className={styles.nfcCircle}>
-        <NfcIcon className={styles.nfcIcon} />
-      </div>
+    <div className={`${styles.nfc} ${scanning ? styles.nfcScanning : ''}`}>
+      <span className={styles.ring} />
+      <span className={styles.ring} />
+      <span className={styles.ring} />
+      <NfcIcon className={styles.nfcIcon} />
     </div>
   )
 }
@@ -96,25 +68,60 @@ function SupportedReaders() {
   )
 }
 
+function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => void; t: TFunction }) {
+  const [label, setLabel] = useState(() => formatRelativeTime(scan.scannedAt, t))
+  useEffect(() => {
+    const id = setInterval(() => setLabel(formatRelativeTime(scan.scannedAt, t)), 15_000)
+    return () => clearInterval(id)
+  }, [scan.scannedAt, t])
+
+  return (
+    <div
+      className={styles.recentItem}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onClick()}
+    >
+      <div className={styles.recentIcon}>
+        <SpoolIcon color={scan.spool.colorHex} size={36} />
+      </div>
+      <div className={styles.recentInfo}>
+        <div className={styles.recentName}>{scan.spool.brand} · {scan.spool.colorName}</div>
+        <div className={styles.recentUidRow}>
+          <NfcIcon className={styles.recentUidIcon} />
+          <span className={styles.recentUid}>{scan.spool.nfcTagUid ?? '—'}</span>
+        </div>
+      </div>
+      <div className={styles.recentTime}>{label}</div>
+    </div>
+  )
+}
+
+/* ── Main component ───────────────────────────────────────── */
+
 interface Props {
   isHubConnected: boolean
-  onSpoolFound: (spool: SpoolResponse) => void
   onUnknownTag?: (tagUid: string) => void
 }
 
-export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
+export default function DesktopScanner({ onUnknownTag }: Props) {
   const { t } = useTranslation()
-  const [scanPhase, setScanPhase] = useState<ScanPhase>('polling')
-  const [scanError, setScanError] = useState<string | null>(null)
-  const [dlPhase, setDlPhase] = useState<DownloadPhase>('idle')
-  const [lastTag, setLastTag] = useState<LastTag | null>(loadLastTag)
-  const pollRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastTagTime                   = useRelativeTime(lastTag?.scannedAt ?? null, t)
+  const navigate = useNavigate()
+
+  const [scanPhase,      setScanPhase]      = useState<ScanPhase>('polling')
+  const [scanError,      setScanError]      = useState<string | null>(null)
+  const [dlPhase,        setDlPhase]        = useState<DownloadPhase>('idle')
+  const [recentScans,    setRecentScans]    = useState<RecentScan[]>([])
+  const [drawerSpool,    setDrawerSpool]    = useState<SpoolResponse | null>(null)
+  const [showHelp,       setShowHelp]       = useState(false)
+  const [showManual,     setShowManual]     = useState(false)
+  const [manualUid,      setManualUid]      = useState('')
+
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const handleTagFound = useCallback(async (uid: string) => {
-    const tag = { uid, scannedAt: new Date() }
-    setLastTag(tag)
-    saveLastTag(tag)
+    setShowHelp(false)
     setScanPhase('looking-up')
     try {
       const result = await scanTag(uid)
@@ -123,13 +130,18 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
-        onSpoolFound(result.spool)
+        if (result.spool.isActive) {
+          navigate(`/spools/${result.spool.id}`)
+        } else {
+          setRecentScans(prev => [{ spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 6))
+          setDrawerSpool(result.spool)
+        }
       }
     } catch {
       setScanError(t('scan.errorLookup'))
       setScanPhase('error')
     }
-  }, [onSpoolFound, onUnknownTag, t])
+  }, [navigate, onUnknownTag, t])
 
   const { state, readerName, reload, dismissInstallPrompt, disconnect } = useAgentNfc(handleTagFound)
 
@@ -138,7 +150,6 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     }
   }, [state])
-
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   const handleDownload = useCallback(() => {
@@ -149,106 +160,37 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
 
   function retryScan() { setScanPhase('polling'); setScanError(null) }
 
-  // ── Reader connected ────────────────────────────────────────────────────
-  if (state === 'ready') {
-    const showResult = scanPhase === 'unknown' || scanPhase === 'error'
-    const isLookingUp = scanPhase === 'looking-up'
-
-    return (
-      <div className={styles.scanwrap}>
-        <section className={styles.stage}>
-          {!showResult ? (
-            <>
-              <div className={styles.statusRow}>
-                <span className={styles.statusDot} />
-                <span className={styles.statusText}>{t('scan.readerConnectedStatus')}</span>
-              </div>
-              <NfcPulse />
-              <div className={styles.waitingArea}>
-                <p className={styles.waitingTitle}>
-                  {isLookingUp ? t('scan.lookingUp') : t('scan.waitingForTag')}
-                </p>
-                <p className={styles.waitingSubtitle}>{t('scan.holdSpool25cm')}</p>
-              </div>
-            </>
-          ) : (
-            <div className={styles.fullWidth}>
-              <ScanResult
-                status={scanPhase as 'unknown' | 'error'}
-                errorMessage={scanError}
-                onRetry={retryScan}
-              />
-            </div>
-          )}
-
-          <div className={styles.deviceRow}>
-            <InfoCircleIcon className={styles.deviceInfoIcon} />
-            <div className={styles.deviceInfoBody}>
-              <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
-              <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
-            </div>
-          </div>
-
-          <button className={styles.btnDisconnect} onClick={disconnect}>
-            <UsbOffIcon className={styles.disconnectIcon} />
-            {t('scan.disconnect')}
-          </button>
-        </section>
-
-        <aside className={styles.rail}>
-          <div className={styles.railHead}>
-            <h2>{t('scan.lastTagRead')}</h2>
-          </div>
-          <div className={styles.railBody}>
-            {lastTag ? (
-              <div className={styles.lastTagItem}>
-                <span className={styles.lastTagIcon}><NfcIcon /></span>
-                <div className={styles.lastTagInfo}>
-                  <div className={styles.lastTagUid}>{lastTag.uid}</div>
-                  <div className={styles.lastTagTime}>{lastTagTime}</div>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.railEmpty}>{t('scan.noTagsYet')}</div>
-            )}
-          </div>
-        </aside>
-      </div>
-    )
+  function handleManualScan() {
+    const uid = manualUid.trim()
+    if (!uid) return
+    setManualUid('')
+    setShowManual(false)
+    handleTagFound(uid)
   }
 
-  // ── Install prompt ──────────────────────────────────────────────────────
+  /* ── Install prompt — single card ──────────────────────── */
   if (state === 'install-prompt') {
     return (
       <div className={styles.card}>
-        <div className={styles.wrap}>
+        <div className={styles.installWrap}>
           <div className={styles.readerCircle}>
             <UsbOffIcon className={styles.readerIcon} />
           </div>
           <div className={styles.installDialog}>
             <p className={styles.installTitle}>{t('scan.agentRequired')}</p>
             <p className={styles.installDesc}>{t('scan.agentRequiredDesc')}</p>
-
             {dlPhase === 'idle' && (
-              <>
-                <div className={styles.installActions}>
-                  <button onClick={handleDownload} className={styles.btnDownload}>
-                    {t('scan.downloadAgent')}
-                  </button>
-                  <button onClick={() => dismissInstallPrompt(false)} className={styles.btnCancel}>
-                    {t('scan.cancel')}
-                  </button>
-                </div>
-              </>
+              <div className={styles.installActions}>
+                <button onClick={handleDownload} className={styles.btnDownload}>{t('scan.downloadAgent')}</button>
+                <button onClick={() => dismissInstallPrompt(false)} className={styles.btnCancel}>{t('scan.cancel')}</button>
+              </div>
             )}
-
             {dlPhase === 'waiting' && (
               <div className={styles.searchingRow}>
                 <div className={styles.spinner} />
                 <p className={styles.noticeTitle}>{t('scan.waitingForAgent')}</p>
               </div>
             )}
-
             {dlPhase === 'error' && (
               <div className={styles.installActions}>
                 <p className={styles.dlError}>{t('scan.downloadFailed')}</p>
@@ -262,45 +204,233 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
     )
   }
 
-  // ── Checking / connecting / offline / no-reader ─────────────────────────
-  const isSpinning  = state === 'checking' || state === 'connecting'
-  const noticeTitle = state === 'no-reader'    ? t('scan.agentNoReader')
-                    : state === 'agent-offline' ? t('scan.agentOffline')
-                    :                             t('scan.agentConnecting')
-  const tips = state === 'agent-offline'
-    ? [t('scan.agentTip1'), t('scan.agentTip2')]
-    : [t('scan.tip1'), t('scan.tip2'), t('scan.tip3')]
+  /* ── Stage content (varies by state) ───────────────────── */
+  function renderStage() {
+    /* Ready — scan result */
+    if (state === 'ready' && (scanPhase === 'unknown' || scanPhase === 'error')) {
+      return (
+        <div className={styles.fullWidth}>
+          <ScanResult
+            status={scanPhase as 'unknown' | 'error'}
+            errorMessage={scanError}
+            onRetry={retryScan}
+          />
+        </div>
+      )
+    }
 
-  return (
-    <div className={styles.card}>
-      <div className={styles.wrap}>
-        <div className={styles.readerCircle}>
-          <UsbOffIcon className={styles.readerIcon} />
-        </div>
-        <h1 className={styles.title}>{t('scan.usbNfcReader')}</h1>
-        <div className={styles.notice}>
-          {isSpinning ? (
-            <div className={styles.searchingRow}>
-              <div className={styles.spinner} />
-              <p className={styles.noticeTitle}>{noticeTitle}</p>
+    /* Ready — troubleshoot help view */
+    if (state === 'ready' && showHelp) {
+      return (
+        <>
+          <div className={`${styles.nfc} ${styles.nfcError}`}>
+            <UsbOffIcon className={styles.nfcIcon} />
+          </div>
+          <div className={styles.noreader}>
+            <p className={styles.nrTitle}>{t('scan.nrTitle')}</p>
+            <p className={styles.nrDesc}>{t('scan.nrDesc')}</p>
+            <ol className={styles.nrList}>
+              <li>{t('scan.nrStep1')}</li>
+              <li>{t('scan.nrStep2')}</li>
+              <li>{t('scan.nrStep3')}</li>
+            </ol>
+            <div className={styles.nrBtns}>
+              <button className={styles.btn} onClick={() => { setShowHelp(false); setShowManual(true) }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" width="16" height="16">
+                  <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>
+                </svg>
+                {t('scan.enterIdManually')}
+              </button>
+              <button className={`${styles.btn} ${styles.btnAccent}`} onClick={() => { setShowHelp(false); reload() }}>
+                <ReloadIcon className={styles.reloadIcon} />
+                {t('scan.reload')}
+              </button>
             </div>
-          ) : (
-            <>
-              <p className={styles.noticeTitle}>{noticeTitle}</p>
-              <div className={styles.noticeButtons}>
-                <button onClick={reload} className={styles.btnReload}>
-                  <ReloadIcon className={styles.reloadIcon} />
-                  {t('scan.reload')}
-                </button>
-              </div>
-              <ul className={styles.tipList}>
-                {tips.map(tip => <li key={tip}>{tip}</li>)}
-              </ul>
-            </>
-          )}
+          </div>
+        </>
+      )
+    }
+
+    /* Ready — scanning / looking-up */
+    if (state === 'ready') {
+      const isLookingUp = scanPhase === 'looking-up'
+      return (
+        <>
+          <div className={styles.statusRow}>
+            <span className={styles.statusDot} />
+            <span className={styles.statusText}>{t('scan.readerConnectedStatus')}</span>
+          </div>
+          <NfcPulse scanning />
+          <div className={styles.scanhint}>
+            <p className={styles.scanhintTitle}>
+              {isLookingUp ? t('scan.lookingUp') : t('scan.tapToScan')}
+            </p>
+            <p className={styles.scanhintDesc}>{t('scan.scanHintDesc')}</p>
+
+            {!isLookingUp && (
+              <>
+                {showManual ? (
+                  <div className={styles.manualEntry}>
+                    <input
+                      className={styles.manualInput}
+                      value={manualUid}
+                      onChange={e => setManualUid(e.target.value)}
+                      placeholder={t('scan.manualUidPlaceholder')}
+                      onKeyDown={e => e.key === 'Enter' && handleManualScan()}
+                      autoFocus
+                    />
+                    <div className={styles.manualBtns}>
+                      <button className={styles.btnCancel}
+                        onClick={() => { setShowManual(false); setManualUid('') }}>
+                        {t('scan.cancel')}
+                      </button>
+                      <button className={`${styles.btn} ${styles.btnAccent}`} onClick={handleManualScan}>
+                        {t('scan.scanUid')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.scanhintActions}>
+                    <button className={styles.btn} onClick={() => setShowManual(true)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" width="16" height="16">
+                        <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>
+                      </svg>
+                      {t('scan.enterIdManually')}
+                    </button>
+                  </div>
+                )}
+                {!showManual && (
+                  <button className={styles.scanTrouble} onClick={() => setShowHelp(true)}>
+                    {t('scan.readerNotWorking')}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className={styles.deviceRow}>
+            <InfoCircleIcon className={styles.deviceInfoIcon} />
+            <div className={styles.deviceInfoBody}>
+              <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
+              <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
+            </div>
+          </div>
+
+          <button className={styles.btnDisconnect} onClick={disconnect}>
+            <UsbOffIcon className={styles.disconnectIcon} />
+            {t('scan.disconnect')}
+          </button>
+        </>
+      )
+    }
+
+    /* No reader */
+    if (state === 'no-reader') {
+      return (
+        <>
+          <div className={`${styles.nfc} ${styles.nfcError}`}>
+            <UsbOffIcon className={styles.nfcIcon} />
+          </div>
+          <div className={styles.noreader}>
+            <p className={styles.nrTitle}>{t('scan.agentNoReader')}</p>
+            <p className={styles.nrDesc}>{t('scan.nrDesc')}</p>
+            <ol className={styles.nrList}>
+              <li>{t('scan.nrStep1')}</li>
+              <li>{t('scan.nrStep2')}</li>
+              <li>{t('scan.nrStep3')}</li>
+            </ol>
+            <div className={styles.nrBtns}>
+              <button className={styles.btn} onClick={() => setShowManual(true)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" width="16" height="16">
+                  <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>
+                </svg>
+                {t('scan.enterIdManually')}
+              </button>
+              <button className={`${styles.btn} ${styles.btnAccent}`} onClick={() => reload()}>
+                <ReloadIcon className={styles.reloadIcon} />
+                {t('scan.reload')}
+              </button>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    /* Agent offline */
+    if (state === 'agent-offline') {
+      return (
+        <>
+          <div className={`${styles.nfc} ${styles.nfcError}`}>
+            <UsbOffIcon className={styles.nfcIcon} />
+          </div>
+          <div className={styles.noreader}>
+            <p className={styles.nrTitle}>{t('scan.agentOffline')}</p>
+            <p className={styles.nrDesc}>{t('scan.nrDesc')}</p>
+            <ol className={styles.nrList}>
+              <li>{t('scan.agentTip1')}</li>
+              <li>{t('scan.agentTip2')}</li>
+            </ol>
+            <div className={styles.nrBtns}>
+              <button className={`${styles.btn} ${styles.btnAccent}`} onClick={() => reload()}>
+                <ReloadIcon className={styles.reloadIcon} />
+                {t('scan.reload')}
+              </button>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    /* Checking / connecting — spinner */
+    return (
+      <>
+        <div className={styles.nfc}>
+          <div className={styles.stageSpinner} />
         </div>
-        <SupportedReaders />
+        <div className={styles.scanhint}>
+          <p className={styles.scanhintTitle}>{t('scan.agentConnecting')}</p>
+        </div>
+      </>
+    )
+  }
+
+  /* ── Two-column grid layout ─────────────────────────────── */
+  return (
+    <>
+      <div className={styles.scanwrap}>
+        {/* Left: scan stage */}
+        <section className={styles.scanstage}>
+          {renderStage()}
+        </section>
+
+        {/* Right: recent scans rail */}
+        <aside className={styles.rail}>
+          <div className={styles.railHead}>
+            <h2 className={styles.railTitle}>{t('scan.recentScans')}</h2>
+            {recentScans.length > 0 && (
+              <span className={styles.railCount}>{recentScans.length}</span>
+            )}
+          </div>
+          <div className={styles.recentList}>
+            {recentScans.length === 0 ? (
+              <div className={styles.railEmpty}>{t('scan.noScansYet')}</div>
+            ) : (
+              recentScans.map((scan, i) => (
+                <RecentItem
+                  key={i}
+                  scan={scan}
+                  onClick={() => setDrawerSpool(scan.spool)}
+                  t={t}
+                />
+              ))
+            )}
+          </div>
+        </aside>
       </div>
-    </div>
+
+      {drawerSpool && (
+        <NfcScanModal spool={drawerSpool} onClose={() => setDrawerSpool(null)} />
+      )}
+    </>
   )
 }
