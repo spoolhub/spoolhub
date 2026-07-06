@@ -146,12 +146,53 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
         </div>
         <div className={styles.dwsec}>
           <h3>{s.printerName ? 'Loaded in' : 'Location'}</h3>
-          {s.printerName ? (
-            <>
-              <div className={styles.dwline}><span className={styles.lk}>Printer</span><span className={styles.lv}>{s.printerName}</span></div>
-              {s.amsSlot != null && <div className={styles.dwline}><span className={styles.lk}>AMS slot</span><span className={styles.lv}>Slot {s.amsSlot}</span></div>}
-            </>
-          ) : (
+          {s.printerName ? (() => {
+            const printer = printers.find(p => p.name === s.printerName || p.id === s.printerId)
+            const traySlotMap: Record<number, TraySpoolSummary | null> = { 1: printer?.tray1Spool ?? null, 2: printer?.tray2Spool ?? null, 3: printer?.tray3Spool ?? null, 4: printer?.tray4Spool ?? null }
+            return (
+              <div className={styles.amsLayout}>
+                <div className={styles.pcardThumb}>
+                  <div className={styles.pcardPic}>
+                    <img
+                      src={getPrinterImage(printer?.brand ?? '', printer?.model ?? '')}
+                      alt={s.printerName}
+                      className={styles.pcardImg}
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = '/printers/generic.svg' }}
+                    />
+                  </div>
+                </div>
+                <div className={styles.amsRight}>
+                  {printer?.hasAms ? (
+                    <div className={styles.slotPick}>
+                      {[1, 2, 3, 4].map(slot => {
+                        const occupant = traySlotMap[slot]
+                        const isThisSpool = s.amsSlot === slot
+                        const colorHex = isThisSpool ? s.colorHex : occupant?.colorHex
+                        const name = isThisSpool ? s.colorName : occupant?.colorName ?? 'Empty'
+                        return (
+                          <div key={slot} className={`${styles.slotTile} ${styles.slotTileView}${isThisSpool ? ` ${styles.slotTileSel}` : ''}${!occupant && !isThisSpool ? ` ${styles.slotTileEmpty}` : ''}`}>
+                            <span className={styles.slotNum}>{slot}</span>
+                            <span className={styles.slotIc}>
+                              {colorHex ? <SpoolIcon color={colorHex} size={22} /> : <PlusIcon className={styles.slotPlus} />}
+                            </span>
+                            <span className={styles.slotCn}>{name}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className={styles.singleSlot}>
+                      <span className={styles.singleSlotIc}><SpoolIcon color={s.colorHex} size={28} /></span>
+                      <div>
+                        <p className={styles.singleSlotTitle}>{s.printerName}</p>
+                        <p className={styles.singleSlotDesc}>Direct spool — no AMS</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })() : (
             <div className={styles.dwline}><span className={styles.lk}>Stored at</span><span className={styles.lv}>{s.stockLocation ?? 'Unassigned'}</span></div>
           )}
           <div className={styles.dwline}><span className={styles.lk}>Status</span><span className={styles.lv} style={{ color: s.isActive ? 'oklch(0.55 0.13 150)' : low ? 'oklch(0.62 0.16 30)' : 'var(--text-primary)' }}>{s.isActive ? 'Loaded' : low ? 'Low - reorder soon' : 'In stock'}</span></div>

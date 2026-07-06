@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -7,8 +7,17 @@ import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
 import { SpoolIcon } from '@/components/icons'
 import NfcScanModal from '@/components/NfcScanModal'
+import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import type { SpoolResponse } from '@/types/spool'
+import type { PrinterResponse } from '@/types/printer'
 import styles from './DesktopScanner.module.css'
+
+const S = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+
+const ICONS = {
+  trash: <svg {...S}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
+  plus: <svg {...S} strokeWidth={2.2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+}
 
 type ScanPhase = 'polling' | 'looking-up' | 'unknown' | 'error'
 
@@ -58,7 +67,7 @@ function formatRelativeTime(date: Date, t: TFunction): string {
   return t('scan.timeDate', { date: date.toLocaleDateString('en', { month: 'short', day: 'numeric' }) })
 }
 
-function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => void; t: TFunction }) {
+function RecentItem({ scan, onClick, onRemove, t }: { scan: RecentScan; onClick: () => void; onRemove: () => void; t: TFunction }) {
   const [label, setLabel] = useState(() => formatRelativeTime(scan.scannedAt, t))
   useEffect(() => {
     const id = setInterval(() => setLabel(formatRelativeTime(scan.scannedAt, t)), 15_000)
@@ -78,7 +87,9 @@ function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => voi
       <div className={styles.recentIcon}>
         {scan.spool
           ? <SpoolIcon color={scan.spool.colorHex} size={36} />
-          : <NfcIcon className={styles.recentUnknownIcon} />}
+          : scan.deleted
+            ? <span className={styles.recentDeletedIcon}>{ICONS.trash}</span>
+            : <span className={styles.recentUnknownIcon}>{ICONS.plus}</span>}
       </div>
       <div className={styles.recentInfo}>
         <div className={styles.recentName}>
@@ -90,6 +101,18 @@ function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => voi
         </div>
       </div>
       <div className={styles.recentTime}>{label}</div>
+      <button
+        className={styles.recentRemove}
+        onClick={e => { e.stopPropagation(); onRemove() }}
+        title={t('scan.removeScan')}
+        aria-label={t('scan.removeScan')}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 7h16" /><path d="M10 11v6M14 11v6" />
+          <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+          <path d="M9 7V4h6v3" />
+        </svg>
+      </button>
     </div>
   )
 }
@@ -109,17 +132,27 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [scanError,   setScanError]   = useState<string | null>(null)
   const [recentScans, setRecentScans] = useState<RecentScan[]>(loadRecentScans)
   const [drawerSpool, setDrawerSpool] = useState<SpoolResponse | null>(null)
+  const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
+  const [printers, setPrinters] = useState<PrinterResponse[]>([])
+  const recentRef = useRef(recentScans)
+  recentRef.current = recentScans
 
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
+
+  useEffect(() => {
+    if (!detailSpool) return
+    fetch('/api/printers').then(r => r.json()).then(setPrinters).catch(() => {})
+  }, [detailSpool])
 
   // Re-check every entry once on load — the tag may have been registered to
   // a spool elsewhere (e.g. Add Spool) since it was scanned, or a spool that
   // was resolved before may have had its tag unlinked or been deleted since.
-  useEffect(() => {
-    if (recentScans.length === 0) return
+  const refreshScans = useCallback(() => {
+    const scans = recentRef.current
+    if (scans.length === 0) return
     let cancelled = false
 
-    Promise.all(recentScans.map(async s => {
+    Promise.all(scans.map(async s => {
       try {
         const result = await scanTag(s.uid)
         if (result.status === 'found' && result.spool) {
@@ -141,8 +174,20 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     })
 
     return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    const cleanup = refreshScans()
+    return cleanup
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Re-check when a spool is assigned/unassigned
+  useEffect(() => {
+    const handler = () => refreshScans()
+    window.addEventListener('spools-updated', handler)
+    return () => window.removeEventListener('spools-updated', handler)
+  }, [refreshScans])
 
   const handleTagFound = useCallback(async (uid: string) => {
     setScanPhase('looking-up')
@@ -169,6 +214,10 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
 
   function retryScan() { setScanPhase('polling'); setScanError(null) }
 
+  function handleRemoveScan(uid: string) {
+    setRecentScans(prev => prev.filter(s => s.uid !== uid))
+  }
+
   /* ── Recent-scans rail ────────────────────────────────────── */
   function renderRail() {
     return (
@@ -191,6 +240,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
                   if (scan.spool) setDrawerSpool(scan.spool)
                   else navigate(`/spools/add/nfctag?tagUid=${encodeURIComponent(scan.uid)}`)
                 }}
+                onRemove={() => handleRemoveScan(scan.uid)}
                 t={t}
               />
             ))
@@ -214,7 +264,18 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       </div>
 
       {drawerSpool && (
-        <NfcScanModal spool={drawerSpool} onClose={() => setDrawerSpool(null)} />
+        <NfcScanModal
+          spool={drawerSpool}
+          onClose={() => setDrawerSpool(null)}
+          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s) }}
+        />
+      )}
+      {detailSpool && (
+        <SpoolDetailDrawer
+          spool={detailSpool}
+          printers={printers}
+          onClose={() => setDetailSpool(null)}
+        />
       )}
     </>
   )

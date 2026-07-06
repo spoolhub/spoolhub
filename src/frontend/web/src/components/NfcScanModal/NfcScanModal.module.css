@@ -53,12 +53,8 @@
   border-bottom: 1px solid var(--border);
 }
 .heroIcon {
-  width: 76px; height: 96px; flex: none;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
+  width: 96px; height: 96px; flex: none;
+  display: grid; place-items: center;
 }
 .heroText { min-width: 0; flex: 1; }
 .heroBrand {
@@ -205,6 +201,9 @@
 .slotTile:hover { border-color: var(--accent); }
 .slotTileEmpty { border-style: dashed; }
 .slotTileSel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.slotTileView { cursor: default; }
+.slotTileView:hover { border-color: var(--border); }
+.slotTileView.slotTileSel:hover { border-color: var(--accent); }
 
 .slotNum { font-size: 8px; font-weight: 600; color: var(--muted); line-height: 1; }
 .slotIc { width: 22px; height: 22px; display: grid; place-items: center; color: var(--muted); }
@@ -262,6 +261,18 @@
 .btnPrimary:hover:not(:disabled) { filter: brightness(1.06); }
 .btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Footer ── */
+.drawerFoot {
+  flex: none;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+}
+.drawerFoot .btnPrimary {
+  width: 100%;
+}
+
 /* ── Assigned confirmation ── */
 .assigned {
   display: flex; align-items: center; gap: 9px;
@@ -271,21 +282,3 @@
   font-weight: 600; font-size: 13px;
 }
 [data-theme="dark"] .assigned { color: oklch(0.74 0.13 150); }
-
-/* ── Footer ── */
-.drawerFoot {
-  flex: none;
-  padding: 16px 22px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-.btnDetails {
-  width: 100%;
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 40px; padding: 0;
-  border-radius: var(--r-sm); border: 1px solid var(--border);
-  background: none; color: var(--muted);
-  font: inherit; font-weight: 600; font-size: 13px;
-  cursor: pointer; transition: 0.16s;
-}
-.btnDetails:hover { background: var(--surface-alt); color: var(--text-primary); }

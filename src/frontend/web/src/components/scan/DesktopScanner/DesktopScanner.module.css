@@ -58,8 +58,10 @@
 .recentItemStatic:hover { background: none; }
 .recentIcon { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; }
 .recentUnknownIcon {
-  width: 18px; height: 18px; color: var(--faint);
-  padding: 9px; border-radius: 50%; background: var(--surface-alt);
+  color: var(--accent);
+}
+.recentDeletedIcon {
+  color: var(--color-error);
 }
 .recentInfo { flex: 1; min-width: 0; }
 .recentName {

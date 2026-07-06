@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
@@ -48,12 +47,12 @@ const CLOSE_ICON = (
 interface Props {
   spool: SpoolResponse
   onClose: () => void
+  onViewDetails?: (spool: SpoolResponse) => void
 }
 
 type Step = 'info' | 'assign' | 'done-inventory' | 'done-assigned'
 
-export default function NfcScanModal({ spool, onClose }: Props) {
-  const navigate = useNavigate()
+export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
   const [step, setStep] = useState<Step>('info')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
@@ -124,11 +123,11 @@ export default function NfcScanModal({ spool, onClose }: Props) {
 
         {/* ── Hero band ── */}
         <div className={styles.heroBand}>
-          <div className={styles.heroIcon}>
-            <SpoolIcon color={spool.colorHex} size={72} />
+                  <div className={styles.heroIcon}>
+            <SpoolIcon color={spool.colorHex} size={96} />
           </div>
-          <div className={styles.heroText}>
-            <div className={styles.heroBrand}>{spool.brand}</div>
+                  <div className={styles.heroText}>
+                    <div className={styles.heroBrand}>{spool.brand}</div>
             <div className={styles.heroName}>{spool.colorName}</div>
             <div className={styles.heroTags}>
               <span className={styles.heroTag}>{spool.material}</span>
@@ -168,22 +167,89 @@ export default function NfcScanModal({ spool, onClose }: Props) {
             </div>
           </div>
 
+          {/* Printer assignment card */}
+          {spool.printerName && selectedPrinter && step === 'info' && (
+            <div style={{ marginTop: 14 }}>
+              <p className={styles.sectionLabel}>Assigned to <span style={{ color: 'var(--color-success)' }}>{spool.printerName}</span></p>
+              <div className={styles.amsLayout}>
+                <div className={styles.pcardThumb}>
+                  <div className={styles.pcardPic}>
+                    <img
+                      src={getPrinterImage(selectedPrinter.brand, selectedPrinter.model)}
+                      alt={spool.printerName}
+                      className={styles.pcardImg}
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = '/printers/generic.svg' }}
+                    />
+                  </div>
+                </div>
+                <div className={styles.amsRight}>
+                  {selectedPrinter.hasAms ? (
+                    <div className={styles.slotPick}>
+                      {[1, 2, 3, 4].map(slot => {
+                        const occupant = traySlotMap[slot]
+                        const isThisSpool = spool.amsSlot === slot
+                        const colorHex = isThisSpool ? spool.colorHex : occupant?.colorHex
+                        const name = isThisSpool ? spool.colorName : occupant?.colorName ?? t('spoolForm.slotEmpty')
+                        return (
+                          <div key={slot} className={`${styles.slotTile} ${styles.slotTileView}${isThisSpool ? ` ${styles.slotTileSel}` : ''}${!occupant && !isThisSpool ? ` ${styles.slotTileEmpty}` : ''}`}>
+                            <span className={styles.slotNum}>{slot}</span>
+                            <span className={styles.slotIc}>
+                              {colorHex ? <SpoolIcon color={colorHex} size={22} /> : <PlusIcon className={styles.slotPlus} />}
+                            </span>
+                            <span className={styles.slotCn}>{name}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className={styles.singleSlot}>
+                      <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex} size={28} /></span>
+                      <div>
+                        <p className={styles.singleSlotTitle}>{spool.printerName}</p>
+                        <p className={styles.singleSlotDesc}>Direct spool — no AMS</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Assign section ── */}
           {step === 'info' && (
-            <div className={styles.askBox}>
-              <div className={styles.askQuestion}>
-                {t('scan.assignSpoolQuestion')}
-                <small className={styles.askHint}>{t('scan.assignSpoolHint')}</small>
-              </div>
-              <div className={styles.askRow}>
-                <button className={styles.btnSecondary} onClick={() => setStep('done-inventory')}>
-                  {t('scan.notNow')}
-                </button>
-                <button className={styles.btnPrimary} onClick={() => setStep('assign')}>
-                  {ASSIGN_ICON}
-                  {t('scan.assign')}
-                </button>
-              </div>
+            <div className={styles.askBox} style={spool.printerName ? { borderTop: 'none', paddingTop: 0 } : undefined}>
+              {spool.printerName ? (
+                <>
+                  <div className={styles.askQuestion}>
+                    Unassign from {spool.printerName}?
+                    <small className={styles.askHint}>Move this spool back to stock or assign to a different printer</small>
+                  </div>
+                  <div className={styles.askRow}>
+                    <button className={styles.btnSecondary} onClick={() => setStep('done-inventory')}>
+                      {t('scan.notNow')}
+                    </button>
+                    <button className={styles.btnPrimary} onClick={() => setStep('assign')}>
+                      Unassign
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.askQuestion}>
+                    {t('scan.assignSpoolQuestion')}
+                    <small className={styles.askHint}>{t('scan.assignSpoolHint')}</small>
+                  </div>
+                  <div className={styles.askRow}>
+                    <button className={styles.btnSecondary} onClick={() => setStep('done-inventory')}>
+                      {t('scan.notNow')}
+                    </button>
+                    <button className={styles.btnPrimary} onClick={() => setStep('assign')}>
+                      {ASSIGN_ICON}
+                      {t('scan.assign')}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -261,7 +327,7 @@ export default function NfcScanModal({ spool, onClose }: Props) {
                             {amsSlot != null && traySlotMap[amsSlot] && (
                               <div className={styles.slotNote}>
                                 <InfoCircleIcon className={styles.slotNoteIcon} />
-                                {t('spoolForm.slotOccupied')}
+                                {amsSlot === spool.amsSlot ? 'Already assigned to this slot' : t('spoolForm.slotOccupied')}
                               </div>
                             )}
                           </>
@@ -356,8 +422,8 @@ export default function NfcScanModal({ spool, onClose }: Props) {
         {/* ── Footer ── */}
         <div className={styles.drawerFoot}>
           <button
-            className={styles.btnDetails}
-            onClick={() => { navigate(`/spools/${spool.id}`); onClose() }}
+            className={styles.btnPrimary}
+            onClick={() => { onViewDetails?.(spool); onClose() }}
           >
             {t('scan.viewDetails')}
           </button>
