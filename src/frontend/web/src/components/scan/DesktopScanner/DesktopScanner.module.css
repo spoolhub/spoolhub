@@ -12,7 +12,7 @@
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: var(--gap);
-  align-items: start;
+  align-items: stretch;
   width: 100%;
   max-width: 1040px;
 }
