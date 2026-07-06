@@ -14,6 +14,7 @@
   gap: var(--gap);
   align-items: start;
   width: 100%;
+  max-width: 1040px;
 }
 @media (max-width: 1080px) {
   .scanwrap { grid-template-columns: 1fr; }
