@@ -359,6 +359,8 @@
     "holdSpool25cm": "Hold spool 2-5cm from reader",
     "supportedTagsDesc": "Supported tags: NTAG, Bambu RFID, ELEGOO RFID",
     "deviceInfo": "Device: {{name}}",
+    "deviceLabel": "Device:",
+    "readingTagTypes": "Reading tag types",
     "settings": "Settings",
     "help": "Help",
     "lastTagRead": "Last tag read",

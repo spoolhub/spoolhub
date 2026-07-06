@@ -8,13 +8,13 @@ import ScanResult from '../ScanResult'
 import UsbOffIcon from '@/components/icons/UsbOffIcon'
 import NfcIcon from '@/components/icons/NfcIcon'
 import ReloadIcon from '@/components/icons/ReloadIcon'
-import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { SpoolIcon } from '@/components/icons'
 import NfcScanModal from '@/components/NfcScanModal'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './DesktopScanner.module.css'
 
 const SUPPORTED_READERS = ['ACR122U', 'SCL3711', 'OmniKey', 'Feitian', 'NXP', 'SpringCard', 'Bit4ID']
+const TAG_TYPES = ['NTAG213', 'NTAG215', 'NTAG216', 'Mifare Classic']
 const AGENT_RELEASES_URL = 'https://github.com/Coding252/spoolhub/releases/latest'
 
 type DownloadPhase = 'idle' | 'waiting' | 'error'
@@ -210,7 +210,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     /* Install prompt */
     if (state === 'install-prompt') {
       return (
-        <>
+        <div className={styles.stageBody}>
           <div className={`${styles.nfc} ${styles.nfcError}`}>
             <UsbOffIcon className={styles.nfcIcon} />
           </div>
@@ -236,14 +236,14 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               </div>
             )}
           </div>
-        </>
+        </div>
       )
     }
 
     /* Ready — scan result */
     if (state === 'ready' && (scanPhase === 'unknown' || scanPhase === 'error')) {
       return (
-        <div className={styles.fullWidth}>
+        <div className={`${styles.stageBody} ${styles.fullWidth}`}>
           <ScanResult
             status={scanPhase as 'unknown' | 'error'}
             errorMessage={scanError}
@@ -256,7 +256,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     /* Ready — troubleshoot help view */
     if (state === 'ready' && showHelp) {
       return (
-        <>
+        <div className={styles.stageBody}>
           <div className={`${styles.nfc} ${styles.nfcError}`}>
             <UsbOffIcon className={styles.nfcIcon} />
           </div>
@@ -281,7 +281,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               </button>
             </div>
           </div>
-        </>
+        </div>
       )
     }
 
@@ -290,71 +290,75 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       const isLookingUp = scanPhase === 'looking-up'
       return (
         <>
-          <div className={styles.statusRow}>
+          <div className={styles.stageHeader}>
             <span className={styles.statusDot} />
             <span className={styles.statusText}>{t('scan.readerConnectedStatus')}</span>
           </div>
-          <NfcPulse scanning />
-          <div className={styles.scanhint}>
-            <p className={styles.scanhintTitle}>
-              {isLookingUp ? t('scan.lookingUp') : t('scan.tapToScan')}
-            </p>
-            <p className={styles.scanhintDesc}>{t('scan.scanHintDesc')}</p>
 
-            {!isLookingUp && (
-              <>
-                {showManual ? (
-                  <div className={styles.manualEntry}>
-                    <input
-                      className={styles.manualInput}
-                      value={manualUid}
-                      onChange={e => setManualUid(e.target.value)}
-                      placeholder={t('scan.manualUidPlaceholder')}
-                      onKeyDown={e => e.key === 'Enter' && handleManualScan()}
-                      autoFocus
-                    />
-                    <div className={styles.manualBtns}>
-                      <button className={styles.btnCancel}
-                        onClick={() => { setShowManual(false); setManualUid('') }}>
-                        {t('scan.cancel')}
-                      </button>
-                      <button className={`${styles.btn} ${styles.btnAccent}`} onClick={handleManualScan}>
-                        {t('scan.scanUid')}
-                      </button>
+          <div className={styles.stageBody}>
+            <NfcPulse scanning />
+            <div className={styles.scanhint}>
+              <p className={styles.scanhintTitle}>
+                {isLookingUp ? t('scan.lookingUp') : t('scan.tapToScan')}
+              </p>
+              <p className={styles.scanhintDesc}>{t('scan.scanHintDesc')}</p>
+
+              {!isLookingUp && (
+                <>
+                  {showManual && (
+                    <div className={styles.manualEntry}>
+                      <input
+                        className={styles.manualInput}
+                        value={manualUid}
+                        onChange={e => setManualUid(e.target.value)}
+                        placeholder={t('scan.manualUidPlaceholder')}
+                        onKeyDown={e => e.key === 'Enter' && handleManualScan()}
+                        autoFocus
+                      />
+                      <div className={styles.manualBtns}>
+                        <button className={styles.btnCancel}
+                          onClick={() => { setShowManual(false); setManualUid('') }}>
+                          {t('scan.cancel')}
+                        </button>
+                        <button className={`${styles.btn} ${styles.btnAccent}`} onClick={handleManualScan}>
+                          {t('scan.scanUid')}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles.scanhintActions}>
-                    <button className={styles.btn} onClick={() => setShowManual(true)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" width="16" height="16">
-                        <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>
-                      </svg>
-                      {t('scan.enterIdManually')}
+                  )}
+                  {!showManual && (
+                    <button className={styles.scanTrouble} onClick={() => setShowHelp(true)}>
+                      {t('scan.readerNotWorking')}
                     </button>
-                  </div>
-                )}
-                {!showManual && (
-                  <button className={styles.scanTrouble} onClick={() => setShowHelp(true)}>
-                    {t('scan.readerNotWorking')}
-                  </button>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           <div className={styles.footerRow}>
-            <div className={styles.footerDevice} title={t('scan.supportedTagsDesc')}>
-              <InfoCircleIcon className={styles.deviceInfoIcon} />
-              <span className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</span>
+            <div className={styles.footerDevice}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={styles.deviceInfoIcon}>
+                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+              </svg>
+              <span className={styles.deviceLabel}>{t('scan.deviceLabel')}</span>
+              <span className={styles.deviceName}>{readerName ?? '—'}</span>
             </div>
-            <button
-              className={styles.btnDisconnectIcon}
-              onClick={disconnect}
-              title={t('scan.disconnect')}
-              aria-label={t('scan.disconnect')}
-            >
+            <button className={styles.btnDisconnect} onClick={disconnect}>
               <UsbOffIcon className={styles.disconnectIcon} />
+              {t('scan.disconnect')}
             </button>
+          </div>
+
+          <div className={styles.stageTagTypes}>
+            <p className={styles.tagTypesLabel}>{t('scan.readingTagTypes')}</p>
+            <div className={styles.readerGrid}>
+              {TAG_TYPES.map(name => (
+                <div key={name} className={styles.readerChip}>
+                  <span className={styles.chipName}>{name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )
@@ -363,7 +367,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     /* No reader */
     if (state === 'no-reader') {
       return (
-        <>
+        <div className={styles.stageBody}>
           <div className={`${styles.nfc} ${styles.nfcError}`}>
             <UsbOffIcon className={styles.nfcIcon} />
           </div>
@@ -388,14 +392,14 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               </button>
             </div>
           </div>
-        </>
+        </div>
       )
     }
 
     /* Agent offline */
     if (state === 'agent-offline') {
       return (
-        <>
+        <div className={styles.stageBody}>
           <div className={`${styles.nfc} ${styles.nfcError}`}>
             <UsbOffIcon className={styles.nfcIcon} />
           </div>
@@ -415,13 +419,13 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
             </div>
           </div>
           <SupportedReaders />
-        </>
+        </div>
       )
     }
 
     /* Checking / connecting — NFC icon + spinning ring */
     return (
-      <>
+      <div className={styles.stageBody}>
         <div className={styles.connectWrap}>
           <div className={styles.connectRing} />
           <div className={styles.nfc}>
@@ -431,7 +435,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         <div className={styles.scanhint}>
           <p className={styles.scanhintTitle}>{t('scan.agentConnecting')}</p>
         </div>
-      </>
+      </div>
     )
   }
 
