@@ -225,7 +225,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                     <small className={styles.askHint}>Move this spool back to stock or assign to a different printer</small>
                   </div>
                   <div className={styles.askRow}>
-                    <button className={styles.btnSecondary} onClick={() => setStep('done-inventory')}>
+                    <button className={styles.btnSecondary} onClick={onClose}>
                       {t('scan.notNow')}
                     </button>
                     <button className={styles.btnPrimary} onClick={() => setStep('assign')}>
@@ -240,7 +240,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                     <small className={styles.askHint}>{t('scan.assignSpoolHint')}</small>
                   </div>
                   <div className={styles.askRow}>
-                    <button className={styles.btnSecondary} onClick={() => setStep('done-inventory')}>
+                    <button className={styles.btnSecondary} onClick={onClose}>
                       {t('scan.notNow')}
                     </button>
                     <button className={styles.btnPrimary} onClick={() => setStep('assign')}>
