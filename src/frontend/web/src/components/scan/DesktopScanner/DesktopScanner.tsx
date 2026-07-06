@@ -152,12 +152,12 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     try {
       const result = await scanTag(uid)
       if (result.status === 'unknown') {
-        setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 6))
+        setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
-        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 6))
+        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
         if (result.spool.isActive) {
           navigate(`/spools/${result.spool.id}`)
         } else {
