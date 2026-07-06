@@ -111,7 +111,7 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
         </>
       )}
 
-      {foundSpool && platform !== 'pc' && (
+      {foundSpool && (
         <NfcScanModal
           spool={foundSpool}
           onClose={() => setFoundSpool(null)}

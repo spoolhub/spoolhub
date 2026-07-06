@@ -168,21 +168,50 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     handleTagFound(uid)
   }
 
-  /* ── Install prompt — single card ──────────────────────── */
-  if (state === 'install-prompt') {
+  /* ── Shared recent-scans rail ───────────────────────────── */
+  function renderRail() {
     return (
-      <div className={styles.card}>
-        <div className={styles.installWrap}>
-          <div className={styles.readerCircle}>
-            <UsbOffIcon className={styles.readerIcon} />
+      <aside className={styles.rail}>
+        <div className={styles.railHead}>
+          <h2 className={styles.railTitle}>{t('scan.recentScans')}</h2>
+          {recentScans.length > 0 && (
+            <span className={styles.railCount}>{recentScans.length}</span>
+          )}
+        </div>
+        <div className={styles.recentList}>
+          {recentScans.length === 0 ? (
+            <div className={styles.railEmpty}>{t('scan.noScansYet')}</div>
+          ) : (
+            recentScans.map((scan, i) => (
+              <RecentItem
+                key={i}
+                scan={scan}
+                onClick={() => setDrawerSpool(scan.spool)}
+                t={t}
+              />
+            ))
+          )}
+        </div>
+      </aside>
+    )
+  }
+
+  /* ── Stage content (varies by state) ───────────────────── */
+  function renderStage() {
+    /* Install prompt */
+    if (state === 'install-prompt') {
+      return (
+        <>
+          <div className={`${styles.nfc} ${styles.nfcError}`}>
+            <UsbOffIcon className={styles.nfcIcon} />
           </div>
           <div className={styles.installDialog}>
             <p className={styles.installTitle}>{t('scan.agentRequired')}</p>
             <p className={styles.installDesc}>{t('scan.agentRequiredDesc')}</p>
             {dlPhase === 'idle' && (
               <div className={styles.installActions}>
-                <button onClick={handleDownload} className={styles.btnDownload}>{t('scan.downloadAgent')}</button>
-                <button onClick={() => dismissInstallPrompt(false)} className={styles.btnCancel}>{t('scan.cancel')}</button>
+                <button onClick={handleDownload} className={`${styles.btn} ${styles.btnAccent}`}>{t('scan.downloadAgent')}</button>
+                <button onClick={() => dismissInstallPrompt(false)} className={styles.btn}>{t('scan.cancel')}</button>
               </div>
             )}
             {dlPhase === 'waiting' && (
@@ -194,18 +223,14 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
             {dlPhase === 'error' && (
               <div className={styles.installActions}>
                 <p className={styles.dlError}>{t('scan.downloadFailed')}</p>
-                <button onClick={handleDownload} className={styles.btnDownload}>{t('scan.retry')}</button>
+                <button onClick={handleDownload} className={`${styles.btn} ${styles.btnAccent}`}>{t('scan.retry')}</button>
               </div>
             )}
           </div>
-          <SupportedReaders />
-        </div>
-      </div>
-    )
-  }
+        </>
+      )
+    }
 
-  /* ── Stage content (varies by state) ───────────────────── */
-  function renderStage() {
     /* Ready — scan result */
     if (state === 'ready' && (scanPhase === 'unknown' || scanPhase === 'error')) {
       return (
@@ -367,8 +392,9 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
             <p className={styles.nrTitle}>{t('scan.agentOffline')}</p>
             <p className={styles.nrDesc}>{t('scan.nrDesc')}</p>
             <ol className={styles.nrList}>
-              <li>{t('scan.agentTip1')}</li>
-              <li>{t('scan.agentTip2')}</li>
+              <li>{t('scan.nrStep1')}</li>
+              <li>{t('scan.nrStep2')}</li>
+              <li>{t('scan.nrStep3')}</li>
             </ol>
             <div className={styles.nrBtns}>
               <button className={`${styles.btn} ${styles.btnAccent}`} onClick={() => reload()}>
@@ -377,15 +403,19 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               </button>
             </div>
           </div>
+          <SupportedReaders />
         </>
       )
     }
 
-    /* Checking / connecting — spinner */
+    /* Checking / connecting — NFC icon + spinning ring */
     return (
       <>
-        <div className={styles.nfc}>
-          <div className={styles.stageSpinner} />
+        <div className={styles.connectWrap}>
+          <div className={styles.connectRing} />
+          <div className={styles.nfc}>
+            <NfcIcon className={styles.nfcIcon} />
+          </div>
         </div>
         <div className={styles.scanhint}>
           <p className={styles.scanhintTitle}>{t('scan.agentConnecting')}</p>
@@ -404,28 +434,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         </section>
 
         {/* Right: recent scans rail */}
-        <aside className={styles.rail}>
-          <div className={styles.railHead}>
-            <h2 className={styles.railTitle}>{t('scan.recentScans')}</h2>
-            {recentScans.length > 0 && (
-              <span className={styles.railCount}>{recentScans.length}</span>
-            )}
-          </div>
-          <div className={styles.recentList}>
-            {recentScans.length === 0 ? (
-              <div className={styles.railEmpty}>{t('scan.noScansYet')}</div>
-            ) : (
-              recentScans.map((scan, i) => (
-                <RecentItem
-                  key={i}
-                  scan={scan}
-                  onClick={() => setDrawerSpool(scan.spool)}
-                  t={t}
-                />
-              ))
-            )}
-          </div>
-        </aside>
+        {renderRail()}
       </div>
 
       {drawerSpool && (
