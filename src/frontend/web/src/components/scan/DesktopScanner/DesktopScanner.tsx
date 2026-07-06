@@ -16,6 +16,9 @@ interface RecentScan {
   uid: string
   spool: SpoolResponse | null
   scannedAt: Date
+  /** True when this uid previously resolved to a spool that's since been
+   *  unlinked or deleted -- distinct from a tag that was never registered. */
+  deleted?: boolean
 }
 
 const RECENT_SCANS_KEY = 'spoolhub.recentScans'
@@ -25,10 +28,10 @@ function loadRecentScans(): RecentScan[] {
   try {
     const raw = sessionStorage.getItem(RECENT_SCANS_KEY)
     if (!raw) return []
-    const parsed = JSON.parse(raw) as Array<{ uid: string; spool: SpoolResponse | null; scannedAt: string }>
+    const parsed = JSON.parse(raw) as Array<{ uid: string; spool: SpoolResponse | null; scannedAt: string; deleted?: boolean }>
     const cutoff = Date.now() - RECENT_SCANS_MAX_AGE_MS
     return parsed
-      .map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt) }))
+      .map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt), deleted: p.deleted }))
       .filter(s => s.scannedAt.getTime() >= cutoff)
   } catch {
     return []
@@ -77,7 +80,7 @@ function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => voi
       </div>
       <div className={styles.recentInfo}>
         <div className={styles.recentName}>
-          {scan.spool ? `${scan.spool.brand} · ${scan.spool.colorName}` : t('scan.unknownTag')}
+          {scan.spool ? `${scan.spool.brand} · ${scan.spool.colorName}` : scan.deleted ? t('scan.tagDeleted') : t('scan.unknownTag')}
         </div>
         <div className={styles.recentUidRow}>
           <NfcIcon className={styles.recentUidIcon} />
@@ -107,27 +110,31 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
 
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
-  // Re-check any "unregistered tag" entries once on load — the tag may have
-  // been registered to a spool elsewhere (e.g. Add Spool) since it was scanned.
+  // Re-check every entry once on load — the tag may have been registered to
+  // a spool elsewhere (e.g. Add Spool) since it was scanned, or a spool that
+  // was resolved before may have had its tag unlinked or been deleted since.
   useEffect(() => {
-    const unresolved = recentScans.filter(s => !s.spool)
-    if (unresolved.length === 0) return
+    if (recentScans.length === 0) return
     let cancelled = false
 
-    Promise.all(unresolved.map(async s => {
+    Promise.all(recentScans.map(async s => {
       try {
         const result = await scanTag(s.uid)
-        return result.status === 'found' && result.spool ? { uid: s.uid, spool: result.spool } : null
-      } catch {
-        return null
-      }
+        if (result.status === 'found' && result.spool) {
+          return { uid: s.uid, spool: result.spool, deleted: false }
+        }
+        if (result.status === 'unknown' && s.spool) {
+          return { uid: s.uid, spool: null, deleted: true }
+        }
+      } catch { /* keep the entry as-is */ }
+      return null
     })).then(results => {
       if (cancelled) return
-      const resolved = results.filter((r): r is { uid: string; spool: SpoolResponse } => r !== null)
-      if (resolved.length === 0) return
+      const updates = results.filter((r): r is { uid: string; spool: SpoolResponse | null; deleted: boolean } => r !== null)
+      if (updates.length === 0) return
       setRecentScans(prev => prev.map(s => {
-        const match = resolved.find(r => r.uid === s.uid)
-        return match ? { ...s, spool: match.spool } : s
+        const match = updates.find(u => u.uid === s.uid)
+        return match ? { ...s, spool: match.spool, deleted: match.deleted } : s
       }))
     })
 

@@ -313,6 +313,7 @@
     "pageSubtitle": "Read an NFC spool tag to identify filament instantly",
     "lookingUp": "Looking up NFC tag…",
     "unknownTag": "Tag not registered to any spool.",
+    "tagDeleted": "Spool for this tag was deleted",
     "lookupError": "Could not look up this tag. Please try again.",
     "tryAgain": "Try again",
     "alreadyActive": "This spool is already active. Deactivate it?",
