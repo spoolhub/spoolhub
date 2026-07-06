@@ -135,7 +135,8 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const recentRef = useRef(recentScans)
-  recentRef.current = recentScans
+
+  useEffect(() => { recentRef.current = recentScans }, [recentScans])
 
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
