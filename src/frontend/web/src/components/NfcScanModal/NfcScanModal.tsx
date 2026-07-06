@@ -10,6 +10,8 @@ import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
 
+const BASE_LOCATIONS = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
+
 const NFC_UID_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
     strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
@@ -56,6 +58,13 @@ export default function NfcScanModal({ spool, onClose }: Props) {
   const [allSpools, setAllSpools] = useState<SpoolResponse[]>([])
   const [printerId, setPrinterId] = useState<string | null>(spool.printerId)
   const [amsSlot, setAmsSlot] = useState<number | null>(spool.amsSlot)
+  const [isLoadedInPrinter, setIsLoadedInPrinter] = useState(!!spool.printerId)
+  const [stockLocation, setStockLocation] = useState<string | null>(spool.stockLocation)
+  const [showAddLocation, setShowAddLocation] = useState(false)
+  const [newLocation, setNewLocation] = useState('')
+  const [customLocations, setCustomLocations] = useState<string[]>(
+    spool.stockLocation && !BASE_LOCATIONS.includes(spool.stockLocation) ? [spool.stockLocation] : []
+  )
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -78,7 +87,12 @@ export default function NfcScanModal({ spool, onClose }: Props) {
     setSaving(true)
     try {
       await spoolsApi.activate(spool.id)
-      if (printerId) await spoolsApi.assignPrinter(spool.id, { printerId, amsSlot })
+      if (isLoadedInPrinter && printerId) {
+        await spoolsApi.assignPrinter(spool.id, { printerId, amsSlot })
+      } else {
+        await spoolsApi.assignPrinter(spool.id, { printerId: null, amsSlot: null })
+        await spoolsApi.update(spool.id, { stockLocation: stockLocation ?? '' })
+      }
       window.dispatchEvent(new CustomEvent('spools-updated'))
       setStep('done-assigned')
     } finally {
@@ -172,15 +186,81 @@ export default function NfcScanModal({ spool, onClose }: Props) {
           {step === 'assign' && (
             <div className={styles.askBox}>
               <p className={styles.askQuestion}>{t('scan.assignToAPrinter')}</p>
-              <PrinterPicker
-                printers={printers}
-                value={printerId}
-                onChange={v => { setPrinterId(v); if (!v) setAmsSlot(null) }}
-                amsSlot={amsSlot}
-                onAmsSlotChange={setAmsSlot}
-                occupiedSlots={occupiedSlots}
-                currentSpoolColor={spool.colorHex}
-              />
+
+              <div className={styles.placementToggle}>
+                <button
+                  type="button"
+                  className={!isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
+                  onClick={() => { setIsLoadedInPrinter(false); setPrinterId(null); setAmsSlot(null) }}
+                >
+                  {t('scan.inStock')}
+                </button>
+                <button
+                  type="button"
+                  className={isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
+                  onClick={() => setIsLoadedInPrinter(true)}
+                >
+                  {t('scan.loadedInPrinter')}
+                </button>
+              </div>
+
+              {isLoadedInPrinter ? (
+                <PrinterPicker
+                  printers={printers}
+                  value={printerId}
+                  onChange={v => { setPrinterId(v); if (!v) setAmsSlot(null) }}
+                  amsSlot={amsSlot}
+                  onAmsSlotChange={setAmsSlot}
+                  occupiedSlots={occupiedSlots}
+                  currentSpoolColor={spool.colorHex}
+                />
+              ) : (
+                <div className={styles.ff}>
+                  <label>{t('scan.storageLocation')}</label>
+                  <select
+                    value={stockLocation ?? ''}
+                    onChange={e => {
+                      if (e.target.value === '__add_new') setShowAddLocation(true)
+                      else setStockLocation(e.target.value || null)
+                    }}
+                  >
+                    <option value="">{t('scan.selectLocation')}</option>
+                    {BASE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                    {customLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                    <option value="__add_new">{t('scan.addNewLocation')}</option>
+                  </select>
+                  {showAddLocation && (
+                    <div className={styles.addWrap}>
+                      <input
+                        type="text"
+                        placeholder={t('scan.enterNewLocation')}
+                        value={newLocation}
+                        onChange={e => setNewLocation(e.target.value)}
+                        autoFocus
+                      />
+                      <button type="button" className={styles.btnCancel} onClick={() => { setShowAddLocation(false); setNewLocation('') }}>×</button>
+                    </div>
+                  )}
+                  {showAddLocation && (
+                    <button
+                      type="button"
+                      className={styles.btnAdd}
+                      disabled={!newLocation.trim()}
+                      onClick={() => {
+                        const loc = newLocation.trim()
+                        if (!loc) return
+                        if (!customLocations.includes(loc)) setCustomLocations(prev => [...prev, loc])
+                        setStockLocation(loc)
+                        setShowAddLocation(false)
+                        setNewLocation('')
+                      }}
+                    >
+                      {t('common.add')} &quot;{newLocation.trim()}&quot;
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className={styles.askRow}>
                 <button className={styles.btnSecondary} onClick={() => setStep('info')}>
                   {t('scan.back')}

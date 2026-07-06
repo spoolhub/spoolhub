@@ -133,15 +133,63 @@
 .barFillLow { background: oklch(0.65 0.17 30); }
 
 /* ── Assign section ── */
-.askBox { border-top: 1px solid var(--border); padding-top: 16px; }
+.askBox { border-top: 1px solid var(--border); padding-top: 16px; display: flex; flex-direction: column; gap: 14px; }
 .askQuestion {
-  font-weight: 600; font-size: 13.5px; color: var(--text-primary); margin-bottom: 11px;
+  font-weight: 600; font-size: 13.5px; color: var(--text-primary); margin-bottom: 0;
 }
 .askHint {
   display: block; color: var(--muted);
   font-weight: 400; font-size: 12.5px; margin-top: 2px;
 }
 .askRow { display: flex; gap: 10px; }
+
+/* ── Placement toggle (in stock vs loaded in printer) ── */
+.placementToggle {
+  display: flex; border: 1px solid var(--border);
+  border-radius: var(--r-sm); overflow: hidden;
+}
+.placementBtn {
+  flex: 1; padding: 9px; font: inherit; font-weight: 600; font-size: 13px;
+  border: 0; background: var(--surface); color: var(--muted);
+  cursor: pointer; transition: 0.15s;
+}
+.placementBtn:hover { background: var(--surface-alt); }
+.placementBtnOn { background: var(--accent); color: #fff; }
+.placementBtnOn:hover { background: var(--accent); color: #fff; }
+
+/* ── Storage location field ── */
+.ff { display: flex; flex-direction: column; gap: 6px; }
+.ff label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.ff select {
+  height: 40px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  border-radius: var(--r-sm); padding: 0 12px;
+  font: inherit; font-size: 13.5px; width: 100%;
+}
+.ff select:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.addWrap { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.addWrap input {
+  flex: 1; height: 36px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  border-radius: var(--r-sm); padding: 0 10px; font: inherit; font-size: 13px;
+}
+.btnCancel {
+  width: 32px; height: 32px; flex: none;
+  border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted);
+  cursor: pointer; font-size: 16px; display: grid; place-items: center;
+}
+.btnCancel:hover { background: var(--surface-alt); color: var(--text-primary); }
+.btnAdd {
+  height: 36px; padding: 0 14px; margin-top: 8px;
+  border: 1px solid var(--accent); border-radius: var(--r-sm);
+  background: var(--accent-soft); color: var(--accent-ink);
+  font: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.btnAdd:hover { background: var(--accent); color: #fff; }
+.btnAdd:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnAdd:disabled:hover { background: var(--accent-soft); color: var(--accent-ink); }
 
 /* ── Buttons ── */
 .btnSecondary {
