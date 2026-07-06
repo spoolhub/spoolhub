@@ -107,6 +107,34 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
 
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
+  // Re-check any "unregistered tag" entries once on load — the tag may have
+  // been registered to a spool elsewhere (e.g. Add Spool) since it was scanned.
+  useEffect(() => {
+    const unresolved = recentScans.filter(s => !s.spool)
+    if (unresolved.length === 0) return
+    let cancelled = false
+
+    Promise.all(unresolved.map(async s => {
+      try {
+        const result = await scanTag(s.uid)
+        return result.status === 'found' && result.spool ? { uid: s.uid, spool: result.spool } : null
+      } catch {
+        return null
+      }
+    })).then(results => {
+      if (cancelled) return
+      const resolved = results.filter((r): r is { uid: string; spool: SpoolResponse } => r !== null)
+      if (resolved.length === 0) return
+      setRecentScans(prev => prev.map(s => {
+        const match = resolved.find(r => r.uid === s.uid)
+        return match ? { ...s, spool: match.spool } : s
+      }))
+    })
+
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleTagFound = useCallback(async (uid: string) => {
     setScanPhase('looking-up')
     try {
