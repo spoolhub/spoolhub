@@ -21,6 +21,7 @@
   display: flex;
   flex-direction: column;
   min-height: 460px;
+  max-height: 640px;
 }
 .railHead {
   display: flex; align-items: center; justify-content: space-between;
@@ -38,7 +39,7 @@
   background: var(--accent); color: #fff;
   border-radius: 20px; padding: 1px 8px; line-height: 1.5;
 }
-.recentList { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.recentList { flex: 1; min-height: 0; overflow-y: auto; padding: 0.5rem; }
 .recentList::-webkit-scrollbar { width: 8px; }
 .recentList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px; }
 .railEmpty {
