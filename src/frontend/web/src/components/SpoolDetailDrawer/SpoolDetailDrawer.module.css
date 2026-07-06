@@ -20,6 +20,12 @@
   overflow-y: auto;
   transition: transform .3s var(--ease);
 }
+.drawer::-webkit-scrollbar { width: 8px; }
+.drawer::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 20px;
+  border: 2px solid var(--surface);
+}
+.drawer::-webkit-scrollbar-track { background: transparent; }
 .drawerOn { transform: translateX(0) }
 
 .dwSticky { position: sticky; top: 0; background: var(--surface); z-index: 2; border-bottom: 1px solid var(--border-2); }
@@ -181,6 +187,9 @@
 .slotTile:hover { border-color: var(--accent); }
 .slotTileEmpty { border-style: dashed; }
 .slotTileSel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.slotTileView { cursor: default; }
+.slotTileView:hover { border-color: var(--border); }
+.slotTileView.slotTileSel:hover { border-color: var(--accent); }
 
 .slotNum { font-size: 8px; font-weight: 600; color: var(--muted); line-height: 1; }
 .slotIc { width: 22px; height: 22px; display: grid; place-items: center; color: var(--muted); }

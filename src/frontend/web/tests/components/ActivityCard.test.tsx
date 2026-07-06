@@ -4,6 +4,9 @@ import ActivityCard from '@/components/ActivityCard'
 import type { Activity } from '@/types/activity'
 
 function makeActivity(overrides: Partial<Activity> = {}): Activity {
+  // Use a fixed date for "today" to avoid timezone boundary issues in tests
+  const now = new Date()
+  const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toISOString()
   return {
     id: 'a1',
     eventType: 'SpoolScanned',
@@ -20,7 +23,7 @@ function makeActivity(overrides: Partial<Activity> = {}): Activity {
       material: 'PLA',
       weight: 750,
     },
-    createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 min ago
+    createdAt: todayNoon, // noon today - guaranteed to be "Today"
     ...overrides,
   }
 }
@@ -56,7 +59,9 @@ describe('ActivityCard flat — spool event', () => {
   })
 
   it('shows relative time in line 2', () => {
-    renderFlat(makeActivity())
+    // Use a date 2 minutes ago for this test
+    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+    renderFlat(makeActivity({ createdAt: twoMinAgo }))
     expect(screen.getByText('2 min ago')).toBeInTheDocument()
   })
 

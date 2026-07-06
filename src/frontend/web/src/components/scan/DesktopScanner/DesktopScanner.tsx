@@ -1,300 +1,283 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
-import { useAgentNfc } from '@/hooks/useAgentNfc'
-import ScanResult from '../ScanResult'
-import UsbOffIcon from '@/components/icons/UsbOffIcon'
+import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
-import ReloadIcon from '@/components/icons/ReloadIcon'
-import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
-
+import { SpoolIcon } from '@/components/icons'
+import NfcScanModal from '@/components/NfcScanModal'
+import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import type { SpoolResponse } from '@/types/spool'
+import type { PrinterResponse } from '@/types/printer'
 import styles from './DesktopScanner.module.css'
 
-const SUPPORTED_READERS = ['ACR122U', 'SCL3711', 'OmniKey', 'Feitian', 'NXP', 'SpringCard', 'Bit4ID']
-const AGENT_RELEASES_URL = 'https://github.com/Coding252/spoolhub/releases/latest'
+const S = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
-type DownloadPhase = 'idle' | 'waiting' | 'error'
-type ScanPhase     = 'polling' | 'looking-up' | 'unknown' | 'error'
+const ICONS = {
+  trash: <svg {...S}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>,
+  plus: <svg {...S} strokeWidth={2.2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+}
 
-interface LastTag { uid: string; scannedAt: Date }
+type ScanPhase = 'polling' | 'looking-up' | 'unknown' | 'error'
 
-const STORAGE_KEY = 'spoolhub.lastTag'
+interface RecentScan {
+  uid: string
+  spool: SpoolResponse | null
+  scannedAt: Date
+  /** True when this uid previously resolved to a spool that's since been
+   *  unlinked or deleted -- distinct from a tag that was never registered. */
+  deleted?: boolean
+}
 
-function loadLastTag(): LastTag | null {
+const RECENT_SCANS_KEY = 'spoolhub.recentScans'
+const RECENT_SCANS_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 1 week
+
+function loadRecentScans(): RecentScan[] {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { uid: string; scannedAt: string }
-    return { uid: parsed.uid, scannedAt: new Date(parsed.scannedAt) }
-  } catch { return null }
+    const raw = sessionStorage.getItem(RECENT_SCANS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as Array<{ uid: string; spool: SpoolResponse | null; scannedAt: string; deleted?: boolean }>
+    const cutoff = Date.now() - RECENT_SCANS_MAX_AGE_MS
+    return parsed
+      .map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt), deleted: p.deleted }))
+      .filter(s => s.scannedAt.getTime() >= cutoff)
+  } catch {
+    return []
+  }
 }
 
-function saveLastTag(tag: LastTag) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ uid: tag.uid, scannedAt: tag.scannedAt.toISOString() }))
+function saveRecentScans(scans: RecentScan[]) {
+  try {
+    sessionStorage.setItem(RECENT_SCANS_KEY, JSON.stringify(scans))
+  } catch { /* storage unavailable (private browsing, quota, etc.) */ }
 }
 
-function useRelativeTime(date: Date | null, t: TFunction): string {
-  const [label, setLabel] = useState('')
+function formatRelativeTime(date: Date, t: TFunction): string {
+  const diffMs   = Date.now() - date.getTime()
+  const diffSec  = Math.floor(diffMs / 1_000)
+  const diffMin  = Math.floor(diffSec / 60)
+  const diffHr   = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHr / 24)
+  if (diffSec < 60)   return t('scan.timeJustNow')
+  if (diffMin < 60)   return t('scan.timeMinAgo',   { count: diffMin })
+  if (diffHr  < 24)   return t('scan.timeHoursAgo', { count: diffHr })
+  if (diffDays === 1) return t('scan.timeYesterday')
+  if (diffDays < 7)   return t('scan.timeDayName',  { day: date.toLocaleDateString('en', { weekday: 'short' }) })
+  return t('scan.timeDate', { date: date.toLocaleDateString('en', { month: 'short', day: 'numeric' }) })
+}
+
+function RecentItem({ scan, onClick, onRemove, t }: { scan: RecentScan; onClick: () => void; onRemove: () => void; t: TFunction }) {
+  const [label, setLabel] = useState(() => formatRelativeTime(scan.scannedAt, t))
   useEffect(() => {
-    if (!date) return
-    const d = date
-    function update() {
-      const now = new Date()
-      const diffMs = now.getTime() - d.getTime()
-      const diffSec = Math.floor(diffMs / 1000)
-      const diffMin = Math.floor(diffSec / 60)
-      const diffHr = Math.floor(diffMin / 60)
-      const diffDays = Math.floor(diffHr / 24)
-
-      if (diffSec < 60) setLabel(t('scan.timeJustNow'))
-      else if (diffMin < 60) setLabel(t('scan.timeMinAgo', { count: diffMin }))
-      else if (diffHr < 24) setLabel(t('scan.timeHoursAgo', { count: diffHr }))
-      else if (diffDays === 1) setLabel(t('scan.timeYesterday'))
-      else if (diffDays < 7) {
-        const dayName = d.toLocaleDateString('en', { weekday: 'short' })
-        setLabel(t('scan.timeDayName', { day: dayName }))
-      } else {
-        const dateStr = d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
-        setLabel(t('scan.timeDate', { date: dateStr }))
-      }
-    }
-    update()
-    const id = setInterval(update, 15_000)
+    const id = setInterval(() => setLabel(formatRelativeTime(scan.scannedAt, t)), 15_000)
     return () => clearInterval(id)
-  }, [date, t])
-  return label
-}
+  }, [scan.scannedAt, t])
 
-function NfcPulse() {
+  const clickable = !scan.deleted
+
   return (
-    <div className={styles.nfcWrap}>
-      <div className={styles.pingRing1} />
-      <div className={styles.pingRing2} />
-      <div className={styles.pingRing3} />
-      <div className={styles.nfcCircle}>
-        <NfcIcon className={styles.nfcIcon} />
+    <div
+      className={`${styles.recentItem}${clickable ? '' : ` ${styles.recentItemStatic}`}`}
+      onClick={clickable ? onClick : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e => e.key === 'Enter' && onClick()) : undefined}
+    >
+      <div className={styles.recentIcon}>
+        {scan.spool
+          ? <SpoolIcon color={scan.spool.colorHex} size={36} />
+          : scan.deleted
+            ? <span className={styles.recentDeletedIcon}>{ICONS.trash}</span>
+            : <span className={styles.recentUnknownIcon}>{ICONS.plus}</span>}
       </div>
+      <div className={styles.recentInfo}>
+        <div className={styles.recentName}>
+          {scan.spool ? `${scan.spool.brand} · ${scan.spool.colorName}` : scan.deleted ? t('scan.tagDeleted') : t('scan.unknownTag')}
+        </div>
+        <div className={styles.recentUidRow}>
+          <NfcIcon className={styles.recentUidIcon} />
+          <span className={styles.recentUid}>{scan.spool?.nfcTagUid ?? scan.uid}</span>
+        </div>
+      </div>
+      <div className={styles.recentTime}>{label}</div>
+      <button
+        className={styles.recentRemove}
+        onClick={e => { e.stopPropagation(); onRemove() }}
+        title={t('scan.removeScan')}
+        aria-label={t('scan.removeScan')}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 7h16" /><path d="M10 11v6M14 11v6" />
+          <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+          <path d="M9 7V4h6v3" />
+        </svg>
+      </button>
     </div>
   )
 }
 
-function SupportedReaders() {
-  const { t } = useTranslation()
-  return (
-    <div className={styles.supportedWrap}>
-      <p className={styles.supportedLabel}>{t('scan.supportedReaders')}</p>
-      <div className={styles.readerGrid}>
-        {SUPPORTED_READERS.map(name => (
-          <div key={name} className={styles.readerChip}>
-            <span className={styles.chipName}>{name}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+/* ── Main component ───────────────────────────────────────── */
 
 interface Props {
   isHubConnected: boolean
-  onSpoolFound: (spool: SpoolResponse) => void
   onUnknownTag?: (tagUid: string) => void
 }
 
-export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
+export default function DesktopScanner({ onUnknownTag }: Props) {
   const { t } = useTranslation()
-  const [scanPhase, setScanPhase] = useState<ScanPhase>('polling')
-  const [scanError, setScanError] = useState<string | null>(null)
-  const [dlPhase, setDlPhase] = useState<DownloadPhase>('idle')
-  const [lastTag, setLastTag] = useState<LastTag | null>(loadLastTag)
-  const pollRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastTagTime                   = useRelativeTime(lastTag?.scannedAt ?? null, t)
+  const navigate = useNavigate()
+
+  const [scanPhase,   setScanPhase]   = useState<ScanPhase>('polling')
+  const [scanError,   setScanError]   = useState<string | null>(null)
+  const [recentScans, setRecentScans] = useState<RecentScan[]>(loadRecentScans)
+  const [drawerSpool, setDrawerSpool] = useState<SpoolResponse | null>(null)
+  const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
+  const [printers, setPrinters] = useState<PrinterResponse[]>([])
+  const recentRef = useRef(recentScans)
+
+  useEffect(() => { recentRef.current = recentScans }, [recentScans])
+
+  useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
+
+  useEffect(() => {
+    if (!detailSpool) return
+    fetch('/api/printers').then(r => r.json()).then(setPrinters).catch(() => {})
+  }, [detailSpool])
+
+  // Re-check every entry once on load — the tag may have been registered to
+  // a spool elsewhere (e.g. Add Spool) since it was scanned, or a spool that
+  // was resolved before may have had its tag unlinked or been deleted since.
+  const refreshScans = useCallback(() => {
+    const scans = recentRef.current
+    if (scans.length === 0) return
+    let cancelled = false
+
+    Promise.all(scans.map(async s => {
+      try {
+        const result = await scanTag(s.uid)
+        if (result.status === 'found' && result.spool) {
+          return { uid: s.uid, spool: result.spool, deleted: false }
+        }
+        if (result.status === 'unknown' && s.spool) {
+          return { uid: s.uid, spool: null, deleted: true }
+        }
+      } catch { /* keep the entry as-is */ }
+      return null
+    })).then(results => {
+      if (cancelled) return
+      const updates = results.filter((r): r is { uid: string; spool: SpoolResponse | null; deleted: boolean } => r !== null)
+      if (updates.length === 0) return
+      setRecentScans(prev => prev.map(s => {
+        const match = updates.find(u => u.uid === s.uid)
+        return match ? { ...s, spool: match.spool, deleted: match.deleted } : s
+      }))
+    })
+
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    const cleanup = refreshScans()
+    return cleanup
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Re-check when a spool is assigned/unassigned
+  useEffect(() => {
+    const handler = () => refreshScans()
+    window.addEventListener('spools-updated', handler)
+    return () => window.removeEventListener('spools-updated', handler)
+  }, [refreshScans])
 
   const handleTagFound = useCallback(async (uid: string) => {
-    const tag = { uid, scannedAt: new Date() }
-    setLastTag(tag)
-    saveLastTag(tag)
     setScanPhase('looking-up')
     try {
       const result = await scanTag(uid)
       if (result.status === 'unknown') {
+        setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
-        onSpoolFound(result.spool)
+        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
+        if (result.spool.isActive) {
+          navigate(`/spools/${result.spool.id}`)
+        } else {
+          setDrawerSpool(result.spool)
+        }
       }
     } catch {
       setScanError(t('scan.errorLookup'))
       setScanPhase('error')
     }
-  }, [onSpoolFound, onUnknownTag, t])
-
-  const { state, readerName, reload, dismissInstallPrompt, disconnect } = useAgentNfc(handleTagFound)
-
-  useEffect(() => {
-    if (state === 'ready' || state === 'no-reader') {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-    }
-  }, [state])
-
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
-
-  const handleDownload = useCallback(() => {
-    window.open(AGENT_RELEASES_URL, '_blank', 'noopener,noreferrer')
-    setDlPhase('waiting')
-    pollRef.current = setInterval(() => reload(), 2000)
-  }, [reload])
+  }, [navigate, onUnknownTag, t])
 
   function retryScan() { setScanPhase('polling'); setScanError(null) }
 
-  // ── Reader connected ────────────────────────────────────────────────────
-  if (state === 'ready') {
-    const showResult = scanPhase === 'unknown' || scanPhase === 'error'
-    const isLookingUp = scanPhase === 'looking-up'
+  function handleRemoveScan(uid: string) {
+    setRecentScans(prev => prev.filter(s => s.uid !== uid))
+  }
 
+  /* ── Recent-scans rail ────────────────────────────────────── */
+  function renderRail() {
     return (
-      <div className={styles.card}>
-
-        {/* Dark NFC section */}
-        <div className={styles.nfcSection}>
-          {!showResult ? (
-            <>
-              <div className={styles.statusRow}>
-                <span className={styles.statusDot} />
-                <span className={styles.statusText}>{t('scan.readerConnectedStatus')}</span>
-              </div>
-              <NfcPulse />
-              <div className={styles.waitingArea}>
-                <p className={styles.waitingTitle}>
-                  {isLookingUp ? t('scan.lookingUp') : t('scan.waitingForTag')}
-                </p>
-                <p className={styles.waitingSubtitle}>{t('scan.holdSpool25cm')}</p>
-              </div>
-            </>
-          ) : (
-            <div className={styles.fullWidth}>
-              <ScanResult
-                status={scanPhase as 'unknown' | 'error'}
-                errorMessage={scanError}
-                onRetry={retryScan}
-              />
-            </div>
+      <aside className={styles.rail}>
+        <div className={styles.railHead}>
+          <h2 className={styles.railTitle}>{t('scan.recentScans')}</h2>
+          {recentScans.length > 0 && (
+            <span className={styles.railCount}>{recentScans.length}</span>
           )}
         </div>
-
-        {/* Device info / supported tags */}
-        <div className={styles.deviceRow}>
-          <InfoCircleIcon className={styles.deviceInfoIcon} />
-          <div className={styles.deviceInfoBody}>
-            <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
-            <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
-          </div>
+        <div className={styles.recentList}>
+          {recentScans.length === 0 ? (
+            <div className={styles.railEmpty}>{t('scan.noScansYet')}</div>
+          ) : (
+            recentScans.map((scan, i) => (
+              <RecentItem
+                key={i}
+                scan={scan}
+                onClick={() => {
+                  if (scan.spool) setDrawerSpool(scan.spool)
+                  else navigate(`/spools/add/nfctag?tagUid=${encodeURIComponent(scan.uid)}`)
+                }}
+                onRemove={() => handleRemoveScan(scan.uid)}
+                t={t}
+              />
+            ))
+          )}
         </div>
-
-        {/* Disconnect */}
-        <button className={styles.btnDisconnect} onClick={disconnect}>
-          <UsbOffIcon className={styles.disconnectIcon} />
-          {t('scan.disconnect')}
-        </button>
-
-        {/* Last tag read */}
-        {lastTag && (
-          <div className={styles.lastTagSection}>
-            <p className={styles.lastTagLabel}>{t('scan.lastTagRead')}</p>
-            <p className={styles.lastTagValue}>{lastTag.uid} &bull; {lastTagTime}</p>
-          </div>
-        )}
-
-      </div>
+      </aside>
     )
   }
-
-  // ── Install prompt ──────────────────────────────────────────────────────
-  if (state === 'install-prompt') {
-    return (
-      <div className={styles.card}>
-        <div className={styles.wrap}>
-          <div className={styles.readerCircle}>
-            <UsbOffIcon className={styles.readerIcon} />
-          </div>
-          <div className={styles.installDialog}>
-            <p className={styles.installTitle}>{t('scan.agentRequired')}</p>
-            <p className={styles.installDesc}>{t('scan.agentRequiredDesc')}</p>
-
-            {dlPhase === 'idle' && (
-              <>
-                <div className={styles.installActions}>
-                  <button onClick={handleDownload} className={styles.btnDownload}>
-                    {t('scan.downloadAgent')}
-                  </button>
-                  <button onClick={() => dismissInstallPrompt(false)} className={styles.btnCancel}>
-                    {t('scan.cancel')}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {dlPhase === 'waiting' && (
-              <div className={styles.searchingRow}>
-                <div className={styles.spinner} />
-                <p className={styles.noticeTitle}>{t('scan.waitingForAgent')}</p>
-              </div>
-            )}
-
-            {dlPhase === 'error' && (
-              <div className={styles.installActions}>
-                <p className={styles.dlError}>{t('scan.downloadFailed')}</p>
-                <button onClick={handleDownload} className={styles.btnDownload}>{t('scan.retry')}</button>
-              </div>
-            )}
-          </div>
-          <SupportedReaders />
-        </div>
-      </div>
-    )
-  }
-
-  // ── Checking / connecting / offline / no-reader ─────────────────────────
-  const isSpinning  = state === 'checking' || state === 'connecting'
-  const noticeTitle = state === 'no-reader'    ? t('scan.agentNoReader')
-                    : state === 'agent-offline' ? t('scan.agentOffline')
-                    :                             t('scan.agentConnecting')
-  const tips = state === 'agent-offline'
-    ? [t('scan.agentTip1'), t('scan.agentTip2')]
-    : [t('scan.tip1'), t('scan.tip2'), t('scan.tip3')]
 
   return (
-    <div className={styles.card}>
-      <div className={styles.wrap}>
-        <div className={styles.readerCircle}>
-          <UsbOffIcon className={styles.readerIcon} />
-        </div>
-        <h1 className={styles.title}>{t('scan.usbNfcReader')}</h1>
-        <div className={styles.notice}>
-          {isSpinning ? (
-            <div className={styles.searchingRow}>
-              <div className={styles.spinner} />
-              <p className={styles.noticeTitle}>{noticeTitle}</p>
-            </div>
-          ) : (
-            <>
-              <p className={styles.noticeTitle}>{noticeTitle}</p>
-              <div className={styles.noticeButtons}>
-                <button onClick={reload} className={styles.btnReload}>
-                  <ReloadIcon className={styles.reloadIcon} />
-                  {t('scan.reload')}
-                </button>
-              </div>
-              <ul className={styles.tipList}>
-                {tips.map(tip => <li key={tip}>{tip}</li>)}
-              </ul>
-            </>
-          )}
-        </div>
-        <SupportedReaders />
+    <>
+      <div className={styles.scanwrap}>
+        <ScanDesktop
+          onTagFound={handleTagFound}
+          isLookingUp={scanPhase === 'looking-up'}
+          resultStatus={scanPhase === 'unknown' || scanPhase === 'error' ? scanPhase : null}
+          resultErrorMessage={scanError}
+          onRetryResult={retryScan}
+        />
+        {renderRail()}
       </div>
-    </div>
+
+      {drawerSpool && (
+        <NfcScanModal
+          spool={drawerSpool}
+          onClose={() => setDrawerSpool(null)}
+          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s) }}
+        />
+      )}
+      {detailSpool && (
+        <SpoolDetailDrawer
+          spool={detailSpool}
+          printers={printers}
+          onClose={() => setDetailSpool(null)}
+        />
+      )}
+    </>
   )
 }

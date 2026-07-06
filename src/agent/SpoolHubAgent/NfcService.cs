@@ -64,6 +64,7 @@ public sealed class NfcService : IHostedService, IDisposable
     {
         StopMonitor();
         ActiveReader = null;
+        AvailableReaders = [];
         await BroadcastAsync(new { @event = "reader_status", connected = false, reader = (string?)null });
         _logger.LogInformation("Reader manually disconnected");
     }

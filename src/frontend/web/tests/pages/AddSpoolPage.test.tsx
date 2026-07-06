@@ -144,7 +144,7 @@ describe('AddSpoolPage — choose step', () => {
   it('shows the scan step listening on the reader when NFC is chosen', async () => {
     renderPage()
     fireEvent.click(screen.getByText('Scan NFC tag'))
-    await waitFor(() => expect(screen.getByText('Listening for tag…')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tap a tag to scan')).toBeInTheDocument())
   })
 
   it('shows the filament pick step when manual is chosen', async () => {
@@ -168,7 +168,7 @@ describe('AddSpoolPage — choose step', () => {
     await act(async () => { fireTagScan!('04:AA:BB:CC') })
     await waitFor(() => screen.getByText('Select brand…'))
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
-    await waitFor(() => expect(screen.getByText('Listening for tag…')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tap a tag to scan')).toBeInTheDocument())
   })
 })
 
@@ -179,7 +179,7 @@ describe('AddSpoolPage — scan step (real reader via agent)', () => {
     agentState = 'no-reader'
     renderPage()
     fireEvent.click(screen.getByText('Scan NFC tag'))
-    await waitFor(() => expect(screen.getByText('No NFC reader detected')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Agent connected — no reader detected/)).toBeInTheDocument())
   })
 
   it('looks up a scanned tag and moves to pick for an unknown tag', async () => {

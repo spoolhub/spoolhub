@@ -105,7 +105,6 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
           {platform === 'pc' && (
             <DesktopScanner
               isHubConnected={isConnected}
-              onSpoolFound={handleSpoolFound}
               onUnknownTag={onUnknownTag}
             />
           )}

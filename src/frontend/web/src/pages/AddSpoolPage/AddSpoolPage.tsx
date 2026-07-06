@@ -6,7 +6,7 @@ import { printersApi } from '@/api/printers'
 import { filamentsApi } from '@/api/filaments'
 import { locationsApi } from '@/api/locations'
 import { registerTag, scanTag } from '@/api/nfc'
-import { useAgentNfc } from '@/hooks/useAgentNfc'
+import ScanDesktop from '@/components/scan/ScanDesktop'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
@@ -96,75 +96,22 @@ const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 interface ScanStepProps {
   onBack: () => void
   onClose: () => void
-  onManual: () => void
   onTagFound: (tagUid: string) => void
 }
 
-function ScanStep({ onBack, onClose, onManual, onTagFound }: ScanStepProps) {
-  const [trouble, setTrouble] = useState(false)
-  const { state: agentState, reload } = useAgentNfc(onTagFound)
-
-  const noReader = trouble
-    || agentState === 'agent-offline'
-    || agentState === 'no-reader'
-    || agentState === 'install-prompt'
-  const checking = agentState === 'checking' || agentState === 'connecting'
-
-  const retry = () => { setTrouble(false); reload() }
-
+function ScanStep({ onBack, onClose, onTagFound }: ScanStepProps) {
   return (
     <>
       <div className={styles.cardHeader}>
         <button className={styles.closeBtn} onClick={onBack} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
         <div className={styles.cardHeaderTitle}>
           <h2>Scan NFC tag</h2>
-          <div className={styles.sub}>{noReader ? 'No reader connected' : "Hold the spool's NFC tag against your reader"}</div>
+          <div className={styles.sub}>Hold the spool's NFC tag against your reader</div>
         </div>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
       </div>
       <div className={styles.cardBody}>
-        <div className={styles.scanPanel}>
-          {noReader ? (
-            <div className={styles.noReader}>
-              <div className={styles.noReaderIcon} dangerouslySetInnerHTML={{
-                __html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 7V4h6v3"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v5"/><path d="M9 21h6"/><path d="M10.5 16.5h3"/></svg>'
-              }} />
-              <div className={styles.noReaderTitle}>No NFC reader detected</div>
-              <p className={styles.noReaderText}>SpoolHub couldn't reach a reader. To scan tags:</p>
-              <ol className={styles.noReaderList}>
-                <li>Make sure the <strong>SpoolHub Agent</strong> is installed and running</li>
-                <li>Check that the reader is plugged into a working <strong>USB port</strong></li>
-                <li>Reconnect the reader, then try again</li>
-              </ol>
-            </div>
-          ) : (
-            <div className={styles.scanContainer}>
-              <div className={styles.nfcWave}>
-                <span className={styles.nfcRing}></span>
-                <span className={styles.nfcRing}></span>
-                <span className={styles.nfcRing}></span>
-                <span className={styles.nfcGlyph} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
-              </div>
-              <div className={styles.scanStatus}>{checking ? 'Connecting to reader…' : 'Listening for tag…'}</div>
-              <div className={styles.scanHint}>Keep the tag steady until it's detected</div>
-              <button className={styles.scanTrouble} onClick={() => setTrouble(true)}>Reader not working?</button>
-            </div>
-          )}
-          <div className={styles.scanActions}>
-            {noReader ? (
-              <>
-                <button className={styles.btn} onClick={onManual}>
-                  <span dangerouslySetInnerHTML={{ __html: PEN_SVG }} /> Enter manually
-                </button>
-                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={retry}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> Try again
-                </button>
-              </>
-            ) : (
-              <button className={styles.btn} onClick={onClose}>Cancel</button>
-            )}
-          </div>
-        </div>
+        <ScanDesktop onTagFound={onTagFound} />
       </div>
     </>
   )
@@ -214,7 +161,7 @@ export default function AddSpoolPage() {
   }, [])
 
   const close = useCallback(() => {
-    navigate(isNfc || isManual ? '/spools/add' : '/spools')
+    navigate(isNfc ? '/scan' : isManual ? '/spools/add' : '/spools')
   }, [navigate, isNfc, isManual])
 
   const goToChoose = useCallback(() => {
@@ -223,10 +170,6 @@ export default function AddSpoolPage() {
 
   const goToScan = useCallback(() => {
     setState(s => ({ ...s, step: 'scan' }))
-  }, [])
-
-  const goToPick = useCallback((mode: Mode) => {
-    setState(s => ({ ...s, step: 'pick', mode }))
   }, [])
 
   const selectFilament = useCallback((f: FilamentProfile) => {
@@ -716,9 +659,8 @@ export default function AddSpoolPage() {
       case 'choose': return isNfc || isManual ? null : renderChoose()
       case 'scan': return (
         <ScanStep
-          onBack={goToChoose}
+          onBack={isNfc || isManual ? close : goToChoose}
           onClose={close}
-          onManual={() => goToPick('manual')}
           onTagFound={handleTagFound}
         />
       )
