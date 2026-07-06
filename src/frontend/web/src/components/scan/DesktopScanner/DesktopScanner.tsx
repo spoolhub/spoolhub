@@ -26,6 +26,25 @@ interface RecentScan {
   scannedAt: Date
 }
 
+const RECENT_SCANS_KEY = 'spoolhub.recentScans'
+
+function loadRecentScans(): RecentScan[] {
+  try {
+    const raw = sessionStorage.getItem(RECENT_SCANS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as Array<{ uid: string; spool: SpoolResponse | null; scannedAt: string }>
+    return parsed.map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt) }))
+  } catch {
+    return []
+  }
+}
+
+function saveRecentScans(scans: RecentScan[]) {
+  try {
+    sessionStorage.setItem(RECENT_SCANS_KEY, JSON.stringify(scans))
+  } catch { /* storage unavailable (private browsing, quota, etc.) */ }
+}
+
 function formatRelativeTime(date: Date, t: TFunction): string {
   const diffMs   = Date.now() - date.getTime()
   const diffSec  = Math.floor(diffMs / 1_000)
@@ -117,11 +136,13 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [scanPhase,      setScanPhase]      = useState<ScanPhase>('polling')
   const [scanError,      setScanError]      = useState<string | null>(null)
   const [dlPhase,        setDlPhase]        = useState<DownloadPhase>('idle')
-  const [recentScans,    setRecentScans]    = useState<RecentScan[]>([])
+  const [recentScans,    setRecentScans]    = useState<RecentScan[]>(loadRecentScans)
   const [drawerSpool,    setDrawerSpool]    = useState<SpoolResponse | null>(null)
   const [showHelp,       setShowHelp]       = useState(false)
   const [showManual,     setShowManual]     = useState(false)
   const [manualUid,      setManualUid]      = useState('')
+
+  useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
