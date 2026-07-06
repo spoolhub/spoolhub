@@ -80,7 +80,7 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
           </NavLink>
 
           <NavLink to="/activity" onClick={onClose} className={navClass}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="8"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
             Activity
           </NavLink>
 

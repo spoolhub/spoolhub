@@ -344,6 +344,20 @@ export default function SettingsPage() {
       </header>
 
       <div className={styles.setlayout}>
+        <select
+          className={styles.setnavMobile}
+          value={activeTab}
+          onChange={e => setActiveTab(e.target.value)}
+          aria-label={t('settings.title', 'Settings')}
+        >
+          <option value="app">{t('settings.application', 'Application')}</option>
+          <option value="updates">{t('settings.updates', 'Updates')}</option>
+          <option value="notif">{t('settings.notifications', 'Notifications')}</option>
+          <option value="filament">{t('settings.filament', 'Filament')}</option>
+          <option value="logs">{t('settings.logs', 'Logs')}</option>
+          <option value="backup">{t('settings.backup', 'Backup')}</option>
+        </select>
+
         <nav className={styles.setnav} id="setnav">
           <button className={activeTab === 'app' ? styles.on : ''} onClick={() => setActiveTab('app')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M3 9h18M9 3v18"/></svg>
@@ -374,8 +388,6 @@ export default function SettingsPage() {
         <div className={styles.setcontent}>
           {/* APPLICATION */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'app' ? styles.on : ''}`}>
-            <div className={styles.ph}><h2>{t('settings.application', 'Application')}</h2></div>
-
             <div className={styles.srow}>
               <div className={styles.sl}>
                 <div className={styles.t}>{t('settings.lowStockThreshold', 'Low stock threshold')}</div>
@@ -462,7 +474,6 @@ export default function SettingsPage() {
 
           {/* UPDATES */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'updates' ? styles.on : ''}`}>
-            <div className={styles.ph}><h2>{t('settings.updates', 'Updates')}</h2></div>
             <div className={styles.srow}>
               <div className={styles.sl}>
                 <div className={styles.t}>
@@ -497,7 +508,6 @@ export default function SettingsPage() {
 
           {/* NOTIFICATIONS */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'notif' ? styles.on : ''}`}>
-            <div className={styles.ph}><h2>{t('settings.notifications', 'Notifications')}</h2></div>
             <div className={styles.srow}>
               <div className={styles.sl}>
                 <div className={styles.t}>{t('settings.lowStockAlerts', 'Low stock alerts')}</div>
@@ -579,7 +589,6 @@ export default function SettingsPage() {
 
           {/* FILAMENT */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'filament' ? styles.on : ''}`}>
-            <div className={styles.ph}><h2>{t('settings.filament', 'Filament')}</h2></div>
 
             <div className={styles.srow}>
               <div className={styles.sl}>
@@ -670,7 +679,6 @@ export default function SettingsPage() {
           {/* LOGS */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'logs' ? styles.on : ''}`}>
             <div className={styles.ph}>
-              <h2>{t('settings.logs', 'Logs')}</h2>
               <span className={styles.meta}>debug.log</span>
             </div>
             <div className={styles.srow}>
@@ -697,7 +705,6 @@ export default function SettingsPage() {
 
           {/* BACKUP */}
           <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'backup' ? styles.on : ''}`}>
-            <div className={styles.ph}><h2>{t('settings.backup', 'Backup')}</h2></div>
             <div className={styles.srow}>
               <div className={styles.sl}>
                 <div className={styles.t}>{t('settings.lastBackup', 'Last backup')}</div>

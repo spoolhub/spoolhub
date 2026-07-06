@@ -47,7 +47,7 @@ const ICONS = {
   tag:     <svg {...S}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
   minus:   <svg {...S}><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   x:       <svg {...S}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  printer: <svg {...S}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>,
+  printer: <svg {...S} strokeWidth={1.6}><line x1="4" y1="3" x2="4" y2="19"/><line x1="20" y1="3" x2="20" y2="19"/><path d="M4 3h16"/><line x1="4" y1="9" x2="20" y2="9"/><rect x="9.5" y="6.5" width="5" height="4" rx="0.75"/><path d="M11.5 10.5 L12 13 L12.5 10.5" strokeWidth={1.3}/><rect x="3" y="19" width="18" height="2" rx="0.75"/><rect x="8.5" y="14.5" width="7" height="4" rx="0.5"/></svg>,
   pause:   <svg {...S}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
   play:    <svg {...S}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
   weight:  <svg {...S}><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 0 0-1.905 1.4L2.1 17.4A2 2 0 0 0 4 20h16a2 2 0 0 0 1.9-2.6l-2.495-8A2 2 0 0 0 17.5 8z"/></svg>,

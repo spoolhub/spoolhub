@@ -11,7 +11,7 @@
 /* ── Topbar ── */
 .topbar {
   display: flex; align-items: center; gap: 16px;
-  margin-bottom: 8px; flex-shrink: 0;
+  flex-shrink: 0;
 }
 .h { flex: 1; min-width: 0; }
 .h h1 {

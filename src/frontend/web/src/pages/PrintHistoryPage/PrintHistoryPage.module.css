@@ -14,7 +14,6 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 26px;
 }
 .topbarH {
   flex: 1;
@@ -353,4 +352,27 @@
 :global([data-dir="b"]) .jstatus {
   border-radius: 5px;
   font-family: var(--font-num);
+}
+
+@media (max-width: 900px) {
+  .search { display: none }
+  .btnIcon { display: none }
+  .invbar { flex-direction: column; align-items: stretch }
+}
+
+@media (max-width: 767px) {
+  .invbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+  }
+  .chips {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+  .chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }
