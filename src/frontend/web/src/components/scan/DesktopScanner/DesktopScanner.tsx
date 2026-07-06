@@ -333,18 +333,20 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
             )}
           </div>
 
-          <div className={styles.deviceRow}>
-            <InfoCircleIcon className={styles.deviceInfoIcon} />
-            <div className={styles.deviceInfoBody}>
-              <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
-              <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
+          <div className={styles.footerRow}>
+            <div className={styles.footerDevice} title={t('scan.supportedTagsDesc')}>
+              <InfoCircleIcon className={styles.deviceInfoIcon} />
+              <span className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</span>
             </div>
+            <button
+              className={styles.btnDisconnectIcon}
+              onClick={disconnect}
+              title={t('scan.disconnect')}
+              aria-label={t('scan.disconnect')}
+            >
+              <UsbOffIcon className={styles.disconnectIcon} />
+            </button>
           </div>
-
-          <button className={styles.btnDisconnect} onClick={disconnect}>
-            <UsbOffIcon className={styles.disconnectIcon} />
-            {t('scan.disconnect')}
-          </button>
         </>
       )
     }
