@@ -214,7 +214,7 @@ export default function AddSpoolPage() {
   }, [])
 
   const close = useCallback(() => {
-    navigate(isNfc || isManual ? '/spools/add' : '/spools')
+    navigate(isNfc ? '/scan' : isManual ? '/spools/add' : '/spools')
   }, [navigate, isNfc, isManual])
 
   const goToChoose = useCallback(() => {
