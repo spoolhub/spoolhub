@@ -107,6 +107,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const isLow = spool.currentWeightG <= spool.lowStockThresholdG
 
   const selectedPrinterName = selectedPrinter?.name
+  const canActivate = isLoadedInPrinter ? !!printerId : !!stockLocation
 
   return createPortal(
     <>
@@ -395,7 +396,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                 <button className={styles.btnSecondary} onClick={() => setStep('info')}>
                   {t('scan.back')}
                 </button>
-                <button className={styles.btnPrimary} onClick={handleActivate} disabled={saving}>
+                <button className={styles.btnPrimary} onClick={handleActivate} disabled={saving || !canActivate}>
                   {saving ? '…' : t('scan.activate')}
                 </button>
               </div>
