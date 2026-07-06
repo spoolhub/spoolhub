@@ -19,13 +19,17 @@ interface RecentScan {
 }
 
 const RECENT_SCANS_KEY = 'spoolhub.recentScans'
+const RECENT_SCANS_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 1 week
 
 function loadRecentScans(): RecentScan[] {
   try {
     const raw = sessionStorage.getItem(RECENT_SCANS_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as Array<{ uid: string; spool: SpoolResponse | null; scannedAt: string }>
-    return parsed.map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt) }))
+    const cutoff = Date.now() - RECENT_SCANS_MAX_AGE_MS
+    return parsed
+      .map(p => ({ uid: p.uid, spool: p.spool, scannedAt: new Date(p.scannedAt) }))
+      .filter(s => s.scannedAt.getTime() >= cutoff)
   } catch {
     return []
   }
