@@ -21,7 +21,8 @@ type DownloadPhase = 'idle' | 'waiting' | 'error'
 type ScanPhase     = 'polling' | 'looking-up' | 'unknown' | 'error'
 
 interface RecentScan {
-  spool: SpoolResponse
+  uid: string
+  spool: SpoolResponse | null
   scannedAt: Date
 }
 
@@ -84,13 +85,17 @@ function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => voi
       onKeyDown={e => e.key === 'Enter' && onClick()}
     >
       <div className={styles.recentIcon}>
-        <SpoolIcon color={scan.spool.colorHex} size={36} />
+        {scan.spool
+          ? <SpoolIcon color={scan.spool.colorHex} size={36} />
+          : <NfcIcon className={styles.recentUnknownIcon} />}
       </div>
       <div className={styles.recentInfo}>
-        <div className={styles.recentName}>{scan.spool.brand} · {scan.spool.colorName}</div>
+        <div className={styles.recentName}>
+          {scan.spool ? `${scan.spool.brand} · ${scan.spool.colorName}` : t('scan.unknownTag')}
+        </div>
         <div className={styles.recentUidRow}>
           <NfcIcon className={styles.recentUidIcon} />
-          <span className={styles.recentUid}>{scan.spool.nfcTagUid ?? '—'}</span>
+          <span className={styles.recentUid}>{scan.spool?.nfcTagUid ?? scan.uid}</span>
         </div>
       </div>
       <div className={styles.recentTime}>{label}</div>
@@ -126,14 +131,15 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     try {
       const result = await scanTag(uid)
       if (result.status === 'unknown') {
+        setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 6))
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
+        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 6))
         if (result.spool.isActive) {
           navigate(`/spools/${result.spool.id}`)
         } else {
-          setRecentScans(prev => [{ spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 6))
           setDrawerSpool(result.spool)
         }
       }
@@ -186,7 +192,10 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               <RecentItem
                 key={i}
                 scan={scan}
-                onClick={() => setDrawerSpool(scan.spool)}
+                onClick={() => {
+                  if (scan.spool) setDrawerSpool(scan.spool)
+                  else navigate(`/spools/add/nfctag?tagUid=${encodeURIComponent(scan.uid)}`)
+                }}
                 t={t}
               />
             ))

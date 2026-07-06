@@ -270,6 +270,10 @@
 }
 .recentItem:hover { background: var(--surface-alt); }
 .recentIcon { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; }
+.recentUnknownIcon {
+  width: 18px; height: 18px; color: var(--faint);
+  padding: 9px; border-radius: 50%; background: var(--surface-alt);
+}
 .recentInfo { flex: 1; min-width: 0; }
 .recentName {
   font-weight: 600; font-size: 13px;
