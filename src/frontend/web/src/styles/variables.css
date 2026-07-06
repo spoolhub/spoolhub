@@ -186,6 +186,20 @@
   --sidebar-width: 16rem;
 }
 
+[data-theme="dark"] {
+  --color-error:   #f87171;
+  --color-warning: #fbbf24;
+  --color-success: #4ade80;
+  --color-info:    #60a5fa;
+  --error-bg:     oklch(0.32 0.08 25);
+  --error-border: oklch(0.42 0.1 25);
+  --error-text:   oklch(0.78 0.13 25);
+  --success-bg:     oklch(0.32 0.07 150);
+  --success-border: oklch(0.42 0.09 150);
+  --success-text:   oklch(0.78 0.13 150);
+  --warning-text: oklch(0.78 0.13 80);
+}
+
 html.dark {
   --spool-holder:     #d4d4d8;
   --spool-holder-dim: #a1a1aa;

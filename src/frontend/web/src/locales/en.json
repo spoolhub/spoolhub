@@ -309,6 +309,8 @@
     "reassignTray": "Reassign Tray"
   },
   "scan": {
+    "pageTitle": "Scan Tag",
+    "pageSubtitle": "Read an NFC spool tag to identify filament instantly",
     "lookingUp": "Looking up NFC tag…",
     "unknownTag": "Tag not registered to any spool.",
     "lookupError": "Could not look up this tag. Please try again.",
@@ -360,6 +362,7 @@
     "settings": "Settings",
     "help": "Help",
     "lastTagRead": "Last tag read",
+    "noTagsYet": "No tags scanned yet.",
     "timeJustNow": "just now",
     "timeMinAgo": "{{count}} min ago",
     "timeHoursAgo": "{{count}}h ago",

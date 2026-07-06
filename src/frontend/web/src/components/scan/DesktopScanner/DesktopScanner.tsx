@@ -155,10 +155,8 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
     const isLookingUp = scanPhase === 'looking-up'
 
     return (
-      <div className={styles.card}>
-
-        {/* Dark NFC section */}
-        <div className={styles.nfcSection}>
+      <div className={styles.scanwrap}>
+        <section className={styles.stage}>
           {!showResult ? (
             <>
               <div className={styles.statusRow}>
@@ -182,31 +180,39 @@ export default function DesktopScanner({ onSpoolFound, onUnknownTag }: Props) {
               />
             </div>
           )}
-        </div>
 
-        {/* Device info / supported tags */}
-        <div className={styles.deviceRow}>
-          <InfoCircleIcon className={styles.deviceInfoIcon} />
-          <div className={styles.deviceInfoBody}>
-            <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
-            <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
+          <div className={styles.deviceRow}>
+            <InfoCircleIcon className={styles.deviceInfoIcon} />
+            <div className={styles.deviceInfoBody}>
+              <p className={styles.deviceName}>{t('scan.deviceInfo', { name: readerName ?? '—' })}</p>
+              <p className={styles.deviceTags}>{t('scan.supportedTagsDesc')}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Disconnect */}
-        <button className={styles.btnDisconnect} onClick={disconnect}>
-          <UsbOffIcon className={styles.disconnectIcon} />
-          {t('scan.disconnect')}
-        </button>
+          <button className={styles.btnDisconnect} onClick={disconnect}>
+            <UsbOffIcon className={styles.disconnectIcon} />
+            {t('scan.disconnect')}
+          </button>
+        </section>
 
-        {/* Last tag read */}
-        {lastTag && (
-          <div className={styles.lastTagSection}>
-            <p className={styles.lastTagLabel}>{t('scan.lastTagRead')}</p>
-            <p className={styles.lastTagValue}>{lastTag.uid} &bull; {lastTagTime}</p>
+        <aside className={styles.rail}>
+          <div className={styles.railHead}>
+            <h2>{t('scan.lastTagRead')}</h2>
           </div>
-        )}
-
+          <div className={styles.railBody}>
+            {lastTag ? (
+              <div className={styles.lastTagItem}>
+                <span className={styles.lastTagIcon}><NfcIcon /></span>
+                <div className={styles.lastTagInfo}>
+                  <div className={styles.lastTagUid}>{lastTag.uid}</div>
+                  <div className={styles.lastTagTime}>{lastTagTime}</div>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.railEmpty}>{t('scan.noTagsYet')}</div>
+            )}
+          </div>
+        </aside>
       </div>
     )
   }

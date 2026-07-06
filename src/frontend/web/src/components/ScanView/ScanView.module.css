@@ -1,5 +1,6 @@
 .wrap {
-  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
 }
 
 .spinner {
@@ -20,7 +21,9 @@
 .spinnerLabel { font-size: 0.875rem; color: var(--text-secondary); }
 
 .errorBox {
-  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 28rem;
+  border-radius: var(--r);
   border: 1px solid var(--error-border);
   background: var(--error-bg);
   padding: 1rem;
