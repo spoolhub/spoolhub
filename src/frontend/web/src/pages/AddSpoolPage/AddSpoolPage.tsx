@@ -716,7 +716,7 @@ export default function AddSpoolPage() {
       case 'choose': return isNfc || isManual ? null : renderChoose()
       case 'scan': return (
         <ScanStep
-          onBack={goToChoose}
+          onBack={isNfc || isManual ? close : goToChoose}
           onClose={close}
           onManual={() => goToPick('manual')}
           onTagFound={handleTagFound}
