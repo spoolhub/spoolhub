@@ -52,6 +52,16 @@ body {
 .page, .main {
   overflow-y: auto;
 }
+
+/* Clear the fixed mobile Header topbar (rendered globally in AppShell).
+   !important is required: each page's own module CSS sets `padding: var(--pad)`
+   as a shorthand (same specificity, later in bundle order), which would
+   otherwise reset padding-top and hide content under the fixed header. */
+@media (max-width: 767px) {
+  .page {
+    padding-top: calc(var(--pad) + 56px + 14px) !important;
+  }
+}
 html[data-theme] .page,
 html.dark .page,
 html:not(.dark) .page,

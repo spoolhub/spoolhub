@@ -9,7 +9,7 @@
 }
 
 /* ── Topbar ── */
-.topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; flex-shrink: 0 }
+.topbar { display: flex; align-items: center; gap: 16px; flex-shrink: 0 }
 .h { flex: 1; min-width: 0 }
 .h h1 { margin: 0; font-family: var(--font-display); font-size: 25px; font-weight: 700; letter-spacing: -.03em; color: var(--text-primary) }
 .sub { color: var(--muted); font-size: 13.5px; margin-top: 3px }
@@ -47,6 +47,7 @@
   color: var(--muted); background: var(--surface-alt);
   cursor: pointer; transition: .15s var(--ease);
 }
+[data-dir="b"] .chip { border-radius: 5px; font-family: var(--font-num); font-weight: 500; font-size: 12px }
 .chip:hover { border-color: var(--accent); color: var(--text-primary) }
 .chip.on { background: var(--accent); border-color: transparent; color: #fff }
 
@@ -57,11 +58,6 @@
   border-radius: var(--r-sm); padding: 0 12px;
   font: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
 }
-.seg2 { display: flex; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden }
-.seg2 button { display: grid; place-items: center; width: 40px; height: 38px; padding: 0; border: 0; background: var(--surface); color: var(--muted); cursor: pointer }
-.seg2 button svg { width: 16px; height: 16px }
-.seg2 button.on { background: var(--accent); color: #fff }
-
 /* ── Panel ── */
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow-card) }
 .panelHead { display: flex; align-items: center; justify-content: space-between; padding: 18px var(--card-pad); border-bottom: 1px solid var(--border-2) }
@@ -72,7 +68,6 @@
 
 /* ── Grid ── */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--gap); padding: var(--card-pad) }
-.gridList { grid-template-columns: 1fr }
 
 .skeletonCard { height: 220px; border-radius: var(--r-sm); background: var(--track); animation: pulse 1.5s ease-in-out infinite }
 
@@ -83,7 +78,6 @@
   background: var(--surface-alt); transition: .2s var(--ease); cursor: pointer;
 }
 .card:hover { border-color: var(--accent); box-shadow: 0 8px 24px -14px var(--accent) }
-.cardList { max-width: 640px }
 
 .dragHandle {
   position: absolute; top: 14px; right: 14px;
@@ -223,4 +217,29 @@
 @media (max-width: 900px) {
   .search { display: none }
   .invbar { flex-direction: column; align-items: stretch }
+}
+
+@media (max-width: 767px) {
+  .sortsel { display: none }
+  .invbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+  }
+  .chips {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+  .chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .invtools {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

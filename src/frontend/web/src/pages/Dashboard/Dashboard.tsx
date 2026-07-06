@@ -8,7 +8,6 @@ import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
-import Header from '@/components/Header'
 
 import PrinterCard from '@/components/PrinterCard'
 import RecentActivity from '@/components/RecentActivity'
@@ -130,11 +129,13 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header />
       <div className={`${styles.page} page`}>
         {/* ════ PAGE TITLE ROW — Dashboard · search · bell · Add Spool (desktop) ════ */}
         <div className={styles.titleRow}>
-          <h1 className={styles.pageTitle}>Dashboard</h1>
+          <div className={styles.h}>
+            <h1 className={styles.pageTitle}>Dashboard</h1>
+            <div className={styles.pageSub}>{spools.length} spools · {totalWeightKg} kg filament on hand · {onlineCount} / {printers.length} printers online</div>
+          </div>
           <button className={styles.searchBtn} title="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />

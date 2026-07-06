@@ -18,6 +18,10 @@
   gap: 16px;
   flex-shrink: 0;
 }
+.h {
+  flex: 1;
+  min-width: 0;
+}
 .pageTitle {
   margin: 0;
   font-family: var(--font-display);
@@ -28,7 +32,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
 }
 [data-dir="b"] .pageTitle {
   font-weight: 600;
@@ -38,7 +41,6 @@
   color: var(--muted);
   font-size: 13.5px;
   margin-top: 3px;
-  margin-bottom: var(--gap);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -129,7 +131,8 @@
   .metrics { grid-template-columns: repeat(2, 1fr); }
   .searchBtn { display: none; }
   .iconBtn { display: none; }
-  .page { padding-top: calc(var(--pad) + 56px + 14px); }
+  .titleRow { align-items: flex-start; }
+  .pageSub { white-space: normal; overflow: visible; text-overflow: clip; }
 }
 
 /* ── Panel ── */

@@ -11,7 +11,7 @@
 /* ── Topbar ── */
 .topbar {
   display: flex; align-items: center; gap: 16px;
-  margin-bottom: 8px; flex-shrink: 0;
+  flex-shrink: 0;
 }
 .h { flex: 1; min-width: 0; }
 .h h1 {
@@ -35,16 +35,6 @@
 .search input::placeholder { color: var(--faint) }
 .search .k { font-family: var(--font-num); font-size: 11px; color: var(--faint); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; flex-shrink: 0 }
 
-.iconBtn {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 42px; width: 42px; padding: 0;
-  border: 1px solid var(--border); border-radius: var(--r-sm);
-  background: var(--surface); color: var(--muted);
-  font: inherit; cursor: pointer; transition: .16s var(--ease); flex-shrink: 0;
-}
-.iconBtn:hover { background: var(--surface-alt) }
-.iconBtn svg { width: 16px; height: 16px }
-
 .primaryBtn {
   display: inline-flex; align-items: center; gap: 8px;
   height: 42px; padding: 0 17px;
@@ -61,19 +51,7 @@
   display: flex; align-items: center; gap: 14px;
   margin-bottom: var(--gap); flex-wrap: wrap;
 }
-.chips { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0 }
-.chip {
-  font-size: 12.5px; font-weight: 600;
-  padding: 6px 12px; border-radius: 20px;
-  border: 1px solid var(--border);
-  color: var(--muted); background: var(--surface-alt);
-  cursor: pointer; transition: .15s var(--ease);
-}
-[data-dir="b"] .chip { border-radius: 5px; font-family: var(--font-num); font-weight: 500; font-size: 12px }
-.chip:hover { border-color: var(--accent); color: var(--text-primary) }
-.chip.on { background: var(--accent); border-color: transparent; color: #fff }
-
-.invtools { display: flex; align-items: center; gap: 10px }
+.invtools { display: flex; align-items: center; gap: 10px; margin-left: auto }
 .sortsel {
   height: 40px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-primary);
@@ -228,5 +206,9 @@
 @media (max-width: 900px) {
   .search { display: none }
   .invbar { flex-direction: column; align-items: stretch }
-  .primaryBtn { display: none }
+}
+
+@media (max-width: 767px) {
+  .sub { display: none }
+  .invbar { display: none }
 }

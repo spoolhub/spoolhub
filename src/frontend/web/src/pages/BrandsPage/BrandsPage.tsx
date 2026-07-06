@@ -29,7 +29,6 @@ export default function BrandsPage() {
   const [brandSlugs, setBrandSlugs] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState('all')
   const [sortBy, setSortBy] = useState('recent')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -76,25 +75,14 @@ export default function BrandsPage() {
     refresh().catch(() => {})
   }, [refresh])
 
-  const materials = useMemo(() => {
-    const set = new Set<string>()
-    brands.forEach(b => b.mats.forEach(m => set.add(m)))
-    return [...set].sort()
-  }, [brands])
-
   const filtered = useMemo(() => {
     let list = [...brands]
     if (query) list = list.filter(b => b.name.toLowerCase().includes(query.toLowerCase()))
-    if (activeFilter !== 'all') {
-      if (activeFilter === 'active') list = list.filter(b => b.count > 0)
-      else if (activeFilter === 'low') list = list.filter(b => b.low > 0)
-      else list = list.filter(b => b.mats.includes(activeFilter))
-    }
     if (sortBy === 'recent') list.sort((a, b) => b.count - a.count)
     else if (sortBy === 'remaining') list.sort((a, b) => a.total - b.total)
     else list.sort((a, b) => a.name.localeCompare(b.name))
     return list
-  }, [brands, query, activeFilter, sortBy])
+  }, [brands, query, sortBy])
 
   const totalSpools = useMemo(() => brands.reduce((s, b) => s + b.count, 0), [brands])
   const totalKg = useMemo(() => (brands.reduce((s, b) => s + b.total, 0) / 1000).toFixed(1), [brands])
@@ -127,9 +115,6 @@ export default function BrandsPage() {
           <input placeholder="Search brands…" value={query} onChange={e => setQuery(e.target.value)} />
           <span className={styles.k}>⌘K</span>
         </label>
-        <button className={styles.iconBtn} title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>
-        </button>
         <button className={styles.primaryBtn} onClick={() => setShowAddModal(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
           Add Brand
@@ -137,14 +122,6 @@ export default function BrandsPage() {
       </header>
 
       <section className={styles.invbar}>
-        <div className={styles.chips}>
-          <button className={`${styles.chip} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All</button>
-          {materials.map(m => (
-            <button key={m} className={`${styles.chip} ${activeFilter === m ? styles.on : ''}`} onClick={() => setActiveFilter(m)}>{m}</button>
-          ))}
-          <button className={`${styles.chip} ${activeFilter === 'active' ? styles.on : ''}`} onClick={() => setActiveFilter('active')}>Active</button>
-          <button className={`${styles.chip} ${activeFilter === 'low' ? styles.on : ''}`} onClick={() => setActiveFilter('low')}>Low stock</button>
-        </div>
         <div className={styles.invtools}>
           <select className={styles.sortsel} value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="recent">Sort: Most spools</option>

@@ -11,7 +11,7 @@
 /* ── Topbar ── */
 .topbar {
   display: flex; align-items: center; gap: 16px;
-  margin-bottom: 8px; flex-shrink: 0;
+  flex-shrink: 0;
 }
 .h { flex: 1; min-width: 0; }
 .h h1 {
@@ -355,6 +355,28 @@
   .invbar { flex-direction: column; align-items: stretch }
 }
 
+@media (max-width: 767px) {
+  .sortsel { display: none }
+  .invbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+  }
+  .chips {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+  .chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .invtools {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
 /* ── Delete confirmation modal ── */
 .modalScrim {
   position: fixed; inset: 0;
@@ -390,11 +412,6 @@
 .modalText strong { color: var(--text-primary) }
 .modalActions { display: flex; gap: 12px }
 .modalActions .btn { flex: 1 }
-
-@media (max-width: 900px) {
-  .search { display: none }
-  .invbar { flex-direction: column; align-items: stretch }
-}
 
 /* ── Inline add location ── */
 .addNew { font-style: italic; color: var(--accent) }

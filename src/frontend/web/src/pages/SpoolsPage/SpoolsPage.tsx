@@ -132,6 +132,7 @@ export default function SpoolsPage() {
       <section className={styles.panel}>
         <div className={styles.panelHead}>
           <h2>All spools</h2>
+          <span className={styles.meta}>{filtered.length} spools</span>
         </div>
         {view === 'list' ? (
           <div className={styles.listWrap}>
