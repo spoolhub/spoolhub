@@ -5,9 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import { SpoolIcon } from '@/components/icons'
-import PrinterPicker from '@/components/PrinterPicker'
+import PlusIcon from '@/components/icons/PlusIcon'
+import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
+import { getPrinterImage } from '@/utils/printerImages'
 import type { SpoolResponse } from '@/types/spool'
-import type { PrinterResponse } from '@/types/printer'
+import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
 
 const BASE_LOCATIONS = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
@@ -55,7 +57,6 @@ export default function NfcScanModal({ spool, onClose }: Props) {
   const { t } = useTranslation()
   const [step, setStep] = useState<Step>('info')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
-  const [allSpools, setAllSpools] = useState<SpoolResponse[]>([])
   const [printerId, setPrinterId] = useState<string | null>(spool.printerId)
   const [amsSlot, setAmsSlot] = useState<number | null>(spool.amsSlot)
   const [isLoadedInPrinter, setIsLoadedInPrinter] = useState(!!spool.printerId)
@@ -69,19 +70,22 @@ export default function NfcScanModal({ spool, onClose }: Props) {
 
   useEffect(() => {
     printersApi.getAll().then(setPrinters).catch(() => {})
-    spoolsApi.getAll().then(setAllSpools).catch(() => {})
   }, [spool.id])
 
-  const occupiedSlots = useMemo(() => {
-    if (!printerId) return {}
-    const result: Record<number, { colorHex: string; colorName: string; brand: string; material: string }> = {}
-    for (const s of allSpools) {
-      if (s.printerId === printerId && s.amsSlot != null && s.id !== spool.id) {
-        result[s.amsSlot] = { colorHex: s.colorHex, colorName: s.colorName, brand: s.brand, material: s.material }
-      }
+  const selectedPrinter = useMemo(
+    () => printers.find(p => p.id === printerId),
+    [printers, printerId]
+  )
+
+  const traySlotMap = useMemo((): Record<number, TraySpoolSummary | null> => {
+    if (!selectedPrinter) return {}
+    return {
+      1: selectedPrinter.tray1Spool,
+      2: selectedPrinter.tray2Spool,
+      3: selectedPrinter.tray3Spool,
+      4: selectedPrinter.tray4Spool,
     }
-    return result
-  }, [allSpools, printerId, spool.id])
+  }, [selectedPrinter])
 
   async function handleActivate() {
     setSaving(true)
@@ -103,7 +107,7 @@ export default function NfcScanModal({ spool, onClose }: Props) {
   const pct = Math.min(100, Math.round((spool.currentWeightG / spool.initialWeightG) * 100))
   const isLow = spool.currentWeightG <= spool.lowStockThresholdG
 
-  const selectedPrinterName = printers.find(p => p.id === printerId)?.name
+  const selectedPrinterName = selectedPrinter?.name
 
   return createPortal(
     <>
@@ -205,15 +209,75 @@ export default function NfcScanModal({ spool, onClose }: Props) {
               </div>
 
               {isLoadedInPrinter ? (
-                <PrinterPicker
-                  printers={printers}
-                  value={printerId}
-                  onChange={v => { setPrinterId(v); if (!v) setAmsSlot(null) }}
-                  amsSlot={amsSlot}
-                  onAmsSlotChange={setAmsSlot}
-                  occupiedSlots={occupiedSlots}
-                  currentSpoolColor={spool.colorHex}
-                />
+                <div className={styles.ff}>
+                  <label>{t('spoolForm.assignedPrinter')}</label>
+                  <select
+                    value={printerId ?? ''}
+                    onChange={e => { setPrinterId(e.target.value || null); setAmsSlot(null) }}
+                  >
+                    <option value="">{t('spoolForm.noPrinter')}</option>
+                    {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
+                  </select>
+
+                  {selectedPrinter && (
+                    <div className={styles.amsLayout}>
+                      <div className={styles.pcardThumb}>
+                        <div className={styles.pcardPic}>
+                          <img
+                            src={getPrinterImage(selectedPrinter.brand, selectedPrinter.model)}
+                            alt={`${selectedPrinter.brand} ${selectedPrinter.model}`}
+                            className={styles.pcardImg}
+                            onError={e => { (e.currentTarget as HTMLImageElement).src = '/printers/generic.svg' }}
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.amsRight}>
+                        {selectedPrinter.hasAms ? (
+                          <>
+                            <p className={styles.slotLabel}>{t('spoolForm.chooseAmsSlot')}</p>
+                            <div className={styles.slotPick}>
+                              {[1, 2, 3, 4].map(slot => {
+                                const occupant = traySlotMap[slot]
+                                const isSel = amsSlot === slot
+                                const colorHex = isSel ? spool.colorHex : occupant?.colorHex
+                                const name = isSel ? spool.colorName : occupant?.colorName ?? t('spoolForm.slotEmpty')
+                                return (
+                                  <button
+                                    key={slot}
+                                    type="button"
+                                    className={`${styles.slotTile}${isSel ? ` ${styles.slotTileSel}` : ''}${!occupant && !isSel ? ` ${styles.slotTileEmpty}` : ''}`}
+                                    onClick={() => setAmsSlot(isSel ? null : slot)}
+                                  >
+                                    {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
+                                    <span className={styles.slotNum}>{slot}</span>
+                                    <span className={styles.slotIc}>
+                                      {colorHex ? <SpoolIcon color={colorHex} size={22} /> : <PlusIcon className={styles.slotPlus} />}
+                                    </span>
+                                    <span className={styles.slotCn}>{name}</span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            {amsSlot != null && traySlotMap[amsSlot] && (
+                              <div className={styles.slotNote}>
+                                <InfoCircleIcon className={styles.slotNoteIcon} />
+                                {t('spoolForm.slotOccupied')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className={styles.singleSlot}>
+                            <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex} size={28} /></span>
+                            <div>
+                              <p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p>
+                              <p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className={styles.ff}>
                   <label>{t('scan.storageLocation')}</label>
