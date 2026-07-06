@@ -50,7 +50,7 @@ interface Props {
   onViewDetails?: (spool: SpoolResponse) => void
 }
 
-type Step = 'info' | 'assign' | 'done-inventory' | 'done-assigned'
+type Step = 'info' | 'assign' | 'done-assigned'
 
 export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
@@ -399,13 +399,6 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                   {saving ? '…' : t('scan.activate')}
                 </button>
               </div>
-            </div>
-          )}
-
-          {step === 'done-inventory' && (
-            <div className={styles.assigned}>
-              {CHECK_ICON}
-              {t('scan.keptInInventory')}
             </div>
           )}
 
