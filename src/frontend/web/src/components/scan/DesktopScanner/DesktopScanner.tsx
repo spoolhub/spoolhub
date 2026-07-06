@@ -65,13 +65,15 @@ function RecentItem({ scan, onClick, t }: { scan: RecentScan; onClick: () => voi
     return () => clearInterval(id)
   }, [scan.scannedAt, t])
 
+  const clickable = !scan.deleted
+
   return (
     <div
-      className={styles.recentItem}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onClick()}
+      className={`${styles.recentItem}${clickable ? '' : ` ${styles.recentItemStatic}`}`}
+      onClick={clickable ? onClick : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e => e.key === 'Enter' && onClick()) : undefined}
     >
       <div className={styles.recentIcon}>
         {scan.spool

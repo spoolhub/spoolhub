@@ -54,6 +54,8 @@
   cursor: pointer; transition: background 0.15s;
 }
 .recentItem:hover { background: var(--surface-alt); }
+.recentItemStatic { cursor: default; }
+.recentItemStatic:hover { background: none; }
 .recentIcon { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; }
 .recentUnknownIcon {
   width: 18px; height: 18px; color: var(--faint);
