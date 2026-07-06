@@ -68,6 +68,7 @@ export default function SpoolScanPopup({ spool, onClose }: Props) {
     try {
       await spoolsApi.activate(current.id)
       window.dispatchEvent(new CustomEvent('spools-updated'))
+      onClose()
       navigate(`/spools/${current.id}`)
     } catch {
       setApiError(t('scan.activateError'))
