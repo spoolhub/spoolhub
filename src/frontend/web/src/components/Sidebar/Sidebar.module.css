@@ -98,26 +98,10 @@
 .mark {
   width: 38px;
   height: 38px;
-  border-radius: var(--r-sm);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
   display: grid;
   place-items: center;
   flex: none;
 }
-[data-dir="b"] .mark { border-radius: 8px; }
-
-.brandName {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 16.5px;
-  letter-spacing: -.02em;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.brandName b { color: #16A34A; }
 
 .closeBtn {
   display: flex;
