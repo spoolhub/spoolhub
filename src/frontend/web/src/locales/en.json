@@ -11,6 +11,7 @@
     "addSpool": "Add Spool",
     "printers": "Printers",
     "closeSidebar": "Close sidebar",
+    "toggleSidebar": "Toggle sidebar",
     "toggleFilamentSubmenu": "Toggle filament submenu",
     "locations": "Locations",
     "settings": "Settings",

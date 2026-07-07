@@ -48,7 +48,7 @@ function AppShell() {
     <>
       <ConnectionBanner />
       <div className="min-h-dvh sm:h-dvh flex flex-col bg-[var(--bg)] transition-colors duration-200">
-        <div className="sm:h-dvh sm:flex sm:overflow-hidden bg-[var(--bg)]">
+        <div className="sm:h-dvh sm:flex sm:gap-6 sm:overflow-hidden bg-[var(--bg)]">
           <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} spoolCount={spoolCount} />
 
           <main

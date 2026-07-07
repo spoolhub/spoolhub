@@ -1,0 +1,19 @@
+.tile {
+  display: grid;
+  place-items: center;
+  background: var(--green, #22c55e);
+  border-radius: 26%;
+}
+
+.stacked {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.wordmark {
+  font-weight: 700;
+  line-height: 1;
+  color: currentColor;
+}
