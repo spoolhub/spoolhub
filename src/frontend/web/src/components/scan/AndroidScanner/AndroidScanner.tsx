@@ -16,7 +16,7 @@ type ScanState =
 
 interface Props {
   isHubConnected: boolean
-  onSpoolFound: (spool: SpoolResponse) => void
+  onSpoolFound: (spool: SpoolResponse, tagUid?: string) => void
   onUnknownTag?: (tagUid: string) => void
 }
 
@@ -97,7 +97,7 @@ export default function AndroidScanner({ isHubConnected, onSpoolFound, onUnknown
             setScanState('unknown')
           } else if (result.spool) {
             setScanState('idle')
-            onSpoolFound(result.spool)
+            onSpoolFound(result.spool, tagUid)
           }
         } catch {
           setErrorMessage(t('scan.errorLookup'))

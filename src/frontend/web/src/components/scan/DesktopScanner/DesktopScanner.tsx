@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
@@ -127,6 +127,7 @@ interface Props {
 export default function DesktopScanner({ onUnknownTag }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [, setSearchParams] = useSearchParams()
 
   const [scanPhase,   setScanPhase]   = useState<ScanPhase>('polling')
   const [scanError,   setScanError]   = useState<string | null>(null)
@@ -202,12 +203,13 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         setScanPhase('polling')
         setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
         setDrawerSpool(result.spool)
+        setSearchParams({ tagUid: uid }, { replace: true })
       }
     } catch {
       setScanError(t('scan.errorLookup'))
       setScanPhase('error')
     }
-  }, [onUnknownTag, t])
+  }, [onUnknownTag, t, setSearchParams])
 
   function retryScan() { setScanPhase('polling'); setScanError(null) }
 
