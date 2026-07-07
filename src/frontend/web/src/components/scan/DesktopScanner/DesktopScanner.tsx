@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -136,61 +136,12 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [drawerSpool, setDrawerSpool] = useState<SpoolResponse | null>(null)
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
-  const recentRef = useRef(recentScans)
-
-  useEffect(() => { recentRef.current = recentScans }, [recentScans])
-
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
   useEffect(() => {
     if (!detailSpool) return
     fetch('/api/printers').then(r => r.json()).then(setPrinters).catch(() => {})
   }, [detailSpool])
-
-  // Re-check every entry once on load — the tag may have been registered to
-  // a spool elsewhere (e.g. Add Spool) since it was scanned, or a spool that
-  // was resolved before may have had its tag unlinked or been deleted since.
-  const refreshScans = useCallback(() => {
-    const scans = recentRef.current
-    if (scans.length === 0) return
-    let cancelled = false
-
-    Promise.all(scans.map(async s => {
-      try {
-        const result = await scanTag(s.uid)
-        if (result.status === 'found' && result.spool) {
-          return { uid: s.uid, spool: result.spool, deleted: false }
-        }
-        if (result.status === 'unknown' && s.spool) {
-          return { uid: s.uid, spool: null, deleted: true }
-        }
-      } catch { /* keep the entry as-is */ }
-      return null
-    })).then(results => {
-      if (cancelled) return
-      const updates = results.filter((r): r is { uid: string; spool: SpoolResponse | null; deleted: boolean } => r !== null)
-      if (updates.length === 0) return
-      setRecentScans(prev => prev.map(s => {
-        const match = updates.find(u => u.uid === s.uid)
-        return match ? { ...s, spool: match.spool, deleted: match.deleted } : s
-      }))
-    })
-
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    const cleanup = refreshScans()
-    return cleanup
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Re-check when a spool is assigned/unassigned
-  useEffect(() => {
-    const handler = () => refreshScans()
-    window.addEventListener('spools-updated', handler)
-    return () => window.removeEventListener('spools-updated', handler)
-  }, [refreshScans])
 
   const handleTagFound = useCallback(async (uid: string) => {
     setScanPhase('looking-up')
@@ -204,7 +155,6 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
-        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
         setDrawerSpool(result.spool)
       }
     } catch {
