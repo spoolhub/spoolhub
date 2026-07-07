@@ -39,6 +39,12 @@ app.MapPost("/disconnect", async () =>
     return Results.Ok();
 });
 
+app.MapPost("/write-url", (WriteUrlRequest req) =>
+{
+    var ok = nfc.TryWriteNdefUri(req.Url);
+    return ok ? Results.Ok() : Results.Problem("No reader/tag present", statusCode: StatusCodes.Status503ServiceUnavailable);
+});
+
 app.MapGet("/events", async (HttpContext ctx) =>
 {
     if (!ctx.WebSockets.IsWebSocketRequest)
@@ -51,3 +57,5 @@ app.MapGet("/events", async (HttpContext ctx) =>
 });
 
 await app.RunAsync();
+
+public record WriteUrlRequest(string Url);

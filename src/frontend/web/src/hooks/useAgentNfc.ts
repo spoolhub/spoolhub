@@ -4,6 +4,20 @@ const AGENT_WS        = 'ws://localhost:8765/events'
 const AGENT_HTTP      = 'http://localhost:8765'
 const SKIP_PROMPT_KEY = 'spoolhub.agent.skipInstallPrompt'
 
+/** Writes a URI onto whatever tag is currently on the agent's active reader. */
+export async function writeAgentTagUrl(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${AGENT_HTTP}/write-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export type AgentState =
   | 'checking'
   | 'install-prompt'

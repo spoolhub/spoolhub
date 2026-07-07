@@ -16,6 +16,10 @@ public sealed class NfcService : IHostedService, IDisposable
 
     private static readonly byte[] GetUidApdu = [0xFF, 0xCA, 0x00, 0x00, 0x00];
 
+    // NTAG21x / Ultralight user memory starts at page 4, 4 bytes per page.
+    private const int NdefStartPage = 4;
+    private const int PageSize = 4;
+
     public string? ActiveReader { get; private set; }
     public IReadOnlyList<string> AvailableReaders { get; private set; } = [];
 
@@ -158,6 +162,64 @@ public sealed class NfcService : IHostedService, IDisposable
         {
             _logger.LogWarning("Error reading NFC tag: {Msg}", ex.Message);
         }
+    }
+
+    /// Writes a URI as an NDEF Type 2 Tag message onto whatever tag is currently
+    /// on the active reader. Returns false if there's no reader/tag or the write fails.
+    public bool TryWriteNdefUri(string url)
+    {
+        if (ActiveReader is null) return false;
+        try
+        {
+            using var ctx = ContextFactory.Instance.Establish(SCardScope.System);
+            using var reader = ctx.ConnectReader(ActiveReader, SCardShareMode.Shared, SCardProtocol.Any);
+
+            var ndef = BuildNdefUriMessage(url);
+            var response = new byte[18];
+
+            for (var offset = 0; offset < ndef.Length; offset += PageSize)
+            {
+                var chunk = new byte[PageSize];
+                var len = Math.Min(PageSize, ndef.Length - offset);
+                Array.Copy(ndef, offset, chunk, 0, len);
+
+                var page = NdefStartPage + offset / PageSize;
+                var apdu = new byte[] { 0xFF, 0xD6, 0x00, (byte)page, PageSize, chunk[0], chunk[1], chunk[2], chunk[3] };
+
+                var recvLen = reader.Transmit(apdu, response);
+                if (recvLen < 2 || response[recvLen - 2] != 0x90 || response[recvLen - 1] != 0x00)
+                {
+                    _logger.LogWarning("NDEF write failed at page {Page}", page);
+                    return false;
+                }
+            }
+
+            _logger.LogInformation("Wrote NDEF URI to tag: {Url}", url);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Error writing NFC tag: {Msg}", ex.Message);
+            return false;
+        }
+    }
+
+    private static byte[] BuildNdefUriMessage(string url)
+    {
+        var uriBytes = Encoding.UTF8.GetBytes(url);
+        var payload = new byte[1 + uriBytes.Length];
+        payload[0] = 0x00; // URI prefix code: 0 = no abbreviation, full URI follows
+        Array.Copy(uriBytes, 0, payload, 1, uriBytes.Length);
+
+        // NDEF record: MB=1 ME=1 SR=1 TNF=0x01 (well-known), type 'U' (URI)
+        var record = new List<byte> { 0xD1, 0x01, (byte)payload.Length, (byte)'U' };
+        record.AddRange(payload);
+
+        var tlv = new List<byte> { 0x03, (byte)record.Count };
+        tlv.AddRange(record);
+        tlv.Add(0xFE); // NDEF terminator TLV
+
+        return tlv.ToArray();
     }
 
     private async Task BroadcastAsync(object message)
