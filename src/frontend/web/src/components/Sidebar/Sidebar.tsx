@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { clearSession } from '@/api/session'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -14,6 +15,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   return (
     <>
@@ -103,6 +105,13 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
               <div className={styles.name}>Mira Kovač</div>
               <div className={styles.email}>studio · pro plan</div>
             </div>
+            <button
+              className={styles.logoutBtn}
+              title="Log out"
+              onClick={() => { clearSession(); navigate('/login') }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+            </button>
           </div>
 
         </nav>

@@ -11,7 +11,10 @@ using Infrastructure.Services;
 using Infrastructure.Services.BambuLab;
 using Infrastructure.Services.Printer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Serilog;
 using Serilog.Events;
 
@@ -71,12 +74,32 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<FilamentDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+builder.Services.AddAuthorization();
+
 builder.Services.AddHttpClient("ofd", client =>
 {
     client.DefaultRequestHeaders.Add("User-Agent", "SpoolHub/1.0");
 });
 builder.Services.AddSingleton(logBuffer);
 builder.Services.AddHostedService<LogBroadcastService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAppSettingRepository, AppSettingRepository>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
@@ -141,6 +164,8 @@ app.UseExceptionHandler();
 
 app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NfcScanHub>("/hubs/nfc");
 app.MapHub<PrinterHub>("/hubs/printer");

@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.9" />
     <PackageReference Include="PCSC" Version="7.0.0" />
     <PackageReference Include="PCSC.Iso7816" Version="7.0.0" />

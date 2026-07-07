@@ -21,6 +21,8 @@ import ActivityPage from '@/pages/ActivityPage'
 import SelectSpoolPage from '@/pages/SelectSpoolPage'
 import LocationsPage from '@/pages/LocationsPage'
 import PrintHistoryPage from './pages/PrintHistoryPage/PrintHistoryPage'
+import LoginPage from '@/pages/LoginPage'
+import SignupPage from '@/pages/SignupPage'
 import ConnectionBanner from '@/components/ConnectionBanner/ConnectionBanner'
 import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
@@ -89,7 +91,11 @@ export default function App() {
       <DesignProvider>
         <SidebarProvider>
           <BrowserRouter>
-            <AppShell />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/*" element={<AppShell />} />
+            </Routes>
           </BrowserRouter>
         </SidebarProvider>
       </DesignProvider>
