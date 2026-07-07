@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useSidebar } from '@/context/SidebarContext'
 import SpoolHubLogo from '@/components/SpoolHubLogo'
 import styles from './Header.module.css'
@@ -15,9 +16,9 @@ export default function Header() {
       </button>
 
       {/* Brand logo — hidden on desktop, shown on mobile */}
-      <div className={styles.topbarLogo}>
+      <Link to="/" className={styles.topbarLogo} title="Dashboard">
         <SpoolHubLogo variant="full" size={44} />
-      </div>
+      </Link>
 
       {/* Search bar — desktop only */}
       <label className={styles.search}>

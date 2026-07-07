@@ -31,6 +31,11 @@ describe('Header', () => {
     expect(screen.getByPlaceholderText('Search spools, brands, colors…')).toBeInTheDocument()
   })
 
+  it('links the brand logo to the dashboard', () => {
+    renderHeader()
+    expect(screen.getByTitle('Dashboard')).toHaveAttribute('href', '/')
+  })
+
   it('renders the notification bell (mobile + desktop)', () => {
     renderHeader()
     expect(screen.getAllByTitle('Notifications')).toHaveLength(2)
