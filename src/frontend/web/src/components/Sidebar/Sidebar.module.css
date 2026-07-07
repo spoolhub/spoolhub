@@ -253,4 +253,26 @@
   text-overflow: ellipsis;
 }
 
+.logoutBtn {
+  margin-left: auto;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  border: 0;
+  background: none;
+  color: var(--faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: .15s var(--ease);
+  padding: 0;
+}
+.logoutBtn:hover {
+  color: oklch(0.6 0.19 25);
+  background: var(--surface);
+}
+.logoutBtn svg { width: 15px; height: 15px; }
+
 .spacer { flex: 1; }

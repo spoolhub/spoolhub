@@ -17,11 +17,16 @@ public class FilamentDbContext(DbContextOptions<FilamentDbContext> options) : Db
     public DbSet<Domain.Models.AppSetting> AppSettings => Set<Domain.Models.AppSetting>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<SpoolProfile> SpoolProfiles => Set<SpoolProfile>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Domain.Models.AppSetting>()
             .HasKey(s => s.Key);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
 
         modelBuilder.Entity<NfcTag>()
             .HasIndex(t => t.TagUid)

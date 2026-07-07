@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { isAuthenticated } from '@/api/session'
 import { ConnectionProvider, useConnection } from '@/context/ConnectionContext'
 import { DesignProvider } from '@/context/DesignContext'
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
@@ -21,6 +22,8 @@ import ActivityPage from '@/pages/ActivityPage'
 import SelectSpoolPage from '@/pages/SelectSpoolPage'
 import LocationsPage from '@/pages/LocationsPage'
 import PrintHistoryPage from './pages/PrintHistoryPage/PrintHistoryPage'
+import LoginPage from '@/pages/LoginPage'
+import SignupPage from '@/pages/SignupPage'
 import ConnectionBanner from '@/components/ConnectionBanner/ConnectionBanner'
 import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
@@ -83,13 +86,25 @@ function AppShell() {
   )
 }
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
+  return isAuthenticated() ? <Navigate to="/" replace /> : <>{children}</>
+}
+
 export default function App() {
   return (
     <ConnectionProvider>
       <DesignProvider>
         <SidebarProvider>
           <BrowserRouter>
-            <AppShell />
+            <Routes>
+              <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
+              <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
+              <Route path="/*" element={<RequireAuth><AppShell /></RequireAuth>} />
+            </Routes>
           </BrowserRouter>
         </SidebarProvider>
       </DesignProvider>
