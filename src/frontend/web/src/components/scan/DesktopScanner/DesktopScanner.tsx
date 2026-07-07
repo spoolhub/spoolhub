@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
-import { scanTag, writeTagUrl } from '@/api/nfc'
+import { scanTag } from '@/api/nfc'
 import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
 import { SpoolIcon } from '@/components/icons'
@@ -198,7 +198,6 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       if (result.status === 'unknown') {
         setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
         setSearchParams({ tagUid: uid }, { replace: true })
-        writeTagUrl(`${window.location.origin}/scan?tagUid=${uid}`).catch(() => {})
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
