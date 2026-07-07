@@ -45,6 +45,18 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
           <NavLink to="/" end onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <span className={styles.mark}>
               <svg width="30" height="30" viewBox="47 0 215 180" fill="none" role="img" aria-label="SpoolHub" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <g id="spk-full-sidebar">
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(45)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(90)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(135)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(180)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(225)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(270)"/>
+                    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" strokeWidth="2" opacity="0.5" transform="rotate(315)"/>
+                  </g>
+                </defs>
                 <circle cx="68" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3"/>
                 <g transform="translate(68,90)">
                   <g>
@@ -52,6 +64,7 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
                     <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.4"/>
                     <circle r="43" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.65"/>
                     <circle r="33" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.9"/>
+                    <use href="#spk-full-sidebar"/>
                   </g>
                   <circle r="17" fill="#15803D"/>
                   <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6"/>
@@ -118,7 +131,7 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
           </NavLink>
 
           <NavLink to="/print-history" onClick={onClose} className={navClass}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="8"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M12 8v4l3 2"/><circle cx="12" y="12" r="8"/></svg>
             Print History
           </NavLink>
 
