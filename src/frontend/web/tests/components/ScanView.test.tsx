@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, waitFor, screen } from '@testing-library/react'
 import type { NfcScanResult } from '@/types/nfc'
 import type { SpoolResponse } from '@/types/spool'
 
@@ -86,7 +86,7 @@ describe('ScanView — tagUid URL param handling', () => {
     })
   })
 
-  it('navigates to spool detail when tag is found and spool is active', async () => {
+  it('shows NfcScanModal (not a navigation) when tag is found and spool is active', async () => {
     mockSearchParams.set('tagUid', 'ABC123')
     const spool = makeSpool({ id: 'spool-active', isActive: true })
     mockScanTag.mockResolvedValue({ status: 'found', tagUid: 'ABC123', spool, message: null })
@@ -94,8 +94,9 @@ describe('ScanView — tagUid URL param handling', () => {
     render(React.createElement(ScanView))
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/spools/spool-active')
+      expect(screen.getByTestId('nfc-scan-modal')).toBeInTheDocument()
     })
+    expect(mockNavigate).not.toHaveBeenCalledWith('/spools/spool-active')
   })
 
   it('shows NfcScanModal when tag is found and spool is inactive', async () => {

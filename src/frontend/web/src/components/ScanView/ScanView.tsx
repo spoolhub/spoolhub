@@ -36,10 +36,9 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
   const [foundSpool, setFoundSpool] = useState<SpoolResponse | null>(null)
 
   const handleSpoolFound = useCallback((spool: SpoolResponse) => {
-    if (spool.isActive) { navigate(`/spools/${spool.id}`); return }
     setFoundSpool(spool)
     setPhase('idle')
-  }, [navigate])
+  }, [])
 
   const handleScanResult = useCallback((result: NfcScanResult) => {
     if (platform === 'pc') return
@@ -115,6 +114,7 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
         <NfcScanModal
           spool={foundSpool}
           onClose={() => setFoundSpool(null)}
+          onViewDetails={spool => navigate(`/spools/${spool.id}`)}
         />
       )}
     </div>

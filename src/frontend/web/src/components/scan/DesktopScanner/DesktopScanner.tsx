@@ -201,17 +201,13 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       } else if (result.spool) {
         setScanPhase('polling')
         setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
-        if (result.spool.isActive) {
-          navigate(`/spools/${result.spool.id}`)
-        } else {
-          setDrawerSpool(result.spool)
-        }
+        setDrawerSpool(result.spool)
       }
     } catch {
       setScanError(t('scan.errorLookup'))
       setScanPhase('error')
     }
-  }, [navigate, onUnknownTag, t])
+  }, [onUnknownTag, t])
 
   function retryScan() { setScanPhase('polling'); setScanError(null) }
 
