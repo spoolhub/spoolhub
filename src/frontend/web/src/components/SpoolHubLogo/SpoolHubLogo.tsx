@@ -11,14 +11,19 @@ const SPOKE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
 
 interface SpoolHubLogoProps {
   size?: number
+  iconOnly?: boolean
 }
 
-export default function SpoolHubLogo({ size = 72 }: SpoolHubLogoProps) {
+export default function SpoolHubLogo({ size = 72, iconOnly = false }: SpoolHubLogoProps) {
   const h = size
-  const w = Math.round(size * 680 / 180)
+  const w = Math.round(size * (iconOnly ? 215 / 180 : 680 / 180))
 
   return (
-    <svg width={w} height={h} viewBox="0 0 680 180" role="img" aria-label="SpoolHub" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={w} height={h}
+      viewBox={iconOnly ? '47 0 215 180' : '0 0 680 180'}
+      role="img" aria-label="SpoolHub" xmlns="http://www.w3.org/2000/svg"
+    >
       <defs>
         <g id="spk-full">
           {SPOKE_ANGLES.map((angle) => (
@@ -38,7 +43,7 @@ export default function SpoolHubLogo({ size = 72 }: SpoolHubLogoProps) {
           <circle r="53" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.4" />
           <circle r="43" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.65" />
           <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" />
-          <use href="#spk-full" />
+          {!iconOnly && <use href="#spk-full" />}
         </g>
         <circle r="17" fill={DEEP} />
         <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6" />
@@ -53,9 +58,11 @@ export default function SpoolHubLogo({ size = 72 }: SpoolHubLogoProps) {
           <animate attributeName="stroke-width" values={`0.5;${strokeWidth};0.5`} dur="2s" begin={begin} repeatCount="indefinite" />
         </path>
       ))}
-      <text x="242" y="90" fontFamily="'Hanken Grotesk',system-ui,sans-serif" fontSize="80" fontWeight="700" dominantBaseline="middle">
-        <tspan fill="currentColor">Spool</tspan><tspan fill={BRIGHT}>Hub</tspan>
-      </text>
+      {!iconOnly && (
+        <text x="242" y="90" fontFamily="'Hanken Grotesk',system-ui,sans-serif" fontSize="80" fontWeight="700" dominantBaseline="middle">
+          <tspan fill="currentColor">Spool</tspan><tspan fill={BRIGHT}>Hub</tspan>
+        </text>
+      )}
     </svg>
   )
 }

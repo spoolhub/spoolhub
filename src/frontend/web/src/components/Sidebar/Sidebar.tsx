@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { clearSession } from '@/api/session'
+import SpoolHubLogo from '@/components/SpoolHubLogo'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -44,16 +45,7 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
         <div className={styles.brand}>
           <NavLink to="/" end onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <span className={styles.mark}>
-              <svg width="30" height="30" viewBox="47 22 136 136" fill="none" aria-label="SpoolHub">
-                <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3" />
-                <g transform="translate(115,90)">
-                  <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".4" />
-                  <circle r="43" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".65" />
-                  <circle r="33" fill="none" stroke="#22C55E" strokeWidth="6" opacity=".9" />
-                  <circle r="17" fill="#15803D" />
-                  <circle r="9" fill="none" stroke="#fff" strokeWidth="2" opacity=".6" />
-                </g>
-              </svg>
+              <SpoolHubLogo size={30} iconOnly />
             </span>
             <span className={styles.brandName}>Spool<b>Hub</b></span>
           </NavLink>
