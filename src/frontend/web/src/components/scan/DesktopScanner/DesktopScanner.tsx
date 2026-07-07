@@ -196,10 +196,10 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     setScanPhase('looking-up')
     try {
       const result = await scanTag(uid)
+      writeAgentTagUrl(`${appBaseUrl()}/scan?tagUid=${uid}`)
       if (result.status === 'unknown') {
         setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
         setSearchParams({ tagUid: uid }, { replace: true })
-        writeAgentTagUrl(`${appBaseUrl()}/scan?tagUid=${uid}`)
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
