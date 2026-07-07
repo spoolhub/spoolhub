@@ -22,7 +22,7 @@
   "home": {
     "title": "Panel",
     "pageTitle": "Inicio",
-    "subtitle": "Inventario de filamento de un vistazo",
+    "subtitle": "Todo lo que necesitas, de un vistazo",
     "totalSpools": "Carretes totales",
     "activeSpool": "Carrete activo",
     "filamentLibrary": "Biblioteca de filamento",
@@ -42,6 +42,7 @@
   },
   "spools": {
     "title": "Carretes",
+    "subtitle": "Cada rollo, perfectamente rastreado",
     "notFound": "No se encontraron carretes.",
     "noMatch": "Ningún carrete coincide con tu búsqueda o filtros.",
     "active": "ACTIVO",
@@ -109,8 +110,13 @@
     "count": "{{count}} filamentos",
     "addBrand": "Añadir marca"
   },
+  "brands": {
+    "title": "Marcas",
+    "subtitle": "Todas las marcas en un solo lugar"
+  },
   "printers": {
     "title": "Impresoras",
+    "subtitle": "Monitorea tu flota conectada",
     "addPrinter": "Añadir impresora"
   },
   "connection": {
@@ -307,6 +313,8 @@
     "reassignTray": "Reasignar bandeja"
   },
   "scan": {
+    "pageTitle": "Escanear etiqueta",
+    "pageSubtitle": "Identifica instantáneamente el filamento por etiqueta",
     "lookingUp": "Buscando etiqueta NFC…",
     "unknownTag": "Etiqueta no registrada en ningún carrete.",
     "lookupError": "No se pudo buscar esta etiqueta. Inténtalo de nuevo.",
@@ -556,6 +564,7 @@
   },
   "locations": {
     "title": "Ubicaciones",
+    "subtitle": "Organiza dónde se almacena el filamento",
     "addLocation": "Añadir ubicación",
     "name": "Nombre",
     "namePlaceholder": "ej. Estante A, Cajón 2…",
@@ -696,7 +705,7 @@
     "direction": "Dirección",
     "directionDesc": "El estilo visual — Studio (cálido, redondeado) o Console (frío, técnico)",
     "title": "Configuración",
-    "subtitle": "Aplicación, actualizaciones, filamento, registros y respaldo",
+    "subtitle": "Personaliza tu espacio de trabajo y preferencias",
     "application": "Aplicación",
     "updates": "Actualizaciones",
     "notifications": "Notificaciones",
@@ -744,6 +753,7 @@
   },
   "activity": {
     "title": "Registro de actividad",
+    "subtitle": "Mantente al día con eventos recientes",
     "loading": "Cargando…",
     "eventsRecorded_one": "{{count}} evento registrado",
     "eventsRecorded_other": "{{count}} eventos registrados",
@@ -892,7 +902,7 @@
   },
   "printHistory": {
     "title": "Print History",
-    "subtitle": "Every job logged across your printers",
+    "subtitle": "Historial completo de cada impresión",
     "searchPlaceholder": "Search jobs…",
     "exportCsv": "Export CSV",
     "filterAll": "All",
@@ -918,6 +928,7 @@
     "jobs": "jobs"
   },
   "dashboard": {
+    "subtitle": "Todo lo que necesitas, de un vistazo",
     "usedThisWeek": "usados esta semana",
     "thisMonth": "este mes"
   }

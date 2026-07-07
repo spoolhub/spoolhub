@@ -23,7 +23,7 @@
   "home": {
     "title": "Dashboard",
     "pageTitle": "Home",
-    "subtitle": "Filament inventory at a glance",
+    "subtitle": "Everything you need, at a glance",
     "totalSpools": "Total Spools",
     "activeSpool": "Active Spool",
     "filamentLibrary": "Filament Library",
@@ -44,6 +44,7 @@
   },
   "spools": {
     "title": "Spools",
+    "subtitle": "Every roll, perfectly tracked",
     "notFound": "No spools found.",
     "noMatch": "No spools match your search or filters.",
     "active": "ACTIVE",
@@ -113,7 +114,12 @@
   },
   "printers": {
     "title": "Printers",
+    "subtitle": "Monitor your connected fleet",
     "addPrinter": "Add Printer"
+  },
+  "brands": {
+    "title": "Brands",
+    "subtitle": "All manufacturers in one place"
   },
   "connection": {
     "reconnecting": "Reconnecting to database…"
@@ -311,7 +317,7 @@
   },
   "scan": {
     "pageTitle": "Scan Tag",
-    "pageSubtitle": "Read an NFC spool tag to identify filament instantly",
+    "pageSubtitle": "Instantly identify filament by tag",
     "lookingUp": "Looking up NFC tag…",
     "unknownTag": "Tag not registered to any spool.",
     "tagDeleted": "Spool for this tag was deleted",
@@ -578,6 +584,7 @@
   },
   "locations": {
     "title": "Locations",
+    "subtitle": "Organize where filament is stored",
     "addLocation": "Add Location",
     "name": "Name",
     "namePlaceholder": "e.g. Shelf A, Drawer 2…",
@@ -717,7 +724,7 @@
     "direction": "Direction",
     "directionDesc": "The overall visual style — Studio (warm, rounded) or Console (cool, technical)",
     "title": "Settings",
-    "subtitle": "Application, updates, filament, logs and backup",
+    "subtitle": "Customize your workspace and preferences",
     "application": "Application",
     "updates": "Updates",
     "notifications": "Notifications",
@@ -765,6 +772,7 @@
   },
   "activity": {
     "title": "Activity Log",
+    "subtitle": "Stay up to date with recent events",
     "loading": "Loading…",
     "eventsRecorded_one": "{{count}} event recorded",
     "eventsRecorded_other": "{{count}} events recorded",
@@ -913,7 +921,7 @@
   },
   "printHistory": {
     "title": "Print History",
-    "subtitle": "Every job logged across your printers",
+    "subtitle": "Complete history of every print",
     "searchPlaceholder": "Search jobs…",
     "exportCsv": "Export CSV",
     "filterAll": "All",
@@ -939,6 +947,7 @@
     "jobs": "jobs"
   },
   "dashboard": {
+    "subtitle": "Everything you need, at a glance",
     "usedThisWeek": "used this week",
     "thisMonth": "this month"
   }

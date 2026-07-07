@@ -94,7 +94,7 @@ export default function SpoolsPage() {
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('spools.title', 'Spools')}</h1>
-          <div className={styles.sub}>{spools.length} spools · {totalKg} kg filament on hand · {brands.size} brands</div>
+          <div className={styles.sub}>{t('spools.subtitle')}</div>
         </div>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>

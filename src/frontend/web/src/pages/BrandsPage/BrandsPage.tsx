@@ -108,7 +108,7 @@ export default function BrandsPage() {
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('brands.title', 'Brands')}</h1>
-          <div className={styles.sub}>{brands.length} brands · {totalSpools} spools · {totalKg} kg filament on hand</div>
+          <div className={styles.sub}>{t('brands.subtitle')}</div>
         </div>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
