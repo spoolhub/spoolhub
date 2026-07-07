@@ -265,8 +265,8 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       {drawerSpool && (
         <NfcScanModal
           spool={drawerSpool}
-          onClose={() => setDrawerSpool(null)}
-          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s) }}
+          onClose={() => { setDrawerSpool(null); setSearchParams({}, { replace: true }) }}
+          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s); setSearchParams({}, { replace: true }) }}
         />
       )}
       {detailSpool && (

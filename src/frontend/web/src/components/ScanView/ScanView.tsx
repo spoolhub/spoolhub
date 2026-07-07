@@ -114,7 +114,7 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
       {foundSpool && (
         <NfcScanModal
           spool={foundSpool}
-          onClose={() => setFoundSpool(null)}
+          onClose={() => { setFoundSpool(null); setSearchParams({}, { replace: true }) }}
           onViewDetails={spool => navigate(`/spools/${spool.id}`)}
         />
       )}
