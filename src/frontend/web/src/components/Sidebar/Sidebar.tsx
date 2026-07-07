@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { clearSession } from '@/api/session'
-import SpoolHubLogo from '@/components/SpoolHubLogo'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -45,7 +44,31 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
         <div className={styles.brand}>
           <NavLink to="/" end onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <span className={styles.mark}>
-              <SpoolHubLogo size={30} iconOnly />
+              <svg width="30" height="30" viewBox="47 0 215 180" fill="none" role="img" aria-label="SpoolHub" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="68" cy="90" r="65" fill="none" stroke="#15803D" strokeWidth="3"/>
+                <g transform="translate(68,90)">
+                  <g>
+                    <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite"/>
+                    <circle r="53" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.4"/>
+                    <circle r="43" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.65"/>
+                    <circle r="33" fill="none" stroke="#22C55E" strokeWidth="6" opacity="0.9"/>
+                  </g>
+                  <circle r="17" fill="#15803D"/>
+                  <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6"/>
+                </g>
+                <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke="#15803D" strokeWidth="3.5" strokeLinecap="round">
+                  <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="0.5;3.5;0.5" dur="2s" begin="0s" repeatCount="indefinite"/>
+                </path>
+                <path d="M 182.9,22.2 A 96,96 0 0,1 182.9,157.8" fill="none" stroke="#15803D" strokeWidth="2.5" strokeLinecap="round">
+                  <animate attributeName="opacity" values="0;0.65;0" dur="2s" begin="0.35s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="0.5;2.5;0.5" dur="2s" begin="0.35s" repeatCount="indefinite"/>
+                </path>
+                <path d="M 195.6,9.4 A 114,114 0 0,1 195.6,170.6" fill="none" stroke="#15803D" strokeWidth="2" strokeLinecap="round">
+                  <animate attributeName="opacity" values="0;0.35;0" dur="2s" begin="0.7s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="0.5;2;0.5" dur="2s" begin="0.7s" repeatCount="indefinite"/>
+                </path>
+              </svg>
             </span>
             <span className={styles.brandName}>Spool<b>Hub</b></span>
           </NavLink>
