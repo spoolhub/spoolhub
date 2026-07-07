@@ -165,7 +165,9 @@ public sealed class NfcService : IHostedService, IDisposable
     }
 
     /// Writes a URI as an NDEF Type 2 Tag message onto whatever tag is currently
-    /// on the active reader. Returns false if there's no reader/tag or the write fails.
+    /// on the active reader. Skips the write (returns true, no-op) if the tag
+    /// already has NDEF content. Returns false if there's no reader/tag or the
+    /// write fails.
     public bool TryWriteNdefUri(string url)
     {
         if (ActiveReader is null) return false;
@@ -173,6 +175,12 @@ public sealed class NfcService : IHostedService, IDisposable
         {
             using var ctx = ContextFactory.Instance.Establish(SCardScope.System);
             using var reader = ctx.ConnectReader(ActiveReader, SCardShareMode.Shared, SCardProtocol.Any);
+
+            if (HasExistingNdefMessage(reader))
+            {
+                _logger.LogInformation("Tag already has stored NDEF content; skipping write");
+                return true;
+            }
 
             var ndef = BuildNdefUriMessage(url);
             var response = new byte[18];
@@ -202,6 +210,40 @@ public sealed class NfcService : IHostedService, IDisposable
             _logger.LogWarning("Error writing NFC tag: {Msg}", ex.Message);
             return false;
         }
+    }
+
+    /// Reads the tag's user memory (starting at page 4) and checks whether it
+    /// already contains a non-empty NDEF Message TLV.
+    private static bool HasExistingNdefMessage(ICardReader reader)
+    {
+        const int readPages = 36; // covers NTAG213/215/216 user memory
+        var data = new List<byte>();
+        var response = new byte[PageSize * 4 + 2];
+
+        for (var page = NdefStartPage; page < NdefStartPage + readPages; page += 4)
+        {
+            var apdu = new byte[] { 0xFF, 0xB0, 0x00, (byte)page, (byte)(PageSize * 4) };
+            var recvLen = reader.Transmit(apdu, response);
+            if (recvLen < 2 || response[recvLen - 2] != 0x90 || response[recvLen - 1] != 0x00) break;
+            data.AddRange(response[..(recvLen - 2)]);
+        }
+
+        var bytes = data.ToArray();
+        var i = 0;
+        while (i < bytes.Length)
+        {
+            var tag = bytes[i];
+            if (tag == 0x00) { i++; continue; } // NULL TLV padding
+            if (tag == 0xFE) break;              // terminator, nothing found
+            if (i + 1 >= bytes.Length) break;
+
+            var len = bytes[i + 1];
+            var valueStart = i + 2;
+            if (tag == 0x03) return len > 0 && valueStart + len <= bytes.Length;
+
+            i = valueStart + len;
+        }
+        return false;
     }
 
     private static byte[] BuildNdefUriMessage(string url)
