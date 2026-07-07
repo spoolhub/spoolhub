@@ -239,11 +239,33 @@ public sealed class NfcService : IHostedService, IDisposable
 
             var len = bytes[i + 1];
             var valueStart = i + 2;
-            if (tag == 0x03) return len > 0 && valueStart + len <= bytes.Length;
+            if (tag == 0x03)
+            {
+                if (len == 0 || valueStart + len > bytes.Length) return false;
+                return HasNonEmptyUriRecord(bytes, valueStart, len);
+            }
 
             i = valueStart + len;
         }
         return false;
+    }
+
+    /// Factory-fresh NTAG21x tags often ship with an empty NDEF placeholder
+    /// record (TNF=Empty, zero-length payload) already written -- that alone
+    /// shouldn't count as "already has a stored URL". Only treat it as
+    /// existing content if it's specifically a URI ('U') record with an
+    /// actual non-empty payload beyond the 1-byte prefix code.
+    private static bool HasNonEmptyUriRecord(byte[] bytes, int start, int len)
+    {
+        if (len < 4) return false;
+
+        var header = bytes[start];
+        var tnf = header & 0x07;
+        var typeLen = bytes[start + 1];
+        var payloadLen = bytes[start + 2]; // short-record form (SR bit set)
+        var type = bytes[start + 3];
+
+        return tnf == 0x01 && typeLen == 1 && type == (byte)'U' && payloadLen > 1;
     }
 
     private static byte[] BuildNdefUriMessage(string url)
