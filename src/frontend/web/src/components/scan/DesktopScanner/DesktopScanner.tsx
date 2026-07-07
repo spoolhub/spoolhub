@@ -193,11 +193,11 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
 
   const handleTagFound = useCallback(async (uid: string) => {
     setScanPhase('looking-up')
-    setSearchParams({ tagUid: uid }, { replace: true })
     try {
       const result = await scanTag(uid)
       if (result.status === 'unknown') {
         setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
+        setSearchParams({ tagUid: uid }, { replace: true })
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
@@ -211,7 +211,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     }
   }, [onUnknownTag, t, setSearchParams])
 
-  function retryScan() { setScanPhase('polling'); setScanError(null) }
+  function retryScan() { setScanPhase('polling'); setScanError(null); setSearchParams({}, { replace: true }) }
 
   function handleRemoveScan(uid: string) {
     setRecentScans(prev => prev.filter(s => s.uid !== uid))
