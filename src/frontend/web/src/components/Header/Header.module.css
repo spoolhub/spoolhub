@@ -103,16 +103,17 @@
   display: none;
 }
 
-/* ── Brand logo in topbar (hidden desktop, shown ≤900px) ── */
+/* ── Brand logo in topbar (shown on both mobile and desktop) ── */
 .topbarLogo {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 11px;
   flex: none;
+  margin-left: -14px;
 }
 .topbarLogo svg {
-  width: 38px;
-  height: 38px;
+  width: auto;
+  height: 44px;
   flex: none;
 }
 .topbarLogoName {
@@ -147,9 +148,6 @@
 @media (max-width: 767px) {
   .menubtn {
     display: inline-flex;
-  }
-  .topbarLogo {
-    display: flex;
   }
   .searchMobile {
     display: inline-flex;
