@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function ScanView({ onUnknownTag }: Props = {}) {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const tagUidParam = searchParams.get('tagUid')
@@ -35,16 +35,16 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [foundSpool, setFoundSpool] = useState<SpoolResponse | null>(null)
 
-  const handleSpoolFound = useCallback((spool: SpoolResponse) => {
-    if (spool.isActive) { navigate(`/spools/${spool.id}`); return }
+  const handleSpoolFound = useCallback((spool: SpoolResponse, tagUid?: string) => {
     setFoundSpool(spool)
     setPhase('idle')
-  }, [navigate])
+    if (tagUid) setSearchParams({ tagUid }, { replace: true })
+  }, [setSearchParams])
 
   const handleScanResult = useCallback((result: NfcScanResult) => {
     if (platform === 'pc') return
     if (result.status === 'found' && result.spool) {
-      handleSpoolFound(result.spool)
+      handleSpoolFound(result.spool, result.tagUid)
     } else if (result.status === 'unknown') {
       if (onUnknownTag && result.tagUid) { onUnknownTag(result.tagUid); return }
       setPhase('error')
@@ -114,7 +114,12 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
       {foundSpool && (
         <NfcScanModal
           spool={foundSpool}
-          onClose={() => setFoundSpool(null)}
+          onClose={() => {
+            setFoundSpool(null)
+            if (platform === 'ios') navigate('/scan', { replace: true })
+            else setSearchParams({}, { replace: true })
+          }}
+          onViewDetails={spool => navigate(`/spools/${spool.id}`)}
         />
       )}
     </div>

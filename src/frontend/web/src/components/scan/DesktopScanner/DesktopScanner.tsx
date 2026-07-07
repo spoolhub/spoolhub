@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useCallback, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
+import { writeAgentTagUrl, appBaseUrl } from '@/hooks/useAgentNfc'
 import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
 import { SpoolIcon } from '@/components/icons'
@@ -127,6 +128,7 @@ interface Props {
 export default function DesktopScanner({ onUnknownTag }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [, setSearchParams] = useSearchParams()
 
   const [scanPhase,   setScanPhase]   = useState<ScanPhase>('polling')
   const [scanError,   setScanError]   = useState<string | null>(null)
@@ -134,10 +136,6 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [drawerSpool, setDrawerSpool] = useState<SpoolResponse | null>(null)
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
-  const recentRef = useRef(recentScans)
-
-  useEffect(() => { recentRef.current = recentScans }, [recentScans])
-
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
 
   useEffect(() => {
@@ -145,75 +143,27 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
     fetch('/api/printers').then(r => r.json()).then(setPrinters).catch(() => {})
   }, [detailSpool])
 
-  // Re-check every entry once on load — the tag may have been registered to
-  // a spool elsewhere (e.g. Add Spool) since it was scanned, or a spool that
-  // was resolved before may have had its tag unlinked or been deleted since.
-  const refreshScans = useCallback(() => {
-    const scans = recentRef.current
-    if (scans.length === 0) return
-    let cancelled = false
-
-    Promise.all(scans.map(async s => {
-      try {
-        const result = await scanTag(s.uid)
-        if (result.status === 'found' && result.spool) {
-          return { uid: s.uid, spool: result.spool, deleted: false }
-        }
-        if (result.status === 'unknown' && s.spool) {
-          return { uid: s.uid, spool: null, deleted: true }
-        }
-      } catch { /* keep the entry as-is */ }
-      return null
-    })).then(results => {
-      if (cancelled) return
-      const updates = results.filter((r): r is { uid: string; spool: SpoolResponse | null; deleted: boolean } => r !== null)
-      if (updates.length === 0) return
-      setRecentScans(prev => prev.map(s => {
-        const match = updates.find(u => u.uid === s.uid)
-        return match ? { ...s, spool: match.spool, deleted: match.deleted } : s
-      }))
-    })
-
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    const cleanup = refreshScans()
-    return cleanup
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Re-check when a spool is assigned/unassigned
-  useEffect(() => {
-    const handler = () => refreshScans()
-    window.addEventListener('spools-updated', handler)
-    return () => window.removeEventListener('spools-updated', handler)
-  }, [refreshScans])
-
   const handleTagFound = useCallback(async (uid: string) => {
     setScanPhase('looking-up')
     try {
       const result = await scanTag(uid)
+      writeAgentTagUrl(`${appBaseUrl()}/scan?tagUid=${uid}`)
       if (result.status === 'unknown') {
         setRecentScans(prev => [{ uid, spool: null, scannedAt: new Date() }, ...prev].slice(0, 20))
+        setSearchParams({ tagUid: uid }, { replace: true })
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
         setScanPhase('polling')
-        setRecentScans(prev => [{ uid, spool: result.spool!, scannedAt: new Date() }, ...prev].slice(0, 20))
-        if (result.spool.isActive) {
-          navigate(`/spools/${result.spool.id}`)
-        } else {
-          setDrawerSpool(result.spool)
-        }
+        setDrawerSpool(result.spool)
       }
     } catch {
       setScanError(t('scan.errorLookup'))
       setScanPhase('error')
     }
-  }, [navigate, onUnknownTag, t])
+  }, [onUnknownTag, t, setSearchParams])
 
-  function retryScan() { setScanPhase('polling'); setScanError(null) }
+  function retryScan() { setScanPhase('polling'); setScanError(null); setSearchParams({}, { replace: true }) }
 
   function handleRemoveScan(uid: string) {
     setRecentScans(prev => prev.filter(s => s.uid !== uid))
@@ -267,8 +217,8 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       {drawerSpool && (
         <NfcScanModal
           spool={drawerSpool}
-          onClose={() => setDrawerSpool(null)}
-          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s) }}
+          onClose={() => { setDrawerSpool(null); setSearchParams({}, { replace: true }) }}
+          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s); setSearchParams({}, { replace: true }) }}
         />
       )}
       {detailSpool && (

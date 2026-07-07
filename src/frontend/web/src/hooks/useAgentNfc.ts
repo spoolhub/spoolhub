@@ -4,6 +4,31 @@ const AGENT_WS        = 'ws://localhost:8765/events'
 const AGENT_HTTP      = 'http://localhost:8765'
 const SKIP_PROMPT_KEY = 'spoolhub.agent.skipInstallPrompt'
 
+/**
+ * The address other devices (phones) should use to reach this app, for URLs
+ * written onto NFC tags. Falls back to the current origin, but that's only
+ * correct if you're browsing via a LAN-reachable address rather than
+ * "localhost" -- set VITE_APP_URL to override for tag-writing purposes.
+ */
+export function appBaseUrl(): string {
+  const configured = import.meta.env.VITE_APP_URL as string | undefined
+  return configured?.trim() || window.location.origin
+}
+
+/** Writes a URI onto whatever tag is currently on the agent's active reader. */
+export async function writeAgentTagUrl(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${AGENT_HTTP}/write-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export type AgentState =
   | 'checking'
   | 'install-prompt'
