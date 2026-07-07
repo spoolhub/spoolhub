@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { isAuthenticated } from '@/api/session'
 import { ConnectionProvider, useConnection } from '@/context/ConnectionContext'
 import { DesignProvider } from '@/context/DesignContext'
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
@@ -85,6 +86,14 @@ function AppShell() {
   )
 }
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
+  return isAuthenticated() ? <Navigate to="/" replace /> : <>{children}</>
+}
+
 export default function App() {
   return (
     <ConnectionProvider>
@@ -92,9 +101,9 @@ export default function App() {
         <SidebarProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/*" element={<AppShell />} />
+              <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
+              <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
+              <Route path="/*" element={<RequireAuth><AppShell /></RequireAuth>} />
             </Routes>
           </BrowserRouter>
         </SidebarProvider>
