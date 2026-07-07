@@ -100,6 +100,10 @@
   border: 0;
   background: transparent;
 }
+.btnIcon svg {
+  width: 21px;
+  height: 21px;
+}
 .btnIcon:hover {
   background: transparent;
   color: var(--text);
@@ -113,8 +117,8 @@
 }
 .menuLines {
   position: relative;
-  width: 18px;
-  height: 12px;
+  width: 22px;
+  height: 14px;
   display: block;
 }
 .menuLine {
@@ -126,19 +130,19 @@
   transition: width 0.22s var(--ease), transform 0.28s var(--ease), top 0.28s var(--ease);
 }
 .menuLine:first-child {
-  top: 2px;
-  width: 18px;
+  top: 3px;
+  width: 22px;
 }
 .menuLine:last-child {
-  top: 8px;
-  width: 11px;
+  top: 10px;
+  width: 14px;
 }
 .menubtn:hover .menuLine:last-child {
-  width: 18px;
+  width: 22px;
 }
 .menubtnOpen .menuLine {
-  top: 5px;
-  width: 18px;
+  top: 6px;
+  width: 22px;
 }
 .menubtnOpen .menuLine:first-child {
   transform: rotate(45deg);
