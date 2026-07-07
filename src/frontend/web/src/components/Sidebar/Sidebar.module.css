@@ -160,18 +160,6 @@
   transition: .15s var(--ease);
   position: relative;
 }
-.link::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--accent);
-  opacity: 0;
-  transition: opacity .15s var(--ease);
-}
 .link:hover {
   background: var(--surface-alt);
   color: var(--text-primary);
@@ -188,7 +176,6 @@
 .linkActive:hover {
   background: var(--accent-soft);
 }
-.linkActive::before { opacity: 1; }
 .link svg {
   width: 18px;
   height: 18px;

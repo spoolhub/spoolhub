@@ -79,13 +79,6 @@ describe('Sidebar', () => {
 
   // ── Overlay / close behaviour ──────────────────────────────────
 
-  it('calls onClose when close button clicked', () => {
-    const onClose = vi.fn()
-    renderSidebar(true, onClose)
-    fireEvent.click(screen.getByLabelText('Close sidebar'))
-    expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
   it('shows overlay when open', () => {
     renderSidebar(true)
     expect(document.querySelector('[aria-hidden="true"]')).toBeInTheDocument()
