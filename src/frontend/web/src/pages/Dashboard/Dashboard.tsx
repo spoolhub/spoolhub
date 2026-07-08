@@ -126,6 +126,8 @@ export default function Dashboard() {
   // Critical = spools at/below 10% remaining
   const lowCriticalCount = spools.filter(s => s.initialWeightG > 0 && (s.currentWeightG / s.initialWeightG) <= 0.1).length
   const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
+  const totalValue = spools.reduce((sum, s) => sum + (s.price ?? 0), 0)
+  const totalValueStr = totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return (
     <>
@@ -189,13 +191,13 @@ export default function Dashboard() {
             )}
           />
           <MetricCard
-            label="Printers Online"
-            value={onlineCount}
-            suffix={<span>/{printers.length}</span>}
-            to="/printers"
+            label="Total Value"
+            value={totalValueStr}
+            suffix={<span>SEK</span>}
+            to="/spools"
             loading={loading}
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="3" x2="4" y2="19" /><line x1="20" y1="3" x2="20" y2="19" /><path d="M4 3h16" /><line x1="4" y1="9" x2="20" y2="9" /><rect x="9.5" y="6.5" width="5" height="4" rx="0.75" /><path d="M11.5 10.5 L12 13 L12.5 10.5" strokeWidth="1.3" /><rect x="3" y="19" width="18" height="2" rx="0.75" /><rect x="8.5" y="14.5" width="7" height="4" rx="0.5" /></svg>}
-            trend={{ text: printerUnits, variant: 'neutral' }}
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
+            trend={{ text: `${spools.filter(s => s.price != null).length} priced spools`, variant: 'neutral' }}
           />
         </section>
 
