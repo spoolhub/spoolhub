@@ -65,7 +65,7 @@ function AppShell() {
               <Route path="/spools/add/manual" element={<AddSpoolPage />} />
               <Route path="/spools/select" element={<SelectSpoolPage />} />
               <Route path="/brands" element={<BrandsPage />} />
-              <Route path="/brands" element={<BrandsPage />} />
+              <Route path="/brand" element={<BrandsPage />} />
               <Route path="/brands/:brand" element={<BrandsPage />} />
               <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
               <Route path="/print-history" element={<PrintHistoryPage />} />
