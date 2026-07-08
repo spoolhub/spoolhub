@@ -6,6 +6,7 @@ import SpoolCard from '@/components/SpoolCard'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import SpoolProfileCard from '@/components/SpoolProfileCard'
 import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
+import AddSpoolProfileModal from '@/components/AddSpoolProfileModal'
 import Pagination from '@/components/Pagination'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
@@ -58,6 +59,7 @@ export default function SpoolsPage() {
   const [profiles, setProfiles] = useState<SpoolProfileResponse[]>([])
   const [profilesLoading, setProfilesLoading] = useState(false)
   const [editingProfile, setEditingProfile] = useState<SpoolProfileResponse | null>(null)
+  const [addingProfile, setAddingProfile] = useState(false)
 
   const isProfileView = activeFilter === 'profile'
 
@@ -124,10 +126,10 @@ export default function SpoolsPage() {
           <input placeholder="Search spools, brands, colors…" value={query} onChange={e => updateQuery(e.target.value)} />
         </label>
         {isProfileView ? (
-          <Link to="/spool-profiles/new" className={styles.primaryBtn}>
+          <button className={styles.primaryBtn} onClick={() => setAddingProfile(true)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
             Add Profile
-          </Link>
+          </button>
         ) : (
           <Link to="/spools/add" className={styles.primaryBtn}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
@@ -317,6 +319,13 @@ export default function SpoolsPage() {
             setSpools(prev => prev.filter(s => s.id !== id))
             setSelected(null)
           }}
+        />
+      )}
+
+      {addingProfile && (
+        <AddSpoolProfileModal
+          onClose={() => setAddingProfile(false)}
+          onAdded={profile => { setProfiles(prev => [...prev, profile]); setAddingProfile(false) }}
         />
       )}
 
