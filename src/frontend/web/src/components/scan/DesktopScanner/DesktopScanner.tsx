@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
@@ -68,23 +68,15 @@ function formatRelativeTime(date: Date, t: TFunction): string {
   return t('scan.timeDate', { date: date.toLocaleDateString('en', { month: 'short', day: 'numeric' }) })
 }
 
-function RecentItem({ scan, onClick, onRemove, t }: { scan: RecentScan; onClick: () => void; onRemove: () => void; t: TFunction }) {
+function RecentItem({ scan, onRemove, t }: { scan: RecentScan; onRemove: () => void; t: TFunction }) {
   const [label, setLabel] = useState(() => formatRelativeTime(scan.scannedAt, t))
   useEffect(() => {
     const id = setInterval(() => setLabel(formatRelativeTime(scan.scannedAt, t)), 15_000)
     return () => clearInterval(id)
   }, [scan.scannedAt, t])
 
-  const clickable = !scan.deleted
-
   return (
-    <div
-      className={`${styles.recentItem}${clickable ? '' : ` ${styles.recentItemStatic}`}`}
-      onClick={clickable ? onClick : undefined}
-      role={clickable ? 'button' : undefined}
-      tabIndex={clickable ? 0 : undefined}
-      onKeyDown={clickable ? (e => e.key === 'Enter' && onClick()) : undefined}
-    >
+    <div className={`${styles.recentItem} ${styles.recentItemStatic}`}>
       <div className={styles.recentIcon}>
         {scan.spool
           ? <SpoolIcon color={scan.spool.colorHex} size={36} />
@@ -127,7 +119,6 @@ interface Props {
 
 export default function DesktopScanner({ onUnknownTag }: Props) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [, setSearchParams] = useSearchParams()
 
   const [scanPhase,   setScanPhase]   = useState<ScanPhase>('polling')
@@ -189,10 +180,6 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
               <RecentItem
                 key={i}
                 scan={scan}
-                onClick={() => {
-                  if (scan.spool) setDrawerSpool(scan.spool)
-                  else navigate(`/spools/add/nfctag?tagUid=${encodeURIComponent(scan.uid)}`)
-                }}
                 onRemove={() => handleRemoveScan(scan.uid)}
                 t={t}
               />
