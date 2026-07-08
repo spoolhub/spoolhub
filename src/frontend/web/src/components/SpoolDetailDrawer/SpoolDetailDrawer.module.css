@@ -49,12 +49,36 @@
 .dwclose:hover { background: var(--surface-alt); color: var(--text-primary) }
 .dwclose svg { width: 17px; height: 17px }
 
-.dwhero { display: flex; gap: 18px; align-items: center; padding: 24px 22px }
-.dwhero .dwdisc { width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center }
+.dwhero {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding: 24px 22px;
+  overflow: hidden;
+}
+.dwheroColorBg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.09;
+  pointer-events: none;
+}
+.dwheroColorGrad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 50%, var(--surface) 100%);
+  pointer-events: none;
+}
+.dwhero .dwdisc {
+  width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center;
+  position: relative; z-index: 1;
+}
+.dwid { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.dwid .dwtext { flex: 1; min-width: 0; }
 .dwid .c { font-family: var(--font-display); font-size: 21px; font-weight: 700; letter-spacing: -.02em; color: var(--text-primary) }
 [data-dir="b"] .dwid .c { font-weight: 600 }
 .dwid .b { font-size: 14px; color: var(--muted); margin-top: 1px }
-.dwid .tags { margin-top: 10px }
+.dwid .tags { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; margin-top: 0; }
 
 .dwbar { padding: 0 22px 22px }
 .dwbar .meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px }

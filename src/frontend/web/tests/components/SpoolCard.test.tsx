@@ -49,9 +49,10 @@ describe('SpoolCard', () => {
     expect(screen.getByText('PLA')).toBeInTheDocument()
   })
 
-  it('renders material and full color name in subtitle', () => {
+  it('renders color name and material separately', () => {
     render_(baseSpool)
-    expect(screen.getByText('PLA Jade White')).toBeInTheDocument()
+    expect(screen.getByText('Jade White')).toBeInTheDocument()
+    expect(screen.getByText('PLA')).toBeInTheDocument()
   })
 
   it('renders weight remaining', () => {

@@ -17,6 +17,7 @@ export interface SpoolProfileResponse {
   price: number | null
   createdAt: string
   updatedAt: string
+  spoolCount: number
 }
 
 export interface AddSpoolProfileRequest {

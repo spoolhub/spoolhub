@@ -9,13 +9,16 @@ public class SpoolProfileService(ISpoolProfileRepository repository) : ISpoolPro
     public async Task<IEnumerable<SpoolProfileResponse>> GetAllAsync()
     {
         var profiles = await repository.GetAllAsync();
-        return profiles.Select(ToResponse);
+        var counts = await repository.GetSpoolCountsAsync();
+        return profiles.Select(p => ToResponse(p, counts.GetValueOrDefault(p.Id, 0)));
     }
 
     public async Task<SpoolProfileResponse?> GetByIdAsync(Guid id)
     {
         var profile = await repository.GetByIdAsync(id);
-        return profile is null ? null : ToResponse(profile);
+        if (profile is null) return null;
+        var counts = await repository.GetSpoolCountsAsync();
+        return ToResponse(profile, counts.GetValueOrDefault(profile.Id, 0));
     }
 
     public async Task<SpoolProfileResponse> AddAsync(AddSpoolProfileRequest request)
@@ -72,11 +75,11 @@ public class SpoolProfileService(ISpoolProfileRepository repository) : ISpoolPro
     public async Task<bool> DeleteAsync(Guid id) =>
         await repository.DeleteAsync(id);
 
-    private static SpoolProfileResponse ToResponse(SpoolProfile p) => new(
+    private static SpoolProfileResponse ToResponse(SpoolProfile p, int spoolCount = 0) => new(
         p.Id, p.Name, p.Brand, p.Material, p.ColorName, p.ColorHex,
         p.InitialWeightG, p.SpoolWeightG, p.LowStockThresholdG,
         p.Density, p.DiameterTolerance,
         p.ExtruderMin, p.ExtruderMax, p.BedMin, p.BedMax,
-        p.Price, p.CreatedAt, p.UpdatedAt
+        p.Price, p.CreatedAt, p.UpdatedAt, spoolCount
     );
 }

@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
+import SpoolProfileCard from '@/components/SpoolProfileCard'
+import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
 import Pagination from '@/components/Pagination'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
+import type { SpoolProfileResponse } from '@/types/spoolProfile'
+import { spoolProfilesApi } from '@/api/spoolProfiles'
 import styles from './SpoolsPage.module.css'
 
 function NfcBadge({ label }: { label: string }) {
@@ -50,6 +54,11 @@ export default function SpoolsPage() {
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(20)
+  const [profiles, setProfiles] = useState<SpoolProfileResponse[]>([])
+  const [profilesLoading, setProfilesLoading] = useState(false)
+  const [editingProfile, setEditingProfile] = useState<SpoolProfileResponse | null>(null)
+
+  const isProfileView = activeFilter === 'profile'
 
   useEffect(() => {
     fetch('/api/spools').then(r => r.json()).then((data: SpoolResponse[]) => {
@@ -60,6 +69,15 @@ export default function SpoolsPage() {
       setPrinters(data)
     }).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!isProfileView) return
+    setProfilesLoading(true)
+    spoolProfilesApi.getAll().then(data => {
+      setProfiles(data)
+      setProfilesLoading(false)
+    }).catch(() => setProfilesLoading(false))
+  }, [isProfileView])
 
   useEffect(() => {
     localStorage.setItem('spoolhub-view', view)
@@ -73,7 +91,7 @@ export default function SpoolsPage() {
     }
     if (activeFilter === 'active') list = list.filter(s => s.isActive)
     else if (activeFilter === 'low') list = list.filter(s => s.currentWeightG <= 120)
-    else if (activeFilter !== 'all') list = list.filter(s => s.material === activeFilter)
+    else if (activeFilter !== 'all' && activeFilter !== 'profile') list = list.filter(s => s.material === activeFilter)
     if (sortBy === 'remaining') list.sort((a, b) => a.currentWeightG - b.currentWeightG)
     else if (sortBy === 'name') list.sort((a, b) => a.brand.localeCompare(b.brand) || a.colorName.localeCompare(b.colorName))
     return list
@@ -97,10 +115,17 @@ export default function SpoolsPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
           <input placeholder="Search spools, brands, colors…" value={query} onChange={e => updateQuery(e.target.value)} />
         </label>
-        <Link to="/spools/add" className={styles.primaryBtn}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
-          Add Spool
-        </Link>
+        {isProfileView ? (
+          <Link to="/spool-profiles/new" className={styles.primaryBtn}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add Profile
+          </Link>
+        ) : (
+          <Link to="/spools/add" className={styles.primaryBtn}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add Spool
+          </Link>
+        )}
       </header>
 
       <section className={styles.invbar}>
@@ -108,6 +133,7 @@ export default function SpoolsPage() {
           <button className={`${styles.chip} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => updateFilter('all')}>All</button>
           <button className={`${styles.chip} ${activeFilter === 'active' ? styles.on : ''}`} onClick={() => updateFilter('active')}>Active</button>
           <button className={`${styles.chip} ${activeFilter === 'low' ? styles.on : ''}`} onClick={() => updateFilter('low')}>Low stock</button>
+          <button className={`${styles.chip} ${activeFilter === 'profile' ? styles.on : ''}`} onClick={() => updateFilter('profile')}>Spool Profile</button>
         </div>
         <div className={styles.invtools}>
           <select className={styles.sortsel} value={sortBy} onChange={e => updateSort(e.target.value)}>
@@ -128,10 +154,26 @@ export default function SpoolsPage() {
 
       <section className={styles.panel}>
         <div className={styles.panelHead}>
-          <h2>All spools</h2>
-          <span className={styles.meta}>{filtered.length} spools</span>
+          <h2>{isProfileView ? 'Spool Profiles' : 'All spools'}</h2>
+          <span className={styles.meta}>{isProfileView ? `${profiles.length} profiles` : `${filtered.length} spools`}</span>
         </div>
-        {view === 'list' ? (
+
+        {isProfileView ? (
+          <div className={styles.spoolGrid}>
+            {profilesLoading
+              ? [1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)
+              : profiles.length === 0
+                ? <div className={styles.empty}>No spool profiles yet.</div>
+                : profiles.map(p => (
+                    <SpoolProfileCard
+                      key={p.id}
+                      profile={p}
+                      onClick={profile => setEditingProfile(profile)}
+                    />
+                  ))
+            }
+          </div>
+        ) : view === 'list' ? (
           <div className={styles.listWrap}>
             <table className={styles.stbl}>
               <thead>
@@ -204,18 +246,22 @@ export default function SpoolsPage() {
                     const isLow = s.currentWeightG <= 120
                     return (
                       <div key={s.id} className={styles.gridCard} onClick={() => setSelected(s)}>
-                        {s.isActive && <span className={styles.activeDotGrid}><i></i>ACTIVE</span>}
-                        <div className={styles.row}>
+                        <div className={styles.gcBand}>
+                          <div className={styles.gcBandBg} style={{ backgroundColor: s.colorHex }} />
+                          <div className={styles.gcBandGrad} />
                           <div className={styles.disc}>
                             <SpoolIcon color={s.colorHex} size={54} />
                             {s.hasNfcTag && <span className={styles.nfcBadgeIcon}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="8" height="8"><path d="M5 8a13 13 0 0 1 0 8M9 6a17 17 0 0 1 0 12M15 6a17 17 0 0 1 0 12M19 8a13 13 0 0 1 0 8"/></svg></span>}
                           </div>
                           <div className={styles.id}>
-                            <div className={styles.cname}>{s.colorName}</div>
-                            <div className={styles.brand}>{s.brand}</div>
-                            <div className={styles.tags}>
-                              <span className={styles.tag}>{s.material}</span>
+                            <div className={styles.gcBandTop}>
+                              <div className={styles.cname}>{s.colorName}</div>
+                              <div className={styles.gcChips}>
+                                {s.isActive && <span className={styles.activeBadge}>ACTIVE</span>}
+                                <span className={styles.tag}>{s.material}</span>
+                              </div>
                             </div>
+                            <div className={styles.brand}>{s.brand}</div>
                           </div>
                         </div>
                         <div className={styles.bar}>
@@ -232,15 +278,17 @@ export default function SpoolsPage() {
             }
           </div>
         )}
-        <Pagination
-          total={filtered.length}
-          page={page}
-          perPage={perPage}
-          onPageChange={setPage}
-          onPerPageChange={p => { setPerPage(p); setPage(1) }}
-          itemLabel="spools"
-          className={styles.pagination}
-        />
+        {!isProfileView && (
+          <Pagination
+            total={filtered.length}
+            page={page}
+            perPage={perPage}
+            onPageChange={setPage}
+            onPerPageChange={p => { setPerPage(p); setPage(1) }}
+            itemLabel="spools"
+            className={styles.pagination}
+          />
+        )}
       </section>
       <div style={{ height: 70 }} />
 
@@ -256,6 +304,21 @@ export default function SpoolsPage() {
           onDeleted={id => {
             setSpools(prev => prev.filter(s => s.id !== id))
             setSelected(null)
+          }}
+        />
+      )}
+
+      {editingProfile && (
+        <SpoolProfileDrawer
+          profile={editingProfile}
+          onClose={() => setEditingProfile(null)}
+          onUpdated={updated => {
+            setProfiles(prev => prev.map(p => p.id === updated.id ? updated : p))
+            setEditingProfile(updated)
+          }}
+          onDeleted={id => {
+            setProfiles(prev => prev.filter(p => p.id !== id))
+            setEditingProfile(null)
           }}
         />
       )}

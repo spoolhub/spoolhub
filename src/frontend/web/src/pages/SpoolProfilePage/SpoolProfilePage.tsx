@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import SpoolProfileCard from '@/components/SpoolProfileCard'
-import SpoolProfileEditor from '@/components/SpoolProfileEditor'
+import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
 import styles from './SpoolProfilePage.module.css'
 
 export default function SpoolProfilePage() {
@@ -12,7 +12,7 @@ export default function SpoolProfilePage() {
   const { t } = useTranslation()
   const [profiles, setProfiles] = useState<SpoolProfileResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingProfile, setEditingProfile] = useState<SpoolProfileResponse | null>(null)
+  const [selectedProfile, setSelectedProfile] = useState<SpoolProfileResponse | null>(null)
 
   const loadProfiles = useCallback(async () => {
     setLoading(true)
@@ -42,24 +42,6 @@ export default function SpoolProfilePage() {
     fetch()
     return () => { cancelled = true }
   }, [])
-
-  async function handleDelete(profile: SpoolProfileResponse) {
-    try {
-      await spoolProfilesApi.delete(profile.id)
-      loadProfiles()
-    } catch {
-      // ignore
-    }
-  }
-
-  function handleEdit(profile: SpoolProfileResponse) {
-    setEditingProfile(profile)
-  }
-
-  function handleSaved() {
-    setEditingProfile(null)
-    loadProfiles()
-  }
 
   if (loading) {
     return (
@@ -103,18 +85,24 @@ export default function SpoolProfilePage() {
             <SpoolProfileCard
               key={profile.id}
               profile={profile}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onClick={setSelectedProfile}
             />
           ))}
         </div>
       )}
 
-      {editingProfile && (
-        <SpoolProfileEditor
-          profile={editingProfile}
-          onSaved={handleSaved}
-          onCancel={() => setEditingProfile(null)}
+      {selectedProfile && (
+        <SpoolProfileDrawer
+          profile={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          onUpdated={updated => {
+            setProfiles(prev => prev.map(p => p.id === updated.id ? updated : p))
+            setSelectedProfile(updated)
+          }}
+          onDeleted={id => {
+            setProfiles(prev => prev.filter(p => p.id !== id))
+            setSelectedProfile(null)
+          }}
         />
       )}
     </div>

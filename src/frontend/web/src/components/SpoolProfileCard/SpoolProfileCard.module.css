@@ -6,7 +6,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all var(--t-normal);
+  transition: border-color var(--t-normal), box-shadow var(--t-normal), transform var(--t-normal);
+  cursor: pointer;
 }
 .card:hover {
   border-color: var(--border-strong);
@@ -14,126 +15,66 @@
   transform: translateY(-1px);
 }
 
-/* ── Expanded state for editing ── */
-.expanded {
-  grid-column: span 2;
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent);
-  transform: none;
-}
-.expanded:hover {
-  transform: none;
-}
-@media (max-width: 639px) {
-  .expanded {
-    grid-column: span 1;
-  }
-}
-
-/* ── Delete animation ── */
-.deleting {
-  animation: flipOut 0.3s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes flipOut {
-  0% { transform: perspective(600px) rotateY(0deg); }
-  100% { transform: perspective(600px) rotateY(180deg); }
-}
-
-/* ── Delete confirmation overlay ── */
-.confirmOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  background: var(--surface);
-  border-radius: var(--radius-xl);
-  animation: fadeIn 0.2s ease-out;
-  pointer-events: auto;
-  transform: perspective(600px) rotateY(-180deg);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.confirmText {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.confirmActions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.confirmCancel, .confirmDelete {
-  padding: 0.375rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: background var(--t-fast);
-}
-.confirmCancel {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-.confirmCancel:hover { background: var(--bg-tertiary); }
-.confirmDelete {
-  background: var(--color-error);
-  color: #fff;
-  border: 1px solid var(--color-error);
-}
-.confirmDelete:hover { opacity: 0.9; }
-
-/* ── Header ── */
-.header {
+/* ── Color header band ── */
+.colorBand {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem 1rem 0.75rem;
-  position: relative;
+  padding: 1rem;
+  overflow: hidden;
 }
 
-.headerColorOverlay {
+
+.colorBandBg {
   position: absolute;
   inset: 0;
-  opacity: 0.06;
+  opacity: 0.12;
   pointer-events: none;
 }
 
-.headerInfo {
+.colorBandGrad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 40%, var(--surface) 100%);
+  pointer-events: none;
+}
+
+.spoolIconWrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.bandInfo {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
 }
 
-.brand {
-  font-size: 0.9375rem;
+.bandTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bandColor {
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
-.sub {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.3;
-  margin-top: 0.0625rem;
-}
-
-.matChip {
+.bandChip {
   flex-shrink: 0;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -146,215 +87,89 @@
   border: 1px solid var(--success-border);
 }
 
-/* ── Menu ── */
-.menuWrap { position: relative; flex-shrink: 0; }
-
-.menuBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.125rem;
-  line-height: 1;
+.bandBrand {
+  font-size: 0.8125rem;
   color: var(--text-secondary);
-  padding: 0.25rem;
-  border-radius: var(--radius-sm);
-  transition: background var(--t-fast), color var(--t-fast);
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.menuBtn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 
-.menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 10;
-  min-width: 8rem;
-  background: var(--surface);
+/* ── Card body ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.625rem 1rem 1rem;
+  flex: 1;
+}
+
+/* ── Temp pills row ── */
+.temps {
+  display: flex;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 0.25rem 0;
-  margin-top: 0.25rem;
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  overflow: hidden;
 }
-
-.menuItem, .menuItemDelete {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background var(--t-fast);
-}
-.menuItem:hover { background: var(--bg-tertiary); }
-.menuItemDelete { color: var(--color-error); }
-.menuItemDelete:hover { background: var(--error-bg); }
-
-/* ── Split section ── */
-.splitSection {
-  display: grid;
-  grid-template-columns: 2fr 3fr;
-  border-top: 1px solid var(--border);
-}
-
-.sectionCol {
-  padding: 0.625rem 1rem;
-}
-.sectionCol:first-child {
-  border-right: 1px solid var(--border);
-}
-
-.sectionLabel {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.375rem;
-}
-
-/* ── Print Settings: stacked key above value ── */
-.printRows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.printEntry {
-  display: flex;
-  flex-direction: column;
-  gap: 0.0625rem;
-}
-
-.printKey {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.printVal {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* ── Material: 3-col table ── */
-.matTable {
-  display: flex;
-  flex-direction: column;
-  gap: 0.0625rem;
-}
-
-.matRow {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.matKey {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+.tempPill {
   flex: 1;
-}
-
-.matVal {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  flex: 1;
-}
-
-/* ── Inline editing table ── */
-.editTable {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.25rem;
+  background: var(--bg-secondary);
 }
-
-.editRow {
-  display: flex;
-  gap: 0.75rem;
+.tempPill + .tempPill {
+  border-left: 1px solid var(--border);
 }
-
-.editCell {
-  flex: 1;
-  min-width: 0;
-}
-
-.editLabel {
-  display: block;
+.tempLabel {
   font-size: 0.625rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
 }
-
-.editInput {
-  width: 100%;
-  padding: 0.25rem 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
+.tempVal {
+  font-size: 0.875rem;
+  font-weight: 700;
   color: var(--text-primary);
-  background: var(--bg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.tempEmpty { color: var(--text-secondary); font-weight: 500; }
+
+/* ── Stats row ── */
+.statsRow {
+  display: flex;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
 }
-
-.editInput:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
-}
-
-.rangeRow {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.rangeSep {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-/* ── Edit actions ── */
-.editActions {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.editCancel {
+.stat {
   flex: 1;
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.25rem;
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: background var(--t-fast);
 }
-.editCancel:hover { background: var(--bg-tertiary); }
-
-.editSave {
-  flex: 2;
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
+.stat + .stat {
+  border-left: 1px solid var(--border);
+}
+.statVal {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.statLabel {
+  font-size: 0.625rem;
   font-weight: 600;
-  color: #fff;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: opacity var(--t-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
 }
-.editSave:hover { opacity: 0.9; }
-.editSave:disabled { opacity: 0.6; cursor: not-allowed; }
+.statEmpty { color: var(--text-secondary); font-weight: 500; font-size: 0.75rem; }

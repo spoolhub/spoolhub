@@ -5,6 +5,7 @@ namespace Application.Interfaces;
 public interface ISpoolProfileRepository
 {
     Task<IEnumerable<SpoolProfile>> GetAllAsync();
+    Task<Dictionary<Guid, int>> GetSpoolCountsAsync();
     Task<SpoolProfile?> GetByIdAsync(Guid id);
     Task<SpoolProfile> AddAsync(SpoolProfile profile);
     Task UpdateAsync(SpoolProfile profile);

@@ -189,15 +189,23 @@
 
 .nfcIcon { color: var(--accent); flex: none; }
 
-/* ── Grid card (handoff match) ── */
+/* ── Grid card ── */
 .gridCard {
-  border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px;
-  background: var(--surface-2); transition: .2s var(--ease); cursor: pointer; position: relative; display: block;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); transition: .2s var(--ease); cursor: pointer;
+  overflow: hidden; display: flex; flex-direction: column;
 }
-.gridCard:hover { border-color: var(--accent); box-shadow: 0 8px 24px -14px var(--accent) }
-.gridCard .row { display: flex; gap: 13px; align-items: center }
-.gridCard .disc { width: 54px; height: 54px; flex: none; display: grid; place-items: center; position: relative }
-.gridCard .disc svg { display: block }
+.gridCard:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* Color band */
+.gcBand {
+  position: relative; display: flex; align-items: center;
+  gap: 13px; padding: 14px 14px 12px; overflow: hidden;
+}
+.gcBandBg { position: absolute; inset: 0; opacity: 0.12; pointer-events: none; }
+.gcBandGrad { position: absolute; inset: 0; background: linear-gradient(to right, transparent 40%, var(--surface) 100%); pointer-events: none; }
+.disc { width: 54px; height: 54px; flex: none; display: grid; place-items: center; position: relative; z-index: 1; }
+.disc svg { display: block }
 .nfcBadgeIcon {
   position: absolute; bottom: 4px; right: 2px;
   width: 13px; height: 13px; border-radius: 50%;
@@ -205,20 +213,18 @@
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 0 0 2px var(--surface);
 }
-.gridCard .id { min-width: 0; flex: 1 }
-.gridCard .cname { font-weight: 700; font-size: 14px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary) }
-[data-dir="b"] .gridCard .cname { font-weight: 600 }
-.gridCard .brand { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.gridCard .tags { display: flex; gap: 6px; margin-top: 8px }
-.gridCard .tag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); text-transform: uppercase }
-[data-theme="dark"] .gridCard .tag { color: var(--accent) }
-[data-dir="b"] .gridCard .tag { font-family: var(--font-num); border-radius: 4px; font-weight: 500 }
-.gridCard .nfcTag { display: inline-flex; align-items: center; gap: 3px; background: transparent; border: 1px solid var(--accent); color: var(--accent-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; text-transform: uppercase }
-[data-theme="dark"] .gridCard .nfcTag { color: var(--accent) }
-.gridCard .nfcTag svg { width: 10px; height: 10px }
-.activeDotGrid { position: absolute; top: 14px; right: 14px; display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: oklch(0.6 0.13 150) }
-.activeDotGrid i { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150 / .18) }
-.gridCard .bar { margin-top: 15px }
+.id { min-width: 0; flex: 1; position: relative; z-index: 1; }
+.gcBandTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.cname { font-weight: 700; font-size: 14px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); flex: 1; min-width: 0; }
+[data-dir="b"] .cname { font-weight: 600 }
+.brand { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+.gcChips { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.activeBadge { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 2px 6px; border-radius: 20px; background: var(--accent); color: #fff; text-transform: uppercase; }
+.tag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); text-transform: uppercase; }
+[data-dir="b"] .tag { font-family: var(--font-num); border-radius: 4px; font-weight: 500 }
+
+/* Bar */
+.gridCard .bar { padding: 0 14px 4px; }
 .gridCard .barMeta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px }
 .gridCard .barG { font-family: var(--font-num); font-weight: 700; font-size: 14.5px; color: var(--text-primary) }
 .gridCard .barG small { color: var(--faint); font-weight: 500; font-size: 12px }
@@ -228,7 +234,7 @@
 [data-dir="b"] .gridCard .track { height: 6px; border-radius: 3px }
 .gridCard .track i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .6s var(--ease) }
 .gridCard .track i.trackLow { background: oklch(0.65 0.17 30) }
-.gridCard .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--border-2); font-size: 11.5px; color: var(--faint) }
+.gridCard .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px 14px 12px; border-top: 1px solid var(--border-2); font-size: 11.5px; color: var(--faint) }
 .gridCard .foot span { display: flex; align-items: center; gap: 5px }
 .gridCard .foot svg { width: 13px; height: 13px }
 
