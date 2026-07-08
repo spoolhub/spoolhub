@@ -15,14 +15,31 @@
 }
 
 .top {
+  position: relative;
   display: flex;
   gap: 0.75rem;
   padding: 1rem 1rem 0.75rem;
+  overflow: hidden;
+}
+
+.topBg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.topGrad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 40%, var(--surface) 100%);
+  pointer-events: none;
 }
 
 .iconWrap {
   flex-shrink: 0;
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
 }
@@ -42,7 +59,7 @@
   border: 2px solid var(--surface);
 }
 
-.info { flex: 1; min-width: 0; }
+.info { position: relative; z-index: 1; flex: 1; min-width: 0; }
 
 .nameRow {
   display: flex;

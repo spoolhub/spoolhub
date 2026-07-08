@@ -32,6 +32,8 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
   return (
     <Link to={`/spools/${spool.id}`} className={styles.card} onClick={handleClick}>
       <div className={styles.top}>
+        <div className={styles.topBg} style={{ backgroundColor: spool.colorHex }} />
+        <div className={styles.topGrad} />
         <div className={styles.iconWrap}>
           <SpoolIcon color={spool.colorHex} size={72} />
           {spool.hasNfcTag && (
