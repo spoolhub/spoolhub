@@ -136,12 +136,13 @@ export default function Dashboard() {
             <h1 className={styles.pageTitle}>Dashboard</h1>
             <div className={styles.pageSub}>{t('dashboard.subtitle')}</div>
           </div>
-          <button className={styles.searchBtn} title="Search">
+          <label className={styles.search}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3-3" />
             </svg>
-          </button>
+            <input placeholder="Search spools, brands, colors…" />
+          </label>
           <button className={styles.iconBtn} title="Notifications">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
               <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
