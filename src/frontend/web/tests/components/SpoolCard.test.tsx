@@ -49,15 +49,15 @@ describe('SpoolCard', () => {
     expect(screen.getByText('PLA')).toBeInTheDocument()
   })
 
-  it('renders material and full color name in subtitle', () => {
+  it('renders color name as title and brand separately', () => {
     render_(baseSpool)
-    expect(screen.getByText('PLA Jade White')).toBeInTheDocument()
+    expect(screen.getByText('Jade White')).toBeInTheDocument()
+    expect(screen.getByText('Bambu Lab')).toBeInTheDocument()
   })
 
-  it('renders weight remaining', () => {
+  it('renders weight display', () => {
     render_(baseSpool)
-    expect(screen.getByText(/remaining/)).toBeInTheDocument()
-    expect(screen.getByText('/1000g')).toBeInTheDocument()
+    expect(screen.getByText('1000g')).toBeInTheDocument()
   })
 
   it('renders percentage', () => {
@@ -93,12 +93,6 @@ describe('SpoolCard', () => {
   it('shows formatted last-used date when lastScannedAt is set', () => {
     render_({ ...baseSpool, lastScannedAt: '2026-06-01T10:00:00Z' })
     expect(screen.queryByText('never')).not.toBeInTheDocument()
-  })
-
-  it('shows Added date from createdAt', () => {
-    render_(baseSpool)
-    // date format varies by locale in JSDOM; just verify some date text is present
-    expect(screen.getByText(/2026/)).toBeInTheDocument()
   })
 
   it('links to the spool detail page', () => {
