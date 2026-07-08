@@ -111,8 +111,8 @@ export default function SpoolIcon({ color = "#888", size = 52, showBackground = 
 
       {showBackground && <rect x="56" y="28" width="102" height="144" rx="20" fill="#f0f0f2" />}
 
-      {/* back flange — always dark so it reads as a visible wheel regardless of filament color */}
-      <ellipse cx={BCX} cy={CY} rx={FRX} ry={FRY} fill={DARK_F.backFlange} />
+      {/* back flange */}
+      <ellipse cx={BCX} cy={CY} rx={FRX} ry={FRY} fill={FL.backFlange} />
 
       {/* wound filament cylinder */}
       <path d={body} fill={color} />
