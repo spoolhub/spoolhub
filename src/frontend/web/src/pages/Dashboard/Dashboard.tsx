@@ -124,11 +124,8 @@ export default function Dashboard() {
   const lowStockCount = spools.filter(s => s.currentWeightG < s.lowStockThresholdG).length
   const onlineCount = printers.filter(pr => !statuses.get(pr.id)?.connectionError).length
   const totalWeightKg = (spools.reduce((sum, s) => sum + s.currentWeightG, 0) / 1000).toFixed(1)
-  const printingCount = printers.filter(pr => statuses.get(pr.id)?.gcodeState?.toUpperCase() === 'RUNNING').length
-  // Derived delta strings
   // Critical = spools at/below 10% remaining
   const lowCriticalCount = spools.filter(s => s.initialWeightG > 0 && (s.currentWeightG / s.initialWeightG) <= 0.1).length
-  const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
   const totalValue = spools.reduce((sum, s) => sum + (s.price ?? 0), 0)
   const totalValueStr = totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
