@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
@@ -20,18 +20,6 @@ export default function SpoolProfilePage() {
   )
 
   useEffect(() => { localStorage.setItem('spoolhub-profile-view', view) }, [view])
-
-  const loadProfiles = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await spoolProfilesApi.getAll()
-      setProfiles(data)
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   useEffect(() => {
     let cancelled = false

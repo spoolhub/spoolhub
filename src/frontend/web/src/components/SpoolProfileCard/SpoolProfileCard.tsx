@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import { SpoolIcon } from '@/components/icons'
@@ -11,7 +10,6 @@ interface SpoolProfileCardProps {
 
 export default function SpoolProfileCard({ profile, onClick }: SpoolProfileCardProps) {
   const { t } = useTranslation()
-  const [deleting] = useState(false)
 
   const color = profile.colorHex || '#888'
   const hasExtruder = profile.extruderMin != null && profile.extruderMax != null
