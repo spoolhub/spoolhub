@@ -10,9 +10,8 @@ import SpoolsPage from '@/pages/SpoolsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import ScanPage from '@/pages/ScanPage'
 import BrandsPage from '@/pages/BrandsPage'
-import SpoolProfilePage from '@/pages/SpoolProfilePage'
-import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import AddSpoolPage from '@/pages/AddSpoolPage'
+import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import Dashboard from '@/pages/Dashboard'
 import PrintersPage from '@/pages/PrintersPage'
 import AddPrinterPage from '@/pages/AddPrinterPage'
@@ -63,6 +62,7 @@ function AppShell() {
               <Route path="/printers" element={<PrintersPage />} />
               <Route path="/printers/addprinter" element={<AddPrinterPage />} />
               <Route path="/spools/add" element={<AddSpoolPage />} />
+              <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
               <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
               <Route path="/spools/add/manual" element={<AddSpoolPage />} />
               <Route path="/spools/select" element={<SelectSpoolPage />} />
@@ -72,8 +72,6 @@ function AppShell() {
               <Route path="/brands" element={<BrandsPage />} />
               <Route path="/brands/:brand" element={<BrandsPage />} />
               <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
-              <Route path="/spool-profiles" element={<SpoolProfilePage />} />
-              <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
               <Route path="/print-history" element={<PrintHistoryPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/locations" element={<LocationsPage />} />

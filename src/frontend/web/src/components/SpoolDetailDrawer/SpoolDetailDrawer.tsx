@@ -112,13 +112,17 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
             </button>
           </div>
           <div className={styles.dwhero}>
+            <div className={styles.dwheroColorBg} style={{ backgroundColor: s.colorHex }} />
+            <div className={styles.dwheroColorGrad} />
             <div className={styles.dwdisc}><SpoolIcon color={s.colorHex} size={96} /></div>
             <div className={styles.dwid}>
-              <div className={styles.c}>{s.colorName}</div>
-              <div className={styles.b}>{s.brand}</div>
+              <div className={styles.dwtext}>
+                <div className={styles.c}>{s.colorName}</div>
+                <div className={styles.b}>{s.brand}</div>
+              </div>
               <div className={styles.tags}>
-                <span className={styles.tag}>{s.material}</span>
                 {s.isActive && <span className={styles.tag} style={{ background: 'oklch(0.6 0.13 150/.15)', color: 'oklch(0.5 0.12 150)' }}>ACTIVE</span>}
+                <span className={styles.tag}>{s.material}</span>
               </div>
             </div>
           </div>
@@ -249,11 +253,17 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           </button>
         </div>
         <div className={styles.dwhero}>
+          <div className={styles.dwheroColorBg} style={{ backgroundColor: f.colorHex ?? '#888' }} />
+          <div className={styles.dwheroColorGrad} />
           <div className={styles.dwdisc}><SpoolIcon color={f.colorHex ?? '#888'} size={80} /></div>
           <div className={styles.dwid}>
-            <div className={styles.b}>{f.brand}</div>
-            <div className={styles.c}>{f.colorName}</div>
-            <div className={styles.tags}><span className={styles.tag}>{f.material}</span></div>
+            <div className={styles.dwtext}>
+              <div className={styles.c}>{f.colorName}</div>
+              <div className={styles.b}>{f.brand}</div>
+            </div>
+            <div className={styles.tags}>
+              <span className={styles.tag}>{f.material}</span>
+            </div>
           </div>
         </div>
         <div className={styles.dwform}>

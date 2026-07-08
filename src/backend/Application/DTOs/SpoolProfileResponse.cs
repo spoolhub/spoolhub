@@ -18,5 +18,6 @@ public record SpoolProfileResponse(
     int? BedMax,
     decimal? Price,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    int SpoolCount
 );
