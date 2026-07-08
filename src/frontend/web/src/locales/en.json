@@ -810,7 +810,16 @@
     "failedLoad": "Failed to load activity log.",
     "noMatch": "No events match your filters.",
     "noActivity": "No activity recorded yet.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "chipAll": "All",
+    "chipScans": "Scans",
+    "chipPrints": "Prints",
+    "chipStock": "Stock",
+    "chipInventory": "Inventory",
+    "colEvent": "Event",
+    "colDetail": "Detail",
+    "colInfo": "Info",
+    "colTime": "Time"
   },
   "activityCard": {
     "spoolCreated": "New spool added",

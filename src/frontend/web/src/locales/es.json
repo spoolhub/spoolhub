@@ -791,7 +791,16 @@
     "failedLoad": "Error al cargar el registro de actividad.",
     "noMatch": "Ningún evento coincide con tus filtros.",
     "noActivity": "No hay actividad registrada aún.",
-    "clearFilters": "Borrar filtros"
+    "clearFilters": "Borrar filtros",
+    "chipAll": "Todos",
+    "chipScans": "Escaneos",
+    "chipPrints": "Impresiones",
+    "chipStock": "Existencias",
+    "chipInventory": "Inventario",
+    "colEvent": "Evento",
+    "colDetail": "Detalle",
+    "colInfo": "Info",
+    "colTime": "Hora"
   },
   "activityCard": {
     "spoolCreated": "Nuevo carrete añadido",
