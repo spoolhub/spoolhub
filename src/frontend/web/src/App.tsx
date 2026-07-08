@@ -11,6 +11,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import ScanPage from '@/pages/ScanPage'
 import BrandsPage from '@/pages/BrandsPage'
 import AddSpoolPage from '@/pages/AddSpoolPage'
+import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import Dashboard from '@/pages/Dashboard'
 import PrintersPage from '@/pages/PrintersPage'
 import AddPrinterPage from '@/pages/AddPrinterPage'
@@ -61,6 +62,7 @@ function AppShell() {
               <Route path="/printers" element={<PrintersPage />} />
               <Route path="/printers/addprinter" element={<AddPrinterPage />} />
               <Route path="/spools/add" element={<AddSpoolPage />} />
+              <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
               <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
               <Route path="/spools/add/manual" element={<AddSpoolPage />} />
               <Route path="/spools/select" element={<SelectSpoolPage />} />
