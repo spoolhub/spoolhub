@@ -156,9 +156,16 @@
 }
 
 @media (max-width: 560px) {
-  .time { display: none }
+  .tablewrap { padding: 6px 10px 14px }
   .table { min-width: 0 }
-  .table th:last-child, .table td:last-child,
-  .table th:nth-child(4), .table td:nth-child(4) { display: none }
-  .detail { white-space: normal }
+  .table th { padding: 6px 5px; font-size: 9.5px }
+  .table td { padding: 10px 5px; font-size: 12px }
+  .iconCell { width: 30px }
+  .aicon { width: 26px; height: 26px }
+  .aicon svg { width: 13px; height: 13px }
+  .eventName { font-size: 12px }
+  .detail, .info { white-space: normal; overflow-wrap: anywhere }
+  .detail { font-size: 11px }
+  .info { font-size: 10.5px }
+  .time { white-space: normal; font-size: 10.5px }
 }
