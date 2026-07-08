@@ -362,24 +362,34 @@
 }
 
 @media (max-width: 767px) {
-  .sortsel { display: none }
   .invbar {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
   }
   .chips {
     flex: none;
     flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .chip {
     white-space: nowrap;
     flex-shrink: 0;
   }
   .invtools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  .sortsel {
+    display: block;
+    flex: 1;
+  }
+  .seg2 {
+    margin-left: 0;
     flex-shrink: 0;
-    margin-left: auto;
   }
 }
 

@@ -20,17 +20,43 @@
 .addBtn:hover { opacity: 0.9; }
 .addBtn svg { width: 1rem; height: 1rem; }
 
+/* ── Toolbar ── */
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.count {
+  font-size: 13px; font-weight: 600; color: var(--muted);
+}
+.toolbarRight {
+  display: flex; align-items: center; gap: 10px;
+}
+.sortsel {
+  height: 40px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+  border-radius: var(--r-sm); padding: 0 10px;
+  font: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.seg2 { display: flex; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden }
+.seg2 button {
+  display: grid; place-items: center;
+  width: 40px; height: 38px; padding: 0;
+  border: 0; background: var(--surface); color: var(--muted); cursor: pointer;
+}
+.seg2 button svg { width: 16px; height: 16px }
+.seg2 button.on { background: var(--accent); color: #fff }
+
+/* ── Loading ── */
 .loadingSkeleton {
   height: 12rem; border-radius: var(--radius-2xl);
   background: var(--surface); border: 1px solid var(--border);
   animation: pulse 1.5s ease-in-out infinite;
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
+/* ── Empty ── */
 .emptyState {
   text-align: center; padding: 3rem;
   background: var(--surface); border: 1px solid var(--border);
@@ -44,6 +70,7 @@
   border: none; cursor: pointer;
 }
 
+/* ── Grid ── */
 .grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -51,3 +78,46 @@
 }
 @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* ── List view ── */
+.listWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-sm); }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tbl thead tr { border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.tbl th {
+  text-align: left; padding: 10px 14px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); white-space: nowrap;
+}
+.tbl tbody tr {
+  border-bottom: 1px solid var(--border-2);
+  cursor: pointer; transition: background .15s;
+}
+.tbl tbody tr:last-child { border-bottom: 0; }
+.tbl tbody tr:hover { background: var(--surface-2); }
+.tbl td { padding: 10px 14px; color: var(--text-primary); white-space: nowrap; }
+.tblIc { display: grid; place-items: center; }
+.tblColor { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.tblDot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; box-shadow: inset 0 0 0 1px oklch(0 0 0 / .12); }
+.tblMat {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 20px; text-transform: uppercase;
+  background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border);
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .count { display: none; }
+  .toolbarRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  .sortsel { flex: 1; }
+  .seg2 { flex-shrink: 0; margin-left: 0; }
+}

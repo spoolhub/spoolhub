@@ -63,7 +63,7 @@
 }
 
 .bandColor {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.25;
@@ -88,7 +88,7 @@
 }
 
 .bandBrand {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   margin-top: 0.125rem;
   white-space: nowrap;
@@ -133,7 +133,7 @@
   color: var(--text-secondary);
 }
 .tempVal {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
@@ -160,7 +160,7 @@
   border-left: 1px solid var(--border);
 }
 .statVal {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
