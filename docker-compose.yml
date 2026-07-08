@@ -7,3 +7,11 @@ services:
       - "4848:4848"
     volumes:
       - ./data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
