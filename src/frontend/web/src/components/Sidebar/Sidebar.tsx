@@ -28,9 +28,11 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
 
   return (
     <>
-      {isOpen && (
-        <div className={styles.overlay} onClick={onClose} aria-hidden="true" />
-      )}
+      <div
+        className={`${styles.overlay}${isOpen ? ` ${styles.overlayOpen}` : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       <aside className={`${styles.aside}${isOpen ? ` ${styles.asideOpen}` : ''}${collapsed ? ` ${styles.asideCollapsed}` : ''}`}>
         <button

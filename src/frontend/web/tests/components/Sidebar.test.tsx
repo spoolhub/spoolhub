@@ -81,12 +81,16 @@ describe('Sidebar', () => {
 
   it('shows overlay when open', () => {
     renderSidebar(true)
-    expect(document.querySelector('[aria-hidden="true"]')).toBeInTheDocument()
+    const overlay = document.querySelector('[aria-hidden="true"]')
+    expect(overlay).toBeInTheDocument()
+    expect(overlay!.className).toMatch(/overlayOpen/)
   })
 
   it('hides overlay when closed', () => {
     renderSidebar(false)
-    expect(document.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument()
+    // overlay stays mounted (iOS Safari repaint workaround) but is inert
+    const overlay = document.querySelector('[aria-hidden="true"]')
+    expect(overlay!.className).not.toMatch(/overlayOpen/)
   })
 
   it('calls onClose when overlay clicked', () => {

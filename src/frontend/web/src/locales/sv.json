@@ -22,7 +22,7 @@
   "home": {
     "title": "Instrumentpanel",
     "pageTitle": "Hem",
-    "subtitle": "Filamentlager i korthet",
+    "subtitle": "Allt du behöver, med en blick",
     "totalSpools": "Totalt spolar",
     "activeSpool": "Aktiv spole",
     "filamentLibrary": "Filamentbibliotek",
@@ -42,6 +42,7 @@
   },
   "spools": {
     "title": "Spolar",
+    "subtitle": "Varje rulle, perfekt spårad",
     "notFound": "Inga spolar hittades.",
     "noMatch": "Inga spolar matchar din sökning eller filter.",
     "active": "AKTIV",
@@ -109,8 +110,13 @@
     "count": "{{count}} filament",
     "addBrand": "Lägg till märke"
   },
+  "brands": {
+    "title": "Märken",
+    "subtitle": "Alla tillverkare på ett ställe"
+  },
   "printers": {
     "title": "Skrivare",
+    "subtitle": "Övervaka din anslutna flotta",
     "addPrinter": "Lägg till skrivare"
   },
   "connection": {
@@ -307,6 +313,8 @@
     "reassignTray": "Tilldela om fack"
   },
   "scan": {
+    "pageTitle": "Skanna tagg",
+    "pageSubtitle": "Identifiera omedelbart filament via tagg",
     "lookingUp": "Söker upp NFC-tagg…",
     "unknownTag": "Taggen är inte registrerad för någon spole.",
     "lookupError": "Kunde inte söka upp taggen. Försök igen.",
@@ -556,6 +564,7 @@
   },
   "locations": {
     "title": "Platser",
+    "subtitle": "Organisera var filament förvaras",
     "addLocation": "Lägg till plats",
     "name": "Namn",
     "namePlaceholder": "t.ex. Hylla A, Låda 2…",
@@ -696,7 +705,7 @@
     "direction": "Riktning",
     "directionDesc": "Den övergripande visuella stilen — Studio (varm, rundad) eller Console (kall, teknisk)",
     "title": "Inställningar",
-    "subtitle": "Program, uppdateringar, filament, loggar och säkerhetskopia",
+    "subtitle": "Anpassa din arbetsyta och preferenser",
     "application": "Program",
     "updates": "Uppdateringar",
     "notifications": "Notifikationer",
@@ -744,6 +753,7 @@
   },
   "activity": {
     "title": "Aktivitetslogg",
+    "subtitle": "Håll dig uppdaterad med senaste händelser",
     "loading": "Laddar…",
     "eventsRecorded_one": "{{count}} händelse registrerad",
     "eventsRecorded_other": "{{count}} händelser registrerade",
@@ -892,7 +902,7 @@
   },
   "printHistory": {
     "title": "Print History",
-    "subtitle": "Every job logged across your printers",
+    "subtitle": "Komplett historik över varje utskrift",
     "searchPlaceholder": "Search jobs…",
     "exportCsv": "Export CSV",
     "filterAll": "All",
@@ -918,6 +928,7 @@
     "jobs": "jobs"
   },
   "dashboard": {
+    "subtitle": "Allt du behöver, med en blick",
     "usedThisWeek": "använd den här veckan",
     "thisMonth": "den här månaden"
   }

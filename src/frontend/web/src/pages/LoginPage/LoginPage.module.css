@@ -87,6 +87,33 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
+.inputwrap input[type="password"],
+.inputwrap input[type="text"]:has(~ .eyeBtn) {
+  padding-right: 42px;
+}
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--faint);
+  border-radius: 4px;
+  transition: color .15s;
+}
+.eyeBtn:hover { color: var(--text-secondary); }
+.eyeBtn svg {
+  position: static;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
 
 .error {
   font-size: 12.5px;

@@ -67,6 +67,33 @@ export function DesignProvider({ children }: { children?: React.ReactNode }) {
     document.documentElement.setAttribute('data-theme', theme)
   }, [mode])
 
+  // Pin the browser chrome tint (iOS Safari bottom bar) to the app background,
+  // so it never re-samples the page under overlays like the sidebar scrim.
+  useEffect(() => {
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:absolute;visibility:hidden;background:var(--bg)'
+    document.body.appendChild(probe)
+    let bg = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    // Serialize modern color spaces (oklch) to a hex every Safari accepts
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 1
+    const cctx = canvas.getContext('2d')
+    if (cctx) {
+      cctx.fillStyle = bg
+      cctx.fillRect(0, 0, 1, 1)
+      const [r, g, b] = cctx.getImageData(0, 0, 1, 1).data
+      bg = `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`
+    }
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = bg
+  }, [mode, dir, dark])
+
   useEffect(() => {
     function sync() {
       const m = readMode()

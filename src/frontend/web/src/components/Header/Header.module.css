@@ -90,17 +90,70 @@
   height: 16px;
 }
 
-/* ── Icon button (bell, hamburger, search mobile) ── */
+/* ── Icon button (bell, hamburger, search mobile) ──
+   Ghost style: no box, just the glyph — matches the hamburger. */
 .btnIcon {
   width: 42px;
   padding: 0;
   justify-content: center;
   color: var(--muted);
+  border: 0;
+  background: transparent;
+}
+.btnIcon svg {
+  width: 21px;
+  height: 21px;
+}
+.btnIcon:hover {
+  background: transparent;
+  color: var(--text);
 }
 
-/* ── Hamburger (hidden desktop, shown ≤900px) ── */
+/* ── Hamburger (hidden desktop, shown ≤900px) ──
+   Two asymmetric lines: the short one stretches on hover,
+   both morph into an X while the sidebar is open. */
 .menubtn {
   display: none;
+}
+.menuLines {
+  position: relative;
+  width: 22px;
+  height: 14px;
+  display: block;
+}
+.menuLine {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: width 0.22s var(--ease), transform 0.28s var(--ease), top 0.28s var(--ease);
+}
+.menuLine:first-child {
+  top: 3px;
+  width: 22px;
+}
+.menuLine:last-child {
+  top: 10px;
+  width: 14px;
+}
+.menubtn:hover .menuLine:last-child {
+  width: 22px;
+}
+.menubtnOpen .menuLine {
+  top: 6px;
+  width: 22px;
+}
+.menubtnOpen .menuLine:first-child {
+  transform: rotate(45deg);
+}
+.menubtnOpen .menuLine:last-child {
+  transform: rotate(-45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .menuLine {
+    transition: none;
+  }
 }
 
 /* ── Brand logo in topbar (shown on both mobile and desktop) ── */

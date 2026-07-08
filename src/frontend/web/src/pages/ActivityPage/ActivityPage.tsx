@@ -91,7 +91,7 @@ export default function ActivityPage() {
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('activity.title')}</h1>
-          <div className={styles.sub}>{loading ? t('activity.loading') : t('activity.eventsRecorded', { count: total })}</div>
+          <div className={styles.sub}>{t('activity.subtitle')}</div>
         </div>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>

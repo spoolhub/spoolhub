@@ -152,16 +152,13 @@ export default function PrintersPage() {
     })
   }, [printers, query, activeFilter, statuses])
 
-  const onlineCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) !== 'offline').length
-  const printingCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) === 'printing').length
-
   return (
     <>
     <div className={`${styles.page} page`}>
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('printers.title')}</h1>
-          <div className={styles.sub}>{printers.length} printer{printers.length === 1 ? '' : 's'} · {onlineCount} online · {printingCount} printing now</div>
+          <div className={styles.sub}>{t('printers.subtitle')}</div>
         </div>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>

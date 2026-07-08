@@ -1,16 +1,31 @@
+/* Kept mounted and faded via opacity: iOS Safari fails to repaint its
+   bottom-bar tint when a full-screen fixed element is abruptly removed. */
 .overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 20;
-  height: 100dvh;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease), visibility 0s 0.25s;
+}
+.overlayOpen {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.25s var(--ease), visibility 0s;
+}
+@media (min-width: 768px) {
+  .overlay { display: none; }
 }
 
 .aside {
   position: fixed;
   top: 0;
   left: 0;
-  height: 100dvh;
+  bottom: 0;
+  min-height: 100dvh;
   width: var(--sidebar-width, 248px);
   min-width: 248px;
   z-index: 30;
@@ -80,7 +95,9 @@
   .aside {
     position: sticky;
     top: 0;
+    bottom: auto;
     height: 100dvh;
+    min-height: 0;
     transform: translateX(0);
     z-index: auto;
     flex-shrink: 0;

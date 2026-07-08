@@ -134,7 +134,7 @@ export default function Dashboard() {
         <div className={styles.titleRow}>
           <div className={styles.h}>
             <h1 className={styles.pageTitle}>Dashboard</h1>
-            <div className={styles.pageSub}>{spools.length} spools · {totalWeightKg} kg filament on hand · {onlineCount} / {printers.length} printers online</div>
+            <div className={styles.pageSub}>{t('dashboard.subtitle')}</div>
           </div>
           <button className={styles.searchBtn} title="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

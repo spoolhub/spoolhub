@@ -1,23 +1,31 @@
+import { Link } from 'react-router-dom'
 import { useSidebar } from '@/context/SidebarContext'
 import SpoolHubLogo from '@/components/SpoolHubLogo'
 import styles from './Header.module.css'
 
 export default function Header() {
-  const { toggle: toggleSidebar } = useSidebar()
+  const { toggle: toggleSidebar, isOpen } = useSidebar()
 
   return (
     <header className={styles.topbar}>
       {/* Hamburger — hidden on desktop, shown on mobile */}
-      <button className={`${styles.btn} ${styles.btnIcon} ${styles.menubtn}`} onClick={toggleSidebar} title="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+      <button
+        className={`${styles.btn} ${styles.btnIcon} ${styles.menubtn}${isOpen ? ` ${styles.menubtnOpen}` : ''}`}
+        onClick={toggleSidebar}
+        title="Menu"
+        aria-label="Menu"
+        aria-expanded={isOpen}
+      >
+        <span className={styles.menuLines} aria-hidden="true">
+          <span className={styles.menuLine} />
+          <span className={styles.menuLine} />
+        </span>
       </button>
 
       {/* Brand logo — hidden on desktop, shown on mobile */}
-      <div className={styles.topbarLogo}>
+      <Link to="/" className={styles.topbarLogo} title="Dashboard">
         <SpoolHubLogo variant="full" size={44} />
-      </div>
+      </Link>
 
       {/* Search bar — desktop only */}
       <label className={styles.search}>

@@ -214,8 +214,6 @@ export default function LocationsPage() {
     return list
   }, [locations, query, activeFilter, sortBy, statsById])
 
-  const totalKg = (spools.reduce((s, sp) => s + sp.currentWeightG, 0) / 1000).toFixed(1)
-
   function openAddDrawer() {
     setIsNew(true)
     setEditing(null)
@@ -297,7 +295,7 @@ export default function LocationsPage() {
       <header className={styles.topbar}>
         <div className={styles.h}>
           <h1>{t('locations.title')}</h1>
-          <div className={styles.sub}>{locations.length} storage location{locations.length === 1 ? '' : 's'} · {spools.length} spools · {totalKg} kg filament on hand</div>
+          <div className={styles.sub}>{t('locations.subtitle')}</div>
         </div>
         <label className={styles.search}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
