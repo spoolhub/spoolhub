@@ -214,8 +214,6 @@ export default function LocationsPage() {
     return list
   }, [locations, query, activeFilter, sortBy, statsById])
 
-  const totalKg = (spools.reduce((s, sp) => s + sp.currentWeightG, 0) / 1000).toFixed(1)
-
   function openAddDrawer() {
     setIsNew(true)
     setEditing(null)

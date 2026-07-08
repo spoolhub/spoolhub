@@ -152,9 +152,6 @@ export default function PrintersPage() {
     })
   }, [printers, query, activeFilter, statuses])
 
-  const onlineCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) !== 'offline').length
-  const printingCount = printers.filter(p => getPrinterStatusClass(statuses.get(p.id)) === 'printing').length
-
   return (
     <>
     <div className={`${styles.page} page`}>

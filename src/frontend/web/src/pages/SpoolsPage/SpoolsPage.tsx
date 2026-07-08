@@ -86,9 +86,6 @@ export default function SpoolsPage() {
   function updateSort(v: string) { setSortBy(v); setPage(1) }
   function updateView(v: 'grid' | 'list') { setView(v); setPage(1) }
 
-  const totalKg = (spools.reduce((s, sp) => s + sp.currentWeightG, 0) / 1000).toFixed(1)
-  const brands = new Set(spools.map(s => s.brand))
-
   return (
     <div className={`${styles.page} page`}>
       <header className={styles.topbar}>

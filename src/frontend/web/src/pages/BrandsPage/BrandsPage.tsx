@@ -84,9 +84,6 @@ export default function BrandsPage() {
     return list
   }, [brands, query, sortBy])
 
-  const totalSpools = useMemo(() => brands.reduce((s, b) => s + b.count, 0), [brands])
-  const totalKg = useMemo(() => (brands.reduce((s, b) => s + b.total, 0) / 1000).toFixed(1), [brands])
-
   if (loading) {
     return (
       <div className={`${styles.page} page`}>
