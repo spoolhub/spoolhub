@@ -9,7 +9,7 @@
   text-decoration: none;
 }
 .card:hover {
-  border-color: var(--success-border);
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
   transform: translateY(-0.125rem);
 }
