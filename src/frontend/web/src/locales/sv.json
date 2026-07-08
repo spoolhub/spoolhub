@@ -791,7 +791,16 @@
     "failedLoad": "Kunde inte ladda aktivitetsloggen.",
     "noMatch": "Inga händelser matchar dina filter.",
     "noActivity": "Ingen aktivitet registrerad ännu.",
-    "clearFilters": "Rensa filter"
+    "clearFilters": "Rensa filter",
+    "chipAll": "Alla",
+    "chipScans": "Skanningar",
+    "chipPrints": "Utskrifter",
+    "chipStock": "Lager",
+    "chipInventory": "Inventarie",
+    "colEvent": "Händelse",
+    "colDetail": "Detalj",
+    "colInfo": "Info",
+    "colTime": "Tid"
   },
   "activityCard": {
     "spoolCreated": "Ny spole tillagd",
