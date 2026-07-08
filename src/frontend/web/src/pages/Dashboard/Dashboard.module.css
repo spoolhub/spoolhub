@@ -116,6 +116,10 @@
   gap: var(--gap);
   flex-shrink: 0;
 }
+@media (min-width: 768px) and (max-width: 1100px) {
+  .search { width: 180px; }
+}
+
 @media (max-width: 767px) {
   .metrics { grid-template-columns: repeat(2, 1fr); }
   .search { display: none; }

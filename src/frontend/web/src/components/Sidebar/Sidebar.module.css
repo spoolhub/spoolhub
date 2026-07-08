@@ -149,7 +149,9 @@
   flex-direction: column;
   gap: 2px;
   overflow-y: auto;
+  scrollbar-width: none;
 }
+.nav::-webkit-scrollbar { display: none; }
 
 .navlabel {
   font-size: 10.5px;
