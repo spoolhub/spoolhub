@@ -154,8 +154,10 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         if (onUnknownTag) onUnknownTag(uid)
         else setScanPhase('unknown')
       } else if (result.spool) {
+        const spool = result.spool
+        setRecentScans(prev => [{ uid, spool, scannedAt: new Date() }, ...prev.filter(s => s.uid !== uid)].slice(0, 20))
         setScanPhase('polling')
-        setDrawerSpool(result.spool)
+        setDrawerSpool(spool)
       }
     } catch {
       setScanError(t('scan.errorLookup'))
