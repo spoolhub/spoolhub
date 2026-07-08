@@ -158,5 +158,7 @@
 @media (max-width: 560px) {
   .time { display: none }
   .table { min-width: 0 }
-  .table th:last-child, .table td:last-child { display: none }
+  .table th:last-child, .table td:last-child,
+  .table th:nth-child(4), .table td:nth-child(4) { display: none }
+  .detail { white-space: normal }
 }
