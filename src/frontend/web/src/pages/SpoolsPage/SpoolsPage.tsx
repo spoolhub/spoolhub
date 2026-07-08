@@ -73,11 +73,18 @@ export default function SpoolsPage() {
 
   useEffect(() => {
     if (!isProfileView) return
-    setProfilesLoading(true)
-    spoolProfilesApi.getAll().then(data => {
-      setProfiles(data)
-      setProfilesLoading(false)
-    }).catch(() => setProfilesLoading(false))
+    let cancelled = false
+    async function load() {
+      setProfilesLoading(true)
+      try {
+        const data = await spoolProfilesApi.getAll()
+        if (!cancelled) { setProfiles(data); setProfilesLoading(false) }
+      } catch {
+        if (!cancelled) setProfilesLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [isProfileView])
 
   useEffect(() => {
