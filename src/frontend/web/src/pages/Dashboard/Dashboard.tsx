@@ -170,7 +170,7 @@ export default function Dashboard() {
             label="Filament On Stock"
             value={parseFloat(totalWeightKg)}
             suffix={<span>kg</span>}
-            to="/spools/active"
+            to="/spools"
             loading={loading}
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 7c3 0 3 10 6 10s3-10 6-10 3 10 6 10" /></svg>}
             trend={weeklyUsedKg != null && weeklyUsedKg > 0
@@ -181,7 +181,7 @@ export default function Dashboard() {
           <MetricCard
             label={t('home.lowStock')}
             value={lowStockCount}
-            to="/spools/low"
+            to="/spools"
             loading={loading}
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
             trend={(

@@ -15,8 +15,6 @@ import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import Dashboard from '@/pages/Dashboard'
 import PrintersPage from '@/pages/PrintersPage'
 import AddPrinterPage from '@/pages/AddPrinterPage'
-import LowStockPage from '@/pages/LowStockPage'
-import ActiveSpoolsPage from '@/pages/ActiveSpoolsPage'
 import ActivityPage from '@/pages/ActivityPage'
 import SelectSpoolPage from '@/pages/SelectSpoolPage'
 import LocationsPage from '@/pages/LocationsPage'
@@ -66,8 +64,6 @@ function AppShell() {
               <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
               <Route path="/spools/add/manual" element={<AddSpoolPage />} />
               <Route path="/spools/select" element={<SelectSpoolPage />} />
-              <Route path="/spools/active" element={<ActiveSpoolsPage />} />
-              <Route path="/spools/low" element={<LowStockPage />} />
               <Route path="/brands" element={<BrandsPage />} />
               <Route path="/brands" element={<BrandsPage />} />
               <Route path="/brands/:brand" element={<BrandsPage />} />
