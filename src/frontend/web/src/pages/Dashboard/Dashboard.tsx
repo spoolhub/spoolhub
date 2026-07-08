@@ -4,8 +4,8 @@ import styles from './Dashboard.module.css'
 import { useTranslation } from 'react-i18next'
 import { useConnection } from '@/context/ConnectionContext'
 import { spoolsApi } from '@/api/spools'
-import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
+import { settingsApi } from '@/api/settings'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
 
@@ -24,13 +24,12 @@ export default function Dashboard() {
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [detailPrinterId, setDetailPrinterId] = useState<string | null>(null)
-  const [, setFilamentLibraryCount] = useState(0)
-  const [, setFilamentBrands] = useState(0)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [statuses, setStatuses] = useState<Map<string, PrinterStatus>>(new Map())
   const [loading, setLoading] = useState(true)
   const [weeklyUsedKg, setWeeklyUsedKg] = useState<number | null>(null)
   const [activityLimit] = useState(5)
+  const [currency, setCurrency] = useState('USD')
 
   const fetchGen = useRef(0)
   const printersRef = useRef<PrinterResponse[]>([])
@@ -52,29 +51,30 @@ export default function Dashboard() {
     void Promise.resolve().then(() => { if (!cancelled) setLoading(true) })
     Promise.all([
       spoolsApi.getAll(),
-      filamentsApi.getAll(),
       printersApi.getAll().catch(() => [] as PrinterResponse[]),
-    ]).then(async ([s, f, p]) => {
+      settingsApi.getApp().catch(() => ({ currency: 'USD' })),
+    ]).then(([s, p, app]) => {
       if (cancelled || gen !== fetchGen.current) return
       setSpools(s)
-      setFilamentLibraryCount(f.length)
-      setFilamentBrands(new Set(f.map(fil => fil.brand)).size)
+      setCurrency((app as { currency: string }).currency)
       printersRef.current = p
       setPrinters(p)
+      setLoading(false)
+      // fetch printer statuses after page is already shown
       const stMap = new Map<string, PrinterStatus>()
-      await Promise.allSettled(p.map(pr => printersApi.getStatus(pr.id).then(st => { if (st) stMap.set(pr.id, st) })))
-      if (!cancelled && gen !== fetchGen.current) setStatuses(stMap)
-    }).then(() => { if (!cancelled) setLoading(false) }).catch(() => {})
+      Promise.allSettled(p.map(pr => printersApi.getStatus(pr.id).then(st => { if (st) stMap.set(pr.id, st) }))).then(() => {
+        if (!cancelled) setStatuses(stMap)
+      }).catch(() => {})
+    }).catch(() => { if (!cancelled) setLoading(false) })
 
     printJobsApi.getWeeklyUsage(7).then(u => { if (!cancelled) setWeeklyUsedKg(u.totalGrams / 1000) }).catch(() => {})
 
     const dataTimer = setInterval(() => {
       if (cancelled) return
       const pollGen = ++fetchGen.current
-      Promise.all([spoolsApi.getAll(), filamentsApi.getAll()]).then(([s, f]) => {
+      spoolsApi.getAll().then(s => {
         if (cancelled || pollGen !== fetchGen.current) return
         setSpools(s)
-        setFilamentLibraryCount(f.length)
       }).catch(() => {})
     }, 60_000)
 
@@ -121,11 +121,10 @@ export default function Dashboard() {
   const lowStockCount = spools.filter(s => s.currentWeightG < s.lowStockThresholdG).length
   const onlineCount = printers.filter(pr => !statuses.get(pr.id)?.connectionError).length
   const totalWeightKg = (spools.reduce((sum, s) => sum + s.currentWeightG, 0) / 1000).toFixed(1)
-  const printingCount = printers.filter(pr => statuses.get(pr.id)?.gcodeState?.toUpperCase() === 'RUNNING').length
-  // Derived delta strings
   // Critical = spools at/below 10% remaining
   const lowCriticalCount = spools.filter(s => s.initialWeightG > 0 && (s.currentWeightG / s.initialWeightG) <= 0.1).length
-  const printerUnits = printingCount > 0 ? `${printingCount} printing now` : 'Idle'
+  const totalValue = spools.reduce((sum, s) => sum + (s.price ?? 0), 0)
+  const totalValueStr = totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return (
     <>
@@ -168,7 +167,7 @@ export default function Dashboard() {
             label="Filament On Stock"
             value={parseFloat(totalWeightKg)}
             suffix={<span>kg</span>}
-            to="/spools/active"
+            to="/spools"
             loading={loading}
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 7c3 0 3 10 6 10s3-10 6-10 3 10 6 10" /></svg>}
             trend={weeklyUsedKg != null && weeklyUsedKg > 0
@@ -179,7 +178,8 @@ export default function Dashboard() {
           <MetricCard
             label={t('home.lowStock')}
             value={lowStockCount}
-            to="/spools/low"
+            to="/spools"
+            toState={{ filter: 'low' }}
             loading={loading}
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
             trend={(
@@ -189,13 +189,13 @@ export default function Dashboard() {
             )}
           />
           <MetricCard
-            label="Printers Online"
-            value={onlineCount}
-            suffix={<span>/{printers.length}</span>}
-            to="/printers"
+            label="Total Value"
+            value={totalValueStr}
+            suffix={<span>{currency}</span>}
+            to="/spools"
             loading={loading}
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="3" x2="4" y2="19" /><line x1="20" y1="3" x2="20" y2="19" /><path d="M4 3h16" /><line x1="4" y1="9" x2="20" y2="9" /><rect x="9.5" y="6.5" width="5" height="4" rx="0.75" /><path d="M11.5 10.5 L12 13 L12.5 10.5" strokeWidth="1.3" /><rect x="3" y="19" width="18" height="2" rx="0.75" /><rect x="8.5" y="14.5" width="7" height="4" rx="0.5" /></svg>}
-            trend={{ text: printerUnits, variant: 'neutral' }}
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
+            trend={{ text: `${spools.filter(s => s.price != null).length} priced spools`, variant: 'neutral' }}
           />
         </section>
 
@@ -237,7 +237,7 @@ export default function Dashboard() {
               <h2>{t('home.recentActivity')}</h2>
               <Link to="/activity" className={styles.viewAll}>{t('common.viewAll')}</Link>
             </div>
-            <RecentActivity limit={activityLimit} />
+            <RecentActivity limit={activityLimit} spools={spools} />
           </section>
         </div>
 

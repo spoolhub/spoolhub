@@ -11,10 +11,23 @@ const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
 const PLUS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
 
+function isNearBlack(hex: string) {
+  if (!hex.startsWith('#') || hex.length < 7) return false
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16)
+  return r < 50 && g < 50 && b < 50
+}
+
 function spoolSvg(color: string, size: number, key: string): string {
   const uid = 'sp_' + key
   const BCX = 82, FCX = 132, CY = 100, FRX = 22, FRY = 66, BRY = 58, BRX = 18, Rflange = 66, sx = FRX / Rflange
   const TOP = CY - BRY, BOT = CY + BRY
+  const light = isNearBlack(color)
+  const backFlange = light ? '#e4e4e7' : '#16161a'
+  const frontFlange = light ? '#f0f0f2' : '#17171b'
+  const frontStroke = light ? '#a1a1aa' : '#0c0c0e'
+  const hubStart = light ? '#d1d5db' : '#3a3a40'
+  const hubEnd = light ? '#e5e7eb' : '#141417'
+  const center = light ? '#71717a' : '#0a0a0c'
   let coils = ''
   for (let x = BCX + 6; x <= FCX - 2; x += 4) coils += `<path d="M${x} ${TOP} A${BRX} ${BRY} 0 0 0 ${x} ${BOT}" fill="none" stroke="rgba(0,0,0,.13)" stroke-width="1"/>`
   const n = 9, step = Math.PI * 2 / n, gap = step * 0.40, Ri = 26, Ro = 60
@@ -26,7 +39,7 @@ function spoolSvg(color: string, size: number, key: string): string {
   }
   const body = `M${BCX} ${TOP} L${FCX} ${TOP} A${BRX} ${BRY} 0 0 1 ${FCX} ${BOT} L${BCX} ${BOT} A${BRX} ${BRY} 0 0 1 ${BCX} ${TOP} Z`
   const w = Math.round(size * 102 / 144)
-  return `<svg width="${w}" height="${size}" viewBox="56 28 102 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="${uid}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".30"/><stop offset="45%" stop-color="#fff" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".22"/></linearGradient><radialGradient id="${uid}h" cx="42%" cy="34%" r="75%"><stop offset="0" stop-color="#3a3a40"/><stop offset="100%" stop-color="#141417"/></radialGradient></defs><ellipse cx="${BCX}" cy="${CY}" rx="${FRX}" ry="${FRY}" fill="#16161a"/><path d="${body}" fill="${color}"/>${coils}<path d="${body}" fill="url(#${uid}b)"/><g transform="translate(${FCX},${CY}) scale(${sx.toFixed(3)},1)"><ellipse cx="0" cy="0" rx="${Rflange}" ry="${Rflange}" fill="#17171b"/>${windows}<ellipse cx="0" cy="0" rx="${Rflange}" ry="${Rflange}" fill="none" stroke="#0c0c0e" stroke-width="2"/><ellipse cx="0" cy="0" rx="26" ry="26" fill="url(#${uid}h)"/><ellipse cx="0" cy="0" rx="11" ry="11" fill="#0a0a0c"/></g></svg>`
+  return `<svg width="${w}" height="${size}" viewBox="56 28 102 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="${uid}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".30"/><stop offset="45%" stop-color="#fff" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".22"/></linearGradient><radialGradient id="${uid}h" cx="42%" cy="34%" r="75%"><stop offset="0" stop-color="${hubStart}"/><stop offset="100%" stop-color="${hubEnd}"/></radialGradient></defs><ellipse cx="${BCX}" cy="${CY}" rx="${FRX}" ry="${FRY}" fill="${backFlange}"/><path d="${body}" fill="${color}"/>${coils}<path d="${body}" fill="url(#${uid}b)"/><g transform="translate(${FCX},${CY}) scale(${sx.toFixed(3)},1)"><ellipse cx="0" cy="0" rx="${Rflange}" ry="${Rflange}" fill="${frontFlange}"/>${windows}<ellipse cx="0" cy="0" rx="${Rflange}" ry="${Rflange}" fill="none" stroke="${frontStroke}" stroke-width="2"/><ellipse cx="0" cy="0" rx="26" ry="26" fill="url(#${uid}h)"/><ellipse cx="0" cy="0" rx="11" ry="11" fill="${center}"/></g></svg>`
 }
 
 type Step = 'pick' | 'details'

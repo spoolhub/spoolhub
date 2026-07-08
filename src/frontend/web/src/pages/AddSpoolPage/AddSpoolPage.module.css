@@ -118,7 +118,7 @@
 .btnPrimary {
   background: var(--accent); border-color: transparent; color: #fff;
 }
-.btnPrimary:hover { filter: brightness(1.06); }
+.btnPrimary:hover { background: var(--accent); filter: none; }
 .btnIcon {
   width: 42px; padding: 0;
   justify-content: center; color: var(--muted);

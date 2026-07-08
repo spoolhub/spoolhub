@@ -43,13 +43,14 @@ const DownArrow = () => (
 )
 
 export function MetricCard({
-  label, value, suffix, trend, to, loading, icon,
+  label, value, suffix, trend, to, toState, loading, icon,
 }: {
   label: string
   value: number | string
   suffix?: React.ReactNode
   trend?: { text: string; muted?: string; variant: 'positive' | 'neutral' | 'warning' | 'error' }
   to?: string
+  toState?: Record<string, unknown>
   loading: boolean
   icon: React.ReactNode
 }) {
@@ -83,7 +84,7 @@ export function MetricCard({
   )
 
   if (to) {
-    return <Link to={to} className={styles.link}>{inner}</Link>
+    return <Link to={to} state={toState} className={styles.link}>{inner}</Link>
   }
   return inner
 }
