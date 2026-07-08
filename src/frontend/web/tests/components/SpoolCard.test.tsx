@@ -56,8 +56,8 @@ describe('SpoolCard', () => {
   })
 
   it('renders weight display', () => {
-    render_(baseSpool)
-    expect(screen.getByText('1000g')).toBeInTheDocument()
+    render_({ ...baseSpool, currentWeightG: 750 })
+    expect(screen.getByText('750g')).toBeInTheDocument()
   })
 
   it('renders percentage', () => {
