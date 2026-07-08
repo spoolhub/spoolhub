@@ -116,7 +116,11 @@
   gap: var(--gap);
   flex-shrink: 0;
 }
-@media (min-width: 768px) and (max-width: 1100px) {
+@media (min-width: 768px) and (max-width: 939px) {
+  .search { width: 42px; padding: 0; justify-content: center; cursor: pointer; }
+  .search input { display: none; }
+}
+@media (min-width: 940px) and (max-width: 1100px) {
   .search { width: 180px; }
 }
 
