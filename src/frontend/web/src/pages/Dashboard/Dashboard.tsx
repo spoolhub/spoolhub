@@ -6,6 +6,7 @@ import { useConnection } from '@/context/ConnectionContext'
 import { spoolsApi } from '@/api/spools'
 import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
+import { settingsApi } from '@/api/settings'
 import { useNfcHub } from '@/hooks/useNfcHub'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
 
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [weeklyUsedKg, setWeeklyUsedKg] = useState<number | null>(null)
   const [activityLimit] = useState(5)
+  const [currency, setCurrency] = useState('USD')
 
   const fetchGen = useRef(0)
   const printersRef = useRef<PrinterResponse[]>([])
@@ -50,6 +52,7 @@ export default function Dashboard() {
     let cancelled = false
     const gen = ++fetchGen.current
     void Promise.resolve().then(() => { if (!cancelled) setLoading(true) })
+    settingsApi.getApp().then(app => { if (!cancelled) setCurrency(app.currency) }).catch(() => {})
     Promise.all([
       spoolsApi.getAll(),
       filamentsApi.getAll(),
@@ -193,7 +196,7 @@ export default function Dashboard() {
           <MetricCard
             label="Total Value"
             value={totalValueStr}
-            suffix={<span>SEK</span>}
+            suffix={<span>{currency}</span>}
             to="/spools"
             loading={loading}
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
