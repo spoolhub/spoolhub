@@ -6,6 +6,7 @@ import { printJobsApi } from '@/api/printJobs'
 import { useConnection } from '@/context/ConnectionContext'
 import type { Activity } from '@/types/activity'
 import type { PrintJobResponse } from '@/types/printJob'
+import type { SpoolResponse } from '@/types/spool'
 import styles from './RecentActivity.module.css'
 
 const NFC_EVENTS = new Set(['NfcTagRegistered', 'NfcTagRemoved'])
@@ -36,18 +37,20 @@ function applyJobToSnapshot(a: Activity, job: PrintJobResponse): Activity {
   }
 }
 
-async function enrichActivities(activities: Activity[]): Promise<Activity[]> {
+type SpoolCache = Map<string, { brand: string; colorName: string; colorHex: string; material: string; stockLocation?: string }>
+
+async function enrichActivities(activities: Activity[], spoolCache?: SpoolCache): Promise<Activity[]> {
   const toEnrich   = activities.filter(needsEnrich)
   const printEvts  = activities.filter(a => PRINT_EVENTS.has(a.eventType) && a.snapshot?.printJobId)
   if (toEnrich.length === 0 && printEvts.length === 0) return activities
 
   const spoolIds  = [...new Set(toEnrich.map(a => a.resourceId!))]
   const jobIds    = [...new Set(printEvts.map(a => a.snapshot!.printJobId!))]
-  const spoolById = new Map<string, { brand: string; colorName: string; colorHex: string; material: string; stockLocation?: string }>()
+  const spoolById: SpoolCache = new Map(spoolCache ?? [])
   const jobById   = new Map<string, PrintJobResponse>()
 
   await Promise.all([
-    ...spoolIds.map(async id => {
+    ...spoolIds.filter(id => !spoolById.has(id)).map(async id => {
       try {
         const s = await spoolsApi.getById(id)
         spoolById.set(id, { brand: s.brand, colorName: s.colorName, colorHex: s.colorHex, material: s.material, stockLocation: s.stockLocation ?? undefined })
@@ -146,16 +149,20 @@ function buildActionLines(a: Activity, t: (k: string) => string): { line1: Actio
   }
 }
 
-export default function RecentActivity({ limit = 5 }: { limit?: number }) {
+export default function RecentActivity({ limit = 5, spools }: { limit?: number; spools?: SpoolResponse[] }) {
   const { t } = useTranslation()
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const { refreshKey } = useConnection()
 
+  const spoolCache = spools
+    ? new Map(spools.map(s => [s.id, { brand: s.brand, colorName: s.colorName, colorHex: s.colorHex, material: s.material, stockLocation: s.stockLocation ?? undefined }]))
+    : undefined
+
   useEffect(() => {
     setLoading(true) // eslint-disable-line react-hooks/set-state-in-effect
     activitiesApi.getRecent(20)
-      .then(r => enrichActivities(r.activities))
+      .then(r => enrichActivities(r.activities, spoolCache))
       .then(enriched => { setActivities(enriched); setLoading(false) })
       .catch(() => {})
   }, [refreshKey])
@@ -163,7 +170,7 @@ export default function RecentActivity({ limit = 5 }: { limit?: number }) {
   useEffect(() => {
     const timer = setInterval(() => {
       activitiesApi.getRecent(20)
-        .then(r => enrichActivities(r.activities))
+        .then(r => enrichActivities(r.activities, spoolCache))
         .then(enriched => setActivities(enriched))
         .catch(() => {})
     }, 10_000)

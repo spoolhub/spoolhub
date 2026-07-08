@@ -237,7 +237,7 @@ export default function Dashboard() {
               <h2>{t('home.recentActivity')}</h2>
               <Link to="/activity" className={styles.viewAll}>{t('common.viewAll')}</Link>
             </div>
-            <RecentActivity limit={activityLimit} />
+            <RecentActivity limit={activityLimit} spools={spools} />
           </section>
         </div>
 
