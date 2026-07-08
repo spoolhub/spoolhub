@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
+import PrinterIcon from '@/components/icons/PrinterIcon'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './SpoolCard.module.css'
 
@@ -85,10 +86,7 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
       <div className={styles.meta}>
         {spool.printerName ? (
           <span className={styles.metaItem}>
-            <svg width="12" height="12" className={styles.iconFlexShrink} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9V3h12v6"/><path d="M6 9H2v10h4"/><path d="M18 9h4v10h-4"/>
-              <path d="M6 14h12v5H6z"/><path d="M9 17h6"/><circle cx="12" cy="5" r="1"/>
-            </svg>
+            <PrinterIcon className={styles.printerIcon} />
             <span className={styles.locationText}>{spool.printerName}{spool.amsSlot ? ` • Slot ${spool.amsSlot}` : ''}</span>
           </span>
         ) : spool.stockLocation ? (

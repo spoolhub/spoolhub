@@ -148,5 +148,6 @@
 }
 .metaItem { display: flex; align-items: center; gap: 0.3rem; }
 
-.locationText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 5rem; }
+.locationText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iconFlexShrink { flex-shrink: 0; }
+.printerIcon { width: 14px; height: 14px; flex-shrink: 0; }
