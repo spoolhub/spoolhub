@@ -98,13 +98,14 @@
 }
 
 .badgeActive {
-  font-size: 0.7rem;
+  font-size: 10.5px;
   font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-lg);
-  background: var(--accent);
-  color: #fff;
-  letter-spacing: 0.025em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: oklch(0.6 0.13 150 / 0.15);
+  color: oklch(0.5 0.12 150);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -112,14 +113,17 @@
 .materialBadge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 0.2rem 0.75rem;
-  border-radius: var(--radius-lg);
-  background: var(--success-bg);
-  color: var(--success-text);
-  border: 1px solid var(--success-border);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
+
+:global([data-theme="dark"]) .materialBadge { color: var(--accent); }
 
 .weightRow {
   display: flex;
