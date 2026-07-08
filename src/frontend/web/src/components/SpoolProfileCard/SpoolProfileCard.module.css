@@ -10,7 +10,7 @@
   cursor: pointer;
 }
 .card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--success-border);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }

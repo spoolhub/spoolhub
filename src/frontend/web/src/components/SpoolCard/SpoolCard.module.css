@@ -4,12 +4,12 @@
   background: var(--surface);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 1px solid var(--success-border);
+  border: 1px solid var(--border);
   transition: border-color var(--t-normal), box-shadow var(--t-normal), transform var(--t-normal);
   text-decoration: none;
 }
 .card:hover {
-  border-color: var(--accent);
+  border-color: var(--success-border);
   box-shadow: var(--shadow-md);
   transform: translateY(-0.125rem);
 }
