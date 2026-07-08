@@ -4,7 +4,6 @@ import styles from './Dashboard.module.css'
 import { useTranslation } from 'react-i18next'
 import { useConnection } from '@/context/ConnectionContext'
 import { spoolsApi } from '@/api/spools'
-import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
 import { settingsApi } from '@/api/settings'
 import { useNfcHub } from '@/hooks/useNfcHub'
@@ -25,8 +24,6 @@ export default function Dashboard() {
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [detailPrinterId, setDetailPrinterId] = useState<string | null>(null)
-  const [, setFilamentLibraryCount] = useState(0)
-  const [, setFilamentBrands] = useState(0)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [statuses, setStatuses] = useState<Map<string, PrinterStatus>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -52,32 +49,32 @@ export default function Dashboard() {
     let cancelled = false
     const gen = ++fetchGen.current
     void Promise.resolve().then(() => { if (!cancelled) setLoading(true) })
-    settingsApi.getApp().then(app => { if (!cancelled) setCurrency(app.currency) }).catch(() => {})
     Promise.all([
       spoolsApi.getAll(),
-      filamentsApi.getAll(),
       printersApi.getAll().catch(() => [] as PrinterResponse[]),
-    ]).then(async ([s, f, p]) => {
+      settingsApi.getApp().catch(() => ({ currency: 'USD' })),
+    ]).then(([s, p, app]) => {
       if (cancelled || gen !== fetchGen.current) return
       setSpools(s)
-      setFilamentLibraryCount(f.length)
-      setFilamentBrands(new Set(f.map(fil => fil.brand)).size)
+      setCurrency((app as { currency: string }).currency)
       printersRef.current = p
       setPrinters(p)
+      setLoading(false)
+      // fetch printer statuses after page is already shown
       const stMap = new Map<string, PrinterStatus>()
-      await Promise.allSettled(p.map(pr => printersApi.getStatus(pr.id).then(st => { if (st) stMap.set(pr.id, st) })))
-      if (!cancelled && gen !== fetchGen.current) setStatuses(stMap)
-    }).then(() => { if (!cancelled) setLoading(false) }).catch(() => {})
+      Promise.allSettled(p.map(pr => printersApi.getStatus(pr.id).then(st => { if (st) stMap.set(pr.id, st) }))).then(() => {
+        if (!cancelled) setStatuses(stMap)
+      }).catch(() => {})
+    }).catch(() => { if (!cancelled) setLoading(false) })
 
     printJobsApi.getWeeklyUsage(7).then(u => { if (!cancelled) setWeeklyUsedKg(u.totalGrams / 1000) }).catch(() => {})
 
     const dataTimer = setInterval(() => {
       if (cancelled) return
       const pollGen = ++fetchGen.current
-      Promise.all([spoolsApi.getAll(), filamentsApi.getAll()]).then(([s, f]) => {
+      spoolsApi.getAll().then(s => {
         if (cancelled || pollGen !== fetchGen.current) return
         setSpools(s)
-        setFilamentLibraryCount(f.length)
       }).catch(() => {})
     }, 60_000)
 
