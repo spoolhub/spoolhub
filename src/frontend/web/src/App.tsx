@@ -10,7 +10,6 @@ import SpoolsPage from '@/pages/SpoolsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import ScanPage from '@/pages/ScanPage'
 import BrandsPage from '@/pages/BrandsPage'
-import SpoolProfilePage from '@/pages/SpoolProfilePage'
 import AddSpoolProfilePage from '@/pages/AddSpoolProfilePage'
 import AddSpoolPage from '@/pages/AddSpoolPage'
 import Dashboard from '@/pages/Dashboard'
@@ -72,7 +71,6 @@ function AppShell() {
               <Route path="/brands" element={<BrandsPage />} />
               <Route path="/brands/:brand" element={<BrandsPage />} />
               <Route path="/brands/:brand/:colorName" element={<BrandsPage />} />
-              <Route path="/spool-profiles" element={<SpoolProfilePage />} />
               <Route path="/spool-profiles/new" element={<AddSpoolProfilePage />} />
               <Route path="/print-history" element={<PrintHistoryPage />} />
               <Route path="/activity" element={<ActivityPage />} />
