@@ -51,10 +51,10 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
               <p className={styles.colorName}>{spool.colorName}</p>
               <p className={styles.brand}>{spool.brand}</p>
             </div>
-            {spool.isActive && <span className={styles.badgeActive}>{t('spools.active')}</span>}
-          </div>
-          <div className={styles.tags}>
-            <span className={styles.materialBadge}>{spool.material}</span>
+            <div className={styles.rightCol}>
+              {spool.isActive && <span className={styles.badgeActive}>{t('spools.active')}</span>}
+              <span className={styles.materialBadge}>{spool.material}</span>
+            </div>
           </div>
         </div>
       </div>
