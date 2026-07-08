@@ -173,14 +173,6 @@ export default function AddSpoolProfilePage() {
     const f = selectedFilament!
     return (
       <>
-        <div className={styles.cardHeader}>
-          <button className={styles.closeBtn} onClick={() => setStep('pick')} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
-          <div className={styles.cardHeaderTitle}>
-            <h2>Add spool profile</h2>
-            <div className={styles.sub}>Set the defaults for this filament profile</div>
-          </div>
-          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-        </div>
         <div className={styles.cardBody}>
           <div className={styles.detailPanel}>
             <div className={styles.selectedCard}>
