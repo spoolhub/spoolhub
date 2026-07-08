@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import SpoolCard from '@/components/SpoolCard'
@@ -45,10 +45,11 @@ const locationLabel = (s: SpoolResponse): string => {
 
 export default function SpoolsPage() {
   const { t } = useTranslation()
+  const location = useLocation()
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeFilter, setActiveFilter] = useState<string>((location.state as { filter?: string } | null)?.filter ?? 'all')
   const [sortBy, setSortBy] = useState('recent')
   const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem('spoolhub-view') as 'grid' | 'list') || 'grid')
   const [selected, setSelected] = useState<SpoolResponse | null>(null)

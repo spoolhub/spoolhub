@@ -58,7 +58,7 @@ export default function AddSpoolProfilePage() {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
   }, [])
 
-  const close = useCallback(() => navigate('/spools'), [navigate])
+  const close = useCallback(() => navigate('/spools', { state: { filter: 'profile' } }), [navigate])
 
   const filteredBrands = [...new Set(filaments.map(f => f.brand))]
   const filteredMats = brand ? [...new Set(filaments.filter(f => f.brand === brand).map(f => f.material))] : []
@@ -100,7 +100,7 @@ export default function AddSpoolProfilePage() {
         bedMax: bedMax ? parseInt(bedMax) : null,
         price: null,
       })
-      navigate('/spools')
+      navigate('/spools', { state: { filter: 'profile' } })
     } catch {
       setSaving(false)
     }
