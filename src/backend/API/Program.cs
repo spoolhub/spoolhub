@@ -267,6 +267,7 @@ static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicatio
                         ["AddAppSettings"]            = "AppSettings",
                         ["AddLocationsTable"]         = "Locations",
                         ["AddSpoolProfile"]           = "SpoolProfiles",
+                        ["AddUsersTable"]             = "Users",
                     };
 
                     var seeded = 0;
