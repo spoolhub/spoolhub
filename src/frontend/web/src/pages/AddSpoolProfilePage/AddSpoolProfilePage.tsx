@@ -5,6 +5,7 @@ import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
 import styles from '@/pages/AddSpoolPage/AddSpoolPage.module.css'
+import localStyles from './AddSpoolProfilePage.module.css'
 
 const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
 const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
@@ -264,7 +265,7 @@ export default function AddSpoolProfilePage() {
             <div className={styles.detailActions}>
               <button className={`${styles.btn} ${styles.back}`} onClick={() => setStep('pick')}
                 dangerouslySetInnerHTML={{ __html: BACK_SVG + ' Back' }} />
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSave} disabled={saving}>
+              <button className={`${styles.btn} ${styles.btnPrimary} ${localStyles.saveBtn}`} onClick={handleSave} disabled={saving}>
                 {saving
                   ? <span className={styles.btnSpinner} />
                   : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}
