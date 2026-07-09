@@ -74,6 +74,8 @@ public class PrinterController(
     public async Task<IActionResult> RegisterCloud([FromBody] CloudLoginRequest request, CancellationToken ct)
     {
         var result = await cloudRegistrationService.LoginAsync(request, ct);
+        if (result.ErrorMessage is not null)
+            return BadRequest(new ProblemDetails { Status = 400, Title = "Bad Request", Detail = result.ErrorMessage });
         return Ok(result);
     }
 

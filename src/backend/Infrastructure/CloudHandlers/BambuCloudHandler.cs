@@ -40,12 +40,13 @@ public class BambuCloudHandler(
         using var doc = JsonDocument.Parse(raw);
         var root = doc.RootElement;
 
-        // Bambu reports failures (wrong credentials, risk control, region mismatch) as JSON with an "error" field
+        // Bambu reports failures (wrong credentials, risk control, region mismatch) as JSON with an "error" field.
+        // These are expected user errors — return them as a result instead of throwing.
         if (root.TryGetProperty("error", out var err) && err.ValueKind == JsonValueKind.String
             && !string.IsNullOrEmpty(err.GetString()))
         {
             logger.LogWarning("Bambu login error ({Status}): {Body}", response.StatusCode, raw);
-            throw new BadRequestException($"Bambu login failed: {err.GetString()}");
+            return new CloudLoginResult(RequiresVerification: false, ErrorMessage: err.GetString());
         }
 
         var loginType = root.TryGetProperty("loginType", out var lt) ? lt.GetString() : null;
