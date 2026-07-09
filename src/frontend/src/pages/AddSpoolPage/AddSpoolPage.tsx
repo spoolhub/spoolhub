@@ -698,37 +698,59 @@ export default function AddSpoolPage() {
             {state.place === 'stock' && (
               <div className={styles.field}>
                 <label>Storage location</label>
-                {showAddLocation ? (
-                  <input
-                    type="text"
-                    placeholder="Enter new location…"
-                    value={newLocation}
-                    disabled={savingLocation}
-                    onChange={e => setNewLocation(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') { e.preventDefault(); void handleAddLocation() }
-                      if (e.key === 'Escape') { setShowAddLocation(false); setNewLocation('') }
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <select
-                    value={state.loc}
-                    onChange={e => {
-                      if (e.target.value === '__add_new') {
-                        setShowAddLocation(true)
-                        setNewLocation('')
-                        return
-                      }
-                      setState(s => ({ ...s, loc: e.target.value }))
-                    }}
+                <select
+                  value={state.loc}
+                  onChange={e => {
+                    if (e.target.value === '__add_new') {
+                      setShowAddLocation(true)
+                      setNewLocation('')
+                      return
+                    }
+                    setShowAddLocation(false)
+                    setNewLocation('')
+                    setState(s => ({ ...s, loc: e.target.value }))
+                  }}
+                >
+                  <option value="">Select location…</option>
+                  {locationNames.map(l => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                  <option value="__add_new">+ Add new location</option>
+                </select>
+                {showAddLocation && (
+                  <div className={styles.addWrap}>
+                    <input
+                      type="text"
+                      placeholder="Enter new location..."
+                      value={newLocation}
+                      disabled={savingLocation}
+                      onChange={e => setNewLocation(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); void handleAddLocation() }
+                        if (e.key === 'Escape') { setShowAddLocation(false); setNewLocation('') }
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className={styles.btnCancel}
+                      aria-label="Cancel"
+                      disabled={savingLocation}
+                      onClick={() => { setShowAddLocation(false); setNewLocation('') }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {showAddLocation && (
+                  <button
+                    type="button"
+                    className={styles.btnAdd}
+                    disabled={!newLocation.trim() || savingLocation}
+                    onClick={() => void handleAddLocation()}
                   >
-                    <option value="">Select location…</option>
-                    {locationNames.map(l => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                    <option value="__add_new">+ Add new location</option>
-                  </select>
+                    {savingLocation ? 'Adding…' : `Add "${newLocation.trim()}"`}
+                  </button>
                 )}
               </div>
             )}

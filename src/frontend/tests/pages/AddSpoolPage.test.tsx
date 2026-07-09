@@ -293,9 +293,9 @@ describe('AddSpoolPage — profiles and catalog', () => {
     renderPage('/spools/add/manual')
     await selectFilament()
     fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
-    const input = screen.getByPlaceholderText('Enter new location…')
+    const input = screen.getByPlaceholderText('Enter new location...')
     fireEvent.change(input, { target: { value: 'Server Room' } })
-    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Add "Server Room"' }))
     await waitFor(() => expect(locationsApi.add).toHaveBeenCalledWith({ name: 'Server Room' }))
     expect(screen.getByDisplayValue('Server Room')).toBeInTheDocument()
   })
@@ -314,13 +314,23 @@ describe('AddSpoolPage — storage location', () => {
     expect(screen.queryByRole('option', { name: 'Drybox 1' })).not.toBeInTheDocument()
   })
 
-  it('swaps the dropdown for a text field when add new location is selected', async () => {
+  it('shows inline add controls under the dropdown like other location forms', async () => {
     renderPage('/spools/add/manual')
     await selectFilament()
     fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
-    expect(screen.getByPlaceholderText('Enter new location…')).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: '+ Add new location' })).not.toBeInTheDocument()
-    expect(screen.queryByDisplayValue('Select location…')).not.toBeInTheDocument()
+    expect(screen.getByDisplayValue('Shelf A1')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter new location...')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add ""' })).toBeDisabled()
+  })
+
+  it('hides the add controls when cancel is clicked', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByDisplayValue('Shelf A1')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Enter new location...')).not.toBeInTheDocument()
   })
 })
 
