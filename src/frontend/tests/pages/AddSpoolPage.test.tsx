@@ -283,6 +283,21 @@ describe('AddSpoolPage — profiles and catalog', () => {
     expect(screen.getByDisplayValue('190')).toBeInTheDocument()
     expect(screen.getByDisplayValue('230')).toBeInTheDocument()
   })
+
+  it('can add a new storage location from the details form', async () => {
+    vi.mocked(locationsApi.add).mockResolvedValue({
+      ...MOCK_LOCATION,
+      id: 'loc-2',
+      name: 'Server Room',
+    })
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    fireEvent.change(screen.getByPlaceholderText('Enter new location…'), { target: { value: 'Server Room' } })
+    fireEvent.click(screen.getByRole('button', { name: /Add "Server Room"/ }))
+    await waitFor(() => expect(locationsApi.add).toHaveBeenCalledWith({ name: 'Server Room' }))
+    expect(screen.getByDisplayValue('Server Room')).toBeInTheDocument()
+  })
 })
 
 describe('AddSpoolPage — form', () => {
