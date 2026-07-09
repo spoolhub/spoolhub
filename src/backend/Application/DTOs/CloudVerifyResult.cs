@@ -1,8 +1,6 @@
 namespace Application.DTOs;
 
-public record CloudLoginResult(
-    bool RequiresVerification,
-    string? Message = null,
+public record CloudVerifyResult(
     IReadOnlyList<CloudDiscoveredPrinterResponse>? AvailablePrinters = null,
     string? ErrorMessage = null
 );

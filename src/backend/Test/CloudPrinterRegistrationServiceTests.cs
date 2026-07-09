@@ -52,8 +52,8 @@ public class CloudPrinterRegistrationServiceTests
     {
         var pending = new CloudPendingSession("Bambu Lab", "user@test.com", "pass123", "verifyCode");
         _sessionStore.GetPending().Returns(pending);
-        var printers = new List<CloudDiscoveredPrinterResponse>().AsReadOnly() as IReadOnlyList<CloudDiscoveredPrinterResponse>;
-        _handler.VerifyAsync("123456", Arg.Any<CancellationToken>()).Returns(printers);
+        _handler.VerifyAsync("123456", Arg.Any<CancellationToken>())
+            .Returns(new CloudVerifyResult(AvailablePrinters: []));
 
         await _sut.VerifyAsync(new CloudVerifyRequest("123456"), CancellationToken.None);
 

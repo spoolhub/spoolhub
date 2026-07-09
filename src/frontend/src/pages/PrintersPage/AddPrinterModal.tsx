@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { isAxiosError } from 'axios'
 import { printersApi } from '@/api/printers'
 import type { PrinterResponse, LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
 import styles from './AddPrinterModal.module.css'
@@ -218,12 +219,22 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
   }
 
   /* ---- Cloud login ---- */
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError(t('addPrinter.emailInvalid'))
+      return
+    }
+    if (password.length < 8) {
+      setError(t('addPrinter.passwordTooShort'))
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
-      const result = await printersApi.registerCloud({ brand: 'Bambu Lab', email, password })
+      const result = await printersApi.registerCloud({ brand: 'Bambu Lab', email: email.trim(), password })
       if (result.requiresVerification) {
         setCountdown(300)
         setOtpDigits(Array(6).fill(''))
@@ -234,8 +245,9 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
       } else {
         setStep('choose')
       }
-    } catch {
-      setError(t('addPrinter.signInError'))
+    } catch (err) {
+      const detail = isAxiosError(err) ? err.response?.data?.detail : null
+      setError(typeof detail === 'string' && detail ? detail : t('addPrinter.signInError'))
     } finally {
       setSubmitting(false)
     }
@@ -281,18 +293,24 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
 
   async function handleVerify(e: React.SyntheticEvent) {
     e.preventDefault()
+    const code = otpDigits.join('')
+    if (!/^\d{6}$/.test(code)) {
+      setError(t('addPrinter.codeIncomplete'))
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
-      const printers = await printersApi.verifyCloud({ code: otpDigits.join('') })
+      const printers = await printersApi.verifyCloud({ code })
       if (printers.length > 0) {
         setCloudPrinters(printers)
         setStep('cloud_select')
       } else {
         setStep('choose')
       }
-    } catch {
-      setError(t('addPrinter.verifyError'))
+    } catch (err) {
+      const detail = isAxiosError(err) ? err.response?.data?.detail : null
+      setError(typeof detail === 'string' && detail ? detail : t('addPrinter.verifyError'))
     } finally {
       setSubmitting(false)
     }
@@ -493,6 +511,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
               {showPassword ? EYE_OFF_ICON : EYE_ICON}
             </button>
           </div>
+          {error && <div className={styles.fieldError}>{error}</div>}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className={`${styles.btn} ${styles.back}`} onClick={goBack}>Back</button>
@@ -500,7 +519,6 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             {submitting ? t('addPrinter.signingIn') : t('addPrinter.signIn')}
           </button>
         </div>
-        {error && <div className={styles.error} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }
@@ -539,6 +557,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             )}
           </div>
         </div>
+        {error && <div className={styles.fieldError} style={{ marginTop: 12, textAlign: 'center' }}>{error}</div>}
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className={`${styles.btn} ${styles.back}`} onClick={goBack}>Back</button>
           <button
@@ -550,7 +569,6 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             {submitting ? t('addPrinter.verifying') : t('addPrinter.verifyAndConnect')}
           </button>
         </div>
-        {error && <div className={styles.error} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }

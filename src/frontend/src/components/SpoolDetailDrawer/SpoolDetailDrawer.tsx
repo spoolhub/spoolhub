@@ -4,7 +4,8 @@ import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
-import type { SpoolResponse } from '@/types/spool'
+import { spoolsApi } from '@/api/spools'
+import type { SpoolResponse, UpdateSpoolRequest } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 
 type EditForm = Partial<SpoolResponse> & { isLoadedInPrinter?: boolean }
@@ -59,7 +60,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
     const s = spool
     if (!editForm) return
     try {
-      const body: Record<string, unknown> = {}
+      const body: UpdateSpoolRequest = {}
       if (editForm.currentWeightG != null) body.currentWeightG = Number(editForm.currentWeightG)
       if (editForm.initialWeightG != null) body.initialWeightG = Number(editForm.initialWeightG)
       if (editForm.spoolWeightG != null) body.spoolWeightG = Number(editForm.spoolWeightG)
@@ -67,11 +68,12 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       if (editForm.price != null) body.price = Number(editForm.price)
       if (editForm.density != null) body.density = Number(editForm.density)
       if (!editForm.isLoadedInPrinter) body.stockLocation = editForm.stockLocation ?? ''
-      await fetch(`/api/spools/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const assignRes = editForm.isLoadedInPrinter
-        ? await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: editForm.printerId, amsSlot: editForm.amsSlot ?? 1 }) })
-        : await fetch(`/api/spools/${s.id}/assign-printer`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printerId: null, amsSlot: null }) })
-      const updated: SpoolResponse = await assignRes.json()
+      await spoolsApi.update(s.id, body)
+      // Non-AMS printers hold the spool as extraSpool (no slot); only AMS printers take a tray slot
+      const targetPrinter = printers.find(p => p.id === editForm.printerId)
+      const updated = editForm.isLoadedInPrinter
+        ? await spoolsApi.assignPrinter(s.id, { printerId: editForm.printerId ?? null, amsSlot: targetPrinter?.hasAms ? (editForm.amsSlot ?? 1) : null })
+        : await spoolsApi.assignPrinter(s.id, { printerId: null, amsSlot: null })
       onUpdated?.(updated)
       setEditForm({})
       setEditMode(false)
@@ -81,7 +83,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const handleDelete = async () => {
     const s = spool
     try {
-      await fetch(`/api/spools/${s.id}`, { method: 'DELETE' })
+      await spoolsApi.delete(s.id)
       onDeleted?.(s.id, s.isActive)
       onClose()
     } catch { /* ignore */ }

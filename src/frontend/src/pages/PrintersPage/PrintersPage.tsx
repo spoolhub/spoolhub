@@ -127,6 +127,12 @@ export default function PrintersPage() {
 
   const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
     setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
+    setSelectedSpool(prev => prev && prev.id === updated.id ? updated : prev)
+    // Assigning/unassigning a printer changes tray data on the printer side too
+    printersApi.getAll().then(p => {
+      printersRef.current = p
+      setPrinters(p)
+    }).catch(() => {})
   }, [])
 
   const handleSpoolDeleted = useCallback((id: string, wasActive: boolean) => {

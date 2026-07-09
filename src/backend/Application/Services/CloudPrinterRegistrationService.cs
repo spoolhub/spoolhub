@@ -14,7 +14,7 @@ public class CloudPrinterRegistrationService(
         return handler.LoginAsync(request.Email, request.Password, ct);
     }
 
-    public Task<IReadOnlyList<CloudDiscoveredPrinterResponse>> VerifyAsync(CloudVerifyRequest request, CancellationToken ct)
+    public Task<CloudVerifyResult> VerifyAsync(CloudVerifyRequest request, CancellationToken ct)
     {
         var pending = sessionStore.GetPending()
             ?? throw new BadRequestException("No pending 2FA verification — call register/cloud first");
