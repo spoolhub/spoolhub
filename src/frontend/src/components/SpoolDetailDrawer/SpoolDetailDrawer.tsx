@@ -69,8 +69,10 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       if (editForm.density != null) body.density = Number(editForm.density)
       if (!editForm.isLoadedInPrinter) body.stockLocation = editForm.stockLocation ?? ''
       await spoolsApi.update(s.id, body)
+      // Non-AMS printers hold the spool as extraSpool (no slot); only AMS printers take a tray slot
+      const targetPrinter = printers.find(p => p.id === editForm.printerId)
       const updated = editForm.isLoadedInPrinter
-        ? await spoolsApi.assignPrinter(s.id, { printerId: editForm.printerId ?? null, amsSlot: editForm.amsSlot ?? 1 })
+        ? await spoolsApi.assignPrinter(s.id, { printerId: editForm.printerId ?? null, amsSlot: targetPrinter?.hasAms ? (editForm.amsSlot ?? 1) : null })
         : await spoolsApi.assignPrinter(s.id, { printerId: null, amsSlot: null })
       onUpdated?.(updated)
       setEditForm({})
