@@ -65,11 +65,13 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
       .catch(() => {})
   }, [spool.id])
 
-  useEffect(() => {
-    if (spool.stockLocation && !dbLocations.includes(spool.stockLocation)) {
-      setCustomLocations(prev => prev.includes(spool.stockLocation!) ? prev : [...prev, spool.stockLocation!])
+  const extraLocationOptions = useMemo(() => {
+    const extras = customLocations.filter(l => !dbLocations.includes(l))
+    if (spool.stockLocation && !dbLocations.includes(spool.stockLocation) && !extras.includes(spool.stockLocation)) {
+      return [...extras, spool.stockLocation]
     }
-  }, [spool.stockLocation, dbLocations])
+    return extras
+  }, [dbLocations, customLocations, spool.stockLocation])
 
   const selectedPrinter = useMemo(
     () => printers.find(p => p.id === printerId),
@@ -356,7 +358,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                   >
                     <option value="">{t('scan.selectLocation')}</option>
                     {dbLocations.map(l => <option key={l} value={l}>{l}</option>)}
-                    {customLocations.filter(l => !dbLocations.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
+                    {extraLocationOptions.map(l => <option key={l} value={l}>{l}</option>)}
                     <option value="__add_new">{t('scan.addNewLocation')}</option>
                   </select>
                   {showAddLocation && (

@@ -300,6 +300,28 @@ describe('AddSpoolPage — profiles and catalog', () => {
   })
 })
 
+describe('AddSpoolPage — storage location', () => {
+  beforeEach(mockDefaults)
+
+  it('lists database locations and a add-new option in the dropdown', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    const dropdown = screen.getByDisplayValue('Shelf A1')
+    expect(dropdown).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Shelf A1' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '+ Add new location' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Drybox 1' })).not.toBeInTheDocument()
+  })
+
+  it('opens the inline add form when add new location is selected', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    expect(screen.getByPlaceholderText('Enter new location…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add "location"/ })).toBeDisabled()
+  })
+})
+
 describe('AddSpoolPage — form', () => {
   beforeEach(mockDefaults)
 
