@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
 import { spoolsApi } from '@/api/spools'
+import { printJobsApi } from '@/api/printJobs'
 import type { SpoolResponse, UpdateSpoolRequest } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
+import type { PrintJobResponse } from '@/types/printJob'
 
 type EditForm = Partial<SpoolResponse> & { isLoadedInPrinter?: boolean }
 import styles from './SpoolDetailDrawer.module.css'
@@ -47,6 +49,24 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const [newLocation, setNewLocation] = useState('')
   const [customLocations, setCustomLocations] = useState<string[]>([])
   const [pendingDelete, setPendingDelete] = useState(false)
+  const [printJobs, setPrintJobs] = useState<PrintJobResponse[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    printJobsApi.getBySpool(spool.id)
+      .then(jobs => {
+        if (!cancelled) {
+          setPrintJobs(
+            jobs
+              .filter(j => j.status === 'finished' && j.gramsUsed > 0)
+              .sort((a, b) => new Date(b.finishedAt ?? b.startedAt).getTime() - new Date(a.finishedAt ?? a.startedAt).getTime())
+              .slice(0, 5)
+          )
+        }
+      })
+      .catch(() => { if (!cancelled) setPrintJobs([]) })
+    return () => { cancelled = true }
+  }, [spool.id])
 
   const startEdit = (s: SpoolResponse) => {
     setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: s.amsSlot ?? null })
@@ -114,8 +134,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
             </button>
           </div>
           <div className={styles.dwhero}>
-            <div className={styles.dwheroColorBg} style={{ backgroundColor: s.colorHex }} />
-            <div className={styles.dwheroColorGrad} />
             <div className={styles.dwdisc}><SpoolIcon color={s.colorHex} size={96} /></div>
             <div className={styles.dwid}>
               <div className={styles.dwtext}>
@@ -209,11 +227,41 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>{s.nfcTagUid ?? '—'}</span></div>
         </div>
         <div className={styles.dwsec}>
-          <h3>Recent activity</h3>
+          <h3>{t('home.recentActivity')}</h3>
           <div className={styles.dwts}>
-            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>{s.isActive ? 'Loaded into printer' : 'Stored in stock'}</div><div className={styles.b}>{formatRelativeTime(s.lastScannedAt)}</div></div></div>
-            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>Used {Math.max(0, s.initialWeightG - s.currentWeightG)} g · Filament tracked</div><div className={styles.b}>Last logged</div></div></div>
-            <div className={styles.ev}><div className={styles.dot}></div><div className={styles.et}><div className={styles.a}>Added to inventory</div><div className={styles.b}>{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div></div></div>
+            {s.printerName && (
+              <div className={styles.ev}>
+                <div className={styles.dot} />
+                <div className={styles.et}>
+                  <div className={styles.a}>
+                    {t('spoolDetail.loadedOn', { printer: s.printerName })}
+                    {s.amsSlot ? ` · ${t('spoolDetail.slot', { slot: s.amsSlot })}` : ''}
+                  </div>
+                  <div className={styles.b}>{formatRelativeTime(s.lastScannedAt)}</div>
+                </div>
+              </div>
+            )}
+            {printJobs.map(job => (
+              <div key={job.id} className={styles.ev}>
+                <div className={styles.dot} />
+                <div className={styles.et}>
+                  <div className={styles.a}>
+                    {t('spoolDetail.usedOnPrinter', {
+                      grams: Math.round(job.gramsUsed),
+                      printer: job.printerName ?? t('spoolDetail.unknownPrinter'),
+                    })}
+                  </div>
+                  <div className={styles.b}>{formatRelativeTime(job.finishedAt ?? job.startedAt)}</div>
+                </div>
+              </div>
+            ))}
+            <div className={styles.ev}>
+              <div className={styles.dot} />
+              <div className={styles.et}>
+                <div className={styles.a}>{t('spoolDetail.addedToInventory')}</div>
+                <div className={styles.b}>{new Date(s.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              </div>
+            </div>
           </div>
         </div>
         <div className={styles.dwact}>
@@ -255,8 +303,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           </button>
         </div>
         <div className={styles.dwhero}>
-          <div className={styles.dwheroColorBg} style={{ backgroundColor: f.colorHex ?? '#888' }} />
-          <div className={styles.dwheroColorGrad} />
           <div className={styles.dwdisc}><SpoolIcon color={f.colorHex ?? '#888'} size={80} /></div>
           <div className={styles.dwid}>
             <div className={styles.dwtext}>

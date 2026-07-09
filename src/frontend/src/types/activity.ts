@@ -9,6 +9,7 @@ export interface ActivitySnapshot {
   printJobId?: string
   printFileName?: string
   gramsUsed?: number
+  printerName?: string
 }
 
 export interface Activity {

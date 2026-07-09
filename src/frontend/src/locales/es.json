@@ -198,7 +198,12 @@
     "statusFinished": "Finalizado",
     "statusFailed": "Fallido",
     "statusCancelled": "Cancelado",
-    "statusRunning": "En curso"
+    "statusRunning": "En curso",
+    "loadedOn": "Cargado en {{printer}}",
+    "slot": "Ranura {{slot}}",
+    "usedOnPrinter": "Usados {{grams}}g en {{printer}}",
+    "unknownPrinter": "Impresora desconocida",
+    "addedToInventory": "Añadido al inventario"
   },
   "spoolForm": {
     "sectionSpoolStats": "Estadísticas del carrete",
@@ -840,7 +845,8 @@
     "printing": "Imprimiendo"
   },
   "recentActivity": {
-    "noActivity": "No hay actividad registrada aún"
+    "noActivity": "No hay actividad registrada aún",
+    "onPrinter": "en"
   },
   "metricCard": {
     "thisMonth": "este mes"

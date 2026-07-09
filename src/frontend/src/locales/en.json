@@ -200,7 +200,12 @@
     "statusFinished": "Finished",
     "statusFailed": "Failed",
     "statusCancelled": "Cancelled",
-    "statusRunning": "Running"
+    "statusRunning": "Running",
+    "loadedOn": "Loaded on {{printer}}",
+    "slot": "Slot {{slot}}",
+    "usedOnPrinter": "Used {{grams}}g on {{printer}}",
+    "unknownPrinter": "Unknown printer",
+    "addedToInventory": "Added to inventory"
   },
   "spoolForm": {
     "sectionSpoolStats": "Spool Stats",
@@ -859,7 +864,8 @@
     "printing": "Printing"
   },
   "recentActivity": {
-    "noActivity": "No activity recorded yet"
+    "noActivity": "No activity recorded yet",
+    "onPrinter": "on"
   },
   "metricCard": {
     "thisMonth": "this month"

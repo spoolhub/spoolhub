@@ -198,7 +198,12 @@
     "statusFinished": "Klar",
     "statusFailed": "Misslyckad",
     "statusCancelled": "Avbruten",
-    "statusRunning": "Pågår"
+    "statusRunning": "Pågår",
+    "loadedOn": "Laddad i {{printer}}",
+    "slot": "Fack {{slot}}",
+    "usedOnPrinter": "Använde {{grams}}g på {{printer}}",
+    "unknownPrinter": "Okänd skrivare",
+    "addedToInventory": "Tillagd i inventariet"
   },
   "spoolForm": {
     "sectionSpoolStats": "Spolstatistik",
@@ -840,7 +845,8 @@
     "printing": "Skriver ut"
   },
   "recentActivity": {
-    "noActivity": "Ingen aktivitet registrerad ännu"
+    "noActivity": "Ingen aktivitet registrerad ännu",
+    "onPrinter": "på"
   },
   "metricCard": {
     "thisMonth": "denna månad"
