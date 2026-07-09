@@ -314,13 +314,13 @@ describe('AddSpoolPage — storage location', () => {
     expect(screen.queryByRole('option', { name: 'Drybox 1' })).not.toBeInTheDocument()
   })
 
-  it('shows a text field under the dropdown when add new location is selected', async () => {
+  it('swaps the dropdown for a text field when add new location is selected', async () => {
     renderPage('/spools/add/manual')
     await selectFilament()
     fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
-    expect(screen.getByDisplayValue('Select location…')).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: '+ Add new location' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Enter new location…')).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: '+ Add new location' })).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('Select location…')).not.toBeInTheDocument()
   })
 })
 

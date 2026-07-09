@@ -698,29 +698,9 @@ export default function AddSpoolPage() {
             {state.place === 'stock' && (
               <div className={styles.field}>
                 <label>Storage location</label>
-                <select
-                  value={showAddLocation ? '' : state.loc}
-                  onChange={e => {
-                    if (e.target.value === '__add_new') {
-                      setShowAddLocation(true)
-                      setNewLocation('')
-                      return
-                    }
-                    setShowAddLocation(false)
-                    setNewLocation('')
-                    setState(s => ({ ...s, loc: e.target.value }))
-                  }}
-                >
-                  <option value="">Select location…</option>
-                  {locationNames.map(l => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                  <option value="__add_new">+ Add new location</option>
-                </select>
-                {showAddLocation && (
+                {showAddLocation ? (
                   <input
                     type="text"
-                    className={styles.locInput}
                     placeholder="Enter new location…"
                     value={newLocation}
                     disabled={savingLocation}
@@ -731,6 +711,24 @@ export default function AddSpoolPage() {
                     }}
                     autoFocus
                   />
+                ) : (
+                  <select
+                    value={state.loc}
+                    onChange={e => {
+                      if (e.target.value === '__add_new') {
+                        setShowAddLocation(true)
+                        setNewLocation('')
+                        return
+                      }
+                      setState(s => ({ ...s, loc: e.target.value }))
+                    }}
+                  >
+                    <option value="">Select location…</option>
+                    {locationNames.map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                    <option value="__add_new">+ Add new location</option>
+                  </select>
                 )}
               </div>
             )}
