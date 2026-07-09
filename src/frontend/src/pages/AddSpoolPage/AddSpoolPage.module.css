@@ -210,6 +210,13 @@
 
 /* filament grid */
 .filaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.filaSkeleton {
+  height: 62px;
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  animation: asblink 1.4s var(--ease) infinite;
+}
 .filaCard {
   display: flex; align-items: center; gap: 11px;
   padding: 11px;
