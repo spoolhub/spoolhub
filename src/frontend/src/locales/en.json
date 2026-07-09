@@ -563,6 +563,8 @@
     "addPrinter": "Add Printer",
     "signInError": "Sign in failed. Check your email and password and try again.",
     "emailInvalid": "Enter a valid email address, e.g. you@example.com",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "codeIncomplete": "Enter the 6-digit verification code",
     "verifyError": "Invalid code. Check the email and try again.",
     "addError": "Failed to add printer. Check the details and try again.",
     "registerTitle": "Register LAN Printer",

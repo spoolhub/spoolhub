@@ -34,6 +34,7 @@ export default function AddPrinterPage() {
   const [email, setEmail]           = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [password, setPassword]     = useState('')
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [digits, setDigits]         = useState<string[]>(Array(6).fill(''))
   const digitRefs                   = useRef<(HTMLInputElement | null)[]>([])
 
@@ -178,11 +179,11 @@ export default function AddPrinterPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setEmailError(t('addPrinter.emailInvalid'))
-      return
-    }
-    setEmailError(null)
+    const emailValid = EMAIL_PATTERN.test(email.trim())
+    const passwordValid = password.length >= 8
+    setEmailError(emailValid ? null : t('addPrinter.emailInvalid'))
+    setPasswordError(passwordValid ? null : t('addPrinter.passwordTooShort'))
+    if (!emailValid || !passwordValid) return
     setSubmitting(true)
     setError(null)
     try {
@@ -207,18 +208,24 @@ export default function AddPrinterPage() {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault()
+    const code = digits.join('')
+    if (!/^\d{6}$/.test(code)) {
+      setError(t('addPrinter.codeIncomplete'))
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
-      const printers = await printersApi.verifyCloud({ code: digits.join('') })
+      const printers = await printersApi.verifyCloud({ code })
       if (printers.length > 0) {
         setCloudPrinters(printers)
         setStep('cloud_select')
       } else {
         navigate('/printers')
       }
-    } catch {
-      setError(t('addPrinter.verifyError'))
+    } catch (err) {
+      const detail = isAxiosError(err) ? err.response?.data?.detail : null
+      setError(typeof detail === 'string' && detail ? detail : t('addPrinter.verifyError'))
     } finally {
       setSubmitting(false)
     }
@@ -643,7 +650,8 @@ export default function AddPrinterPage() {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
                 <input
-                  type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'} value={password}
+                  onChange={e => { setPassword(e.target.value); setPasswordError(null) }}
                   placeholder="••••••••" required autoComplete="current-password"
                   className={`${styles.input} ${styles.inputWithIcon} ${styles.inputWithToggle}`}
                 />
@@ -661,6 +669,7 @@ export default function AddPrinterPage() {
                   )}
                 </button>
               </div>
+              {passwordError && <p className={styles.fieldError}>{passwordError}</p>}
             </div>
 
             {error && <p className={styles.errorBox}>{error}</p>}
