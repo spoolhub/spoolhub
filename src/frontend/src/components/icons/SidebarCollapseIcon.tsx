@@ -1,7 +1,8 @@
+import styles from './SidebarCollapseIcon.module.css'
 export default function SidebarCollapseIcon({ className }: { className?: string }) {
   return (
     <svg
-      className={className}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

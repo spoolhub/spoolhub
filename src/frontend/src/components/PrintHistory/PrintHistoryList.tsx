@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import type { PrintJobResponse } from '@/types/printJob'
-import styles from './PrintHistory.module.css'
+import styles from './PrintHistoryList.module.css'
 
 type Translate = (key: string, options?: { count: number }) => string
 

@@ -1,10 +1,12 @@
+import styles from './FilamentIcon.module.css'
 interface FilamentIconProps {
   color: string
   colors?: string[]
   size?: number
+  className?: string
 }
 
-export default function FilamentIcon({ color, colors, size = 68 }: FilamentIconProps) {
+export default function FilamentIcon({ color, colors, size = 68, className }: FilamentIconProps) {
   const multiColor = colors && colors.length >= 2
   const uid = (multiColor ? colors.join('') : color).replace(/[^a-zA-Z0-9]/g, '')
 
@@ -16,7 +18,7 @@ export default function FilamentIcon({ color, colors, size = 68 }: FilamentIconP
     : null
 
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg className={[styles.icon, className].filter(Boolean).join(' ')} width={size} height={size} viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
         {gradientStops && (
           <linearGradient id={`g-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
