@@ -1,10 +1,11 @@
+import styles from './PenIcon.module.css'
 interface Props { className?: string }
 
 export default function PenIcon({ className }: Props) {
   return (
     <svg
       width="14" height="14"
-      className={className}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       aria-hidden
       viewBox="0 0 24 24"
       fill="none"

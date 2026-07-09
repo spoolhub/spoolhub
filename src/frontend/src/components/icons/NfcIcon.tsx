@@ -1,9 +1,10 @@
+import styles from './NfcIcon.module.css'
 interface Props { className?: string }
 
 export default function NfcIcon({ className }: Props) {
   return (
     <svg
-      className={className}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       aria-hidden
       viewBox="0 0 24 24"
       fill="none"

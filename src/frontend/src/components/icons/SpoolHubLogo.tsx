@@ -1,3 +1,4 @@
+import styles from './SpoolHubLogo.module.css'
 import { useId } from 'react'
 
 interface SpoolHubLogoProps {
@@ -18,7 +19,7 @@ export default function SpoolHubLogo({ height = 40, className }: SpoolHubLogoPro
       viewBox="0 0 680 180"
       role="img"
       aria-label="SpoolHub"
-      className={`${className ? `${className} ` : ''}`}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>

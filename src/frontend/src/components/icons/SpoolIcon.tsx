@@ -1,3 +1,4 @@
+import styles from './SpoolIcon.module.css'
 import { useState, useEffect } from 'react'
 
 interface SpoolIconProps {
@@ -92,7 +93,7 @@ export default function SpoolIcon({ color = "#888", size = 52, showBackground = 
       width={className ? "100%" : Math.round((size * 102) / 144)}
       height={className ? "100%" : size}
       viewBox="56 28 102 144"
-      className={className}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       role="img"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"

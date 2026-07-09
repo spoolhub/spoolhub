@@ -1,9 +1,10 @@
+import styles from './ReloadIcon.module.css'
 interface Props { className?: string }
 
 export default function ReloadIcon({ className }: Props) {
   return (
     <svg
-      className={className}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
       aria-hidden
       viewBox="0 0 24 24"
       fill="none"
