@@ -5,6 +5,7 @@ import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
 import styles from '@/pages/AddSpoolPage/AddSpoolPage.module.css'
+import NotificationBell from '@/components/NotificationBell'
 import localStyles from './AddSpoolProfilePage.module.css'
 
 const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
@@ -127,7 +128,10 @@ export default function AddSpoolProfilePage() {
           <h2>Add spool profile</h2>
           <div className={styles.sub}>Pick the filament for this profile</div>
         </div>
-        <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        <div className={styles.headerActions}>
+          <NotificationBell variant="bordered" />
+          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        </div>
       </div>
       <div className={styles.cardBody}>
         <div className={styles.detailPanel}>
@@ -186,6 +190,13 @@ export default function AddSpoolProfilePage() {
     const f = selectedFilament!
     return (
       <>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardHeaderTitle} />
+          <div className={styles.headerActions}>
+            <NotificationBell variant="bordered" />
+            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+          </div>
+        </div>
         <div className={styles.cardBody}>
           <div className={styles.detailPanel}>
             <div className={styles.selectedCard}>

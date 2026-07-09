@@ -623,6 +623,11 @@
     "viewProfile": "Ver perfil",
     "logOut": "Cerrar sesión"
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Sin actividad reciente",
+    "viewAll": "Ver toda la actividad"
+  },
   "settings": {
     "pageTitle": "Configuración",
     "tabNotifications": "Notificaciones",

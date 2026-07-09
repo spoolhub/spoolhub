@@ -20,6 +20,7 @@ import { spoolsApi } from '@/api/spools'
 import SpoolIcon from '@/components/icons/SpoolIcon'
 import type { LocationResponse, LocationType } from '@/types/location'
 import type { SpoolResponse } from '@/types/spool'
+import NotificationBell from '@/components/NotificationBell'
 import styles from './LocationsPage.module.css'
 
 const ORDER_KEY = 'locations-order'
@@ -301,6 +302,7 @@ export default function LocationsPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
           <input placeholder="Search locations…" value={query} onChange={e => setQuery(e.target.value)} />
         </label>
+        <NotificationBell variant="bordered" />
         <button className={styles.primaryBtn} onClick={openAddDrawer}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
           {t('locations.addLocation')}

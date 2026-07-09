@@ -6,6 +6,7 @@ import { printersApi } from '@/api/printers'
 import { SpoolIcon } from '@/components/icons'
 import SpoolSearchBar from '@/components/SpoolSearchBar'
 import Pagination from '@/components/Pagination'
+import NotificationBell from '@/components/NotificationBell'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './SelectSpoolPage.module.css'
 
@@ -126,6 +127,7 @@ export default function SelectSpoolPage() {
         <h1 className={styles.title}>
           {amsSlot != null ? t('selectSpool.titleWithSlot', { slot: amsSlot }) : t('selectSpool.title')}
         </h1>
+        <NotificationBell variant="bordered" />
       </div>
 
       {error && <p className={styles.error}>{error}</p>}

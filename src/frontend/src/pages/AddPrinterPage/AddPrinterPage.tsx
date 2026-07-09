@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { isAxiosError } from 'axios'
 import { printersApi } from '@/api/printers'
 import type { LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
+import NotificationBell from '@/components/NotificationBell'
 import styles from './AddPrinterPage.module.css'
 
 const BAMBU_ICON = (
@@ -344,11 +345,14 @@ export default function AddPrinterPage() {
                 {backLabel()}
               </button>
             )}
-          <Link to="/printers" className={styles.closeBtn} aria-label={t('common.cancel')}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 6l12 12M18 6L6 18"/>
-            </svg>
-          </Link>
+          <div className={styles.navActions}>
+            <NotificationBell variant="bordered" />
+            <Link to="/printers" className={styles.closeBtn} aria-label={t('common.cancel')}>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 6l12 12M18 6L6 18"/>
+              </svg>
+            </Link>
+          </div>
         </div>
       )}
 

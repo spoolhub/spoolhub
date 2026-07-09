@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import AddSpoolPage from '@/pages/AddSpoolPage'
+import { withNotificationsProvider } from '../utils/withNotificationsProvider'
 
 vi.mock('@/api/spools', () => ({ spoolsApi: { add: vi.fn(), getAll: vi.fn(), assignPrinter: vi.fn() } }))
 vi.mock('@/api/spoolProfiles', () => ({ spoolProfilesApi: { getAll: vi.fn() } }))
@@ -128,16 +129,18 @@ const MOCK_PRINTER_NO_AMS = {
 // Include all routes that AddSpoolPage navigates between
 function renderPage(path = '/spools/add') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/spools/add" element={<AddSpoolPage />} />
-        <Route path="/spools/add/manual" element={<AddSpoolPage />} />
-        <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
-        <Route path="/spools/:id" element={<div>Spool detail</div>} />
-        <Route path="/spools" element={<div>Spools list</div>} />
-        <Route path="/" element={<div>Home</div>} />
-      </Routes>
-    </MemoryRouter>
+    withNotificationsProvider(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/spools/add" element={<AddSpoolPage />} />
+          <Route path="/spools/add/manual" element={<AddSpoolPage />} />
+          <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
+          <Route path="/spools/:id" element={<div>Spool detail</div>} />
+          <Route path="/spools" element={<div>Spools list</div>} />
+          <Route path="/" element={<div>Home</div>} />
+        </Routes>
+      </MemoryRouter>,
+    ),
   )
 }
 

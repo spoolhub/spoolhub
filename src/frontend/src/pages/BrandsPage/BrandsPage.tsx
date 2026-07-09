@@ -8,6 +8,7 @@ import type { BrandApiResponse as Brand } from '@/types/brand'
 import type { SpoolResponse } from '@/types/spool'
 import type { FilamentProfile } from '@/types/filament'
 import type { PrinterResponse } from '@/types/printer'
+import NotificationBell from '@/components/NotificationBell'
 import styles from './BrandsPage.module.css'
 
 interface BrandStats {
@@ -89,6 +90,7 @@ export default function BrandsPage() {
       <div className={`${styles.page} page`}>
         <div className={styles.topbar}>
           <div className={styles.h}><h1>{t('brands.title', 'Brands')}</h1></div>
+          <NotificationBell variant="bordered" />
         </div>
         <div className={styles.panel}>
           <div className={styles.panelHead}><h2>All brands</h2></div>
@@ -112,6 +114,7 @@ export default function BrandsPage() {
           <input placeholder="Search brands…" value={query} onChange={e => setQuery(e.target.value)} />
           <span className={styles.k}>⌘K</span>
         </label>
+        <NotificationBell variant="bordered" />
         <button className={styles.primaryBtn} onClick={() => setShowAddModal(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
           Add Brand

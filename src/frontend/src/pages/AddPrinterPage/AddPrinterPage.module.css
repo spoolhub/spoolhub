@@ -6,6 +6,13 @@
 
 .navRow { display: flex; align-items: center; justify-content: space-between; }
 
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .backBtn {
   display: flex;
   align-items: center;

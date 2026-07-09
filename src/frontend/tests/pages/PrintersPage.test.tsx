@@ -19,6 +19,7 @@ vi.mock('@/api/spools', () => ({
 
 import { printersApi } from '@/api/printers'
 import { spoolsApi } from '@/api/spools'
+import { withNotificationsProvider } from '../utils/withNotificationsProvider'
 
 const basePrinter: PrinterResponse = {
   id: 'p1',
@@ -37,9 +38,11 @@ const emptySpools: SpoolResponse[] = []
 
 function renderPage() {
   return render(
-    <MemoryRouter initialEntries={['/printers']}>
-      <PrintersPage />
-    </MemoryRouter>
+    withNotificationsProvider(
+      <MemoryRouter initialEntries={['/printers']}>
+        <PrintersPage />
+      </MemoryRouter>,
+    ),
   )
 }
 

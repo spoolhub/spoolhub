@@ -1,10 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useSidebar } from '@/context/SidebarContext'
 import SpoolHubLogo from '@/components/SpoolHubLogo'
+import NotificationBell from '@/components/NotificationBell'
 import styles from './Header.module.css'
 
 export default function Header() {
   const { toggle: toggleSidebar, isOpen } = useSidebar()
+  const { pathname } = useLocation()
+  const showBell = pathname !== '/activity' && pathname !== '/scan'
 
   return (
     <header className={styles.topbar}>
@@ -45,19 +48,9 @@ export default function Header() {
         </svg>
       </button>
 
-      {/* Bell — mobile only */}
-      <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellMobile}`} title="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
-        </svg>
-      </button>
+      {showBell && <NotificationBell className={styles.bellMobile} />}
 
-      {/* Bell — desktop only */}
-      <button className={`${styles.btn} ${styles.btnIcon} ${styles.bellDesktop}`} title="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
-        </svg>
-      </button>
+      {showBell && <NotificationBell className={styles.bellDesktop} />}
     </header>
   )
 }

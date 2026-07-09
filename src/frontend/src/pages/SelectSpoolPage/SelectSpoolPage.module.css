@@ -15,7 +15,7 @@
 }
 .backBtn:hover { color: var(--accent); }
 
-.title { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
+.title { flex: 1; font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
 
 .toolbar { margin-bottom: 1.5rem; }
 

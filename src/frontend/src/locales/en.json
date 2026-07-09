@@ -644,6 +644,11 @@
     "viewProfile": "View profile",
     "logOut": "Log out"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No recent activity",
+    "viewAll": "View all activity"
+  },
   "settings": {
     "pageTitle": "Settings",
     "tabNotifications": "Notifications",
