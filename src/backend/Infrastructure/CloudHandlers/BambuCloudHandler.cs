@@ -73,10 +73,11 @@ public class BambuCloudHandler(
         return new CloudLoginResult(RequiresVerification: false, AvailablePrinters: available);
     }
 
-    public async Task<IReadOnlyList<CloudDiscoveredPrinterResponse>> VerifyAsync(string code, CancellationToken ct)
+    public async Task<CloudVerifyResult> VerifyAsync(string code, CancellationToken ct)
     {
-        var pending = sessionStore.GetPending()
-            ?? throw new BadRequestException("No pending Bambu 2FA session — call register/cloud first");
+        var pending = sessionStore.GetPending();
+        if (pending is null)
+            return new CloudVerifyResult(ErrorMessage: "No pending Bambu 2FA session — sign in again");
 
         using var client = BuildClient();
 
@@ -90,21 +91,27 @@ public class BambuCloudHandler(
         var raw = await response.Content.ReadAsStringAsync(ct);
         logger.LogInformation("Bambu verify response ({Status}): {Body}", response.StatusCode, raw);
 
-        if (!response.IsSuccessStatusCode)
+        using var doc = JsonDocument.Parse(raw);
+        var root = doc.RootElement;
+
+        // Wrong or expired code — expected user error, returned as a result instead of thrown
+        if (root.TryGetProperty("error", out var err) && err.ValueKind == JsonValueKind.String
+            && !string.IsNullOrEmpty(err.GetString()))
         {
-            logger.LogWarning("Bambu verify failed ({Status}): {Body}", response.StatusCode, raw);
-            throw new BadRequestException($"Bambu verify failed ({(int)response.StatusCode}): {raw}");
+            logger.LogWarning("Bambu verify error ({Status}): {Body}", response.StatusCode, raw);
+            return new CloudVerifyResult(ErrorMessage: err.GetString());
         }
 
-        using var doc = JsonDocument.Parse(raw);
-        if (!doc.RootElement.TryGetProperty("accessToken", out var tokenEl))
+        if (!response.IsSuccessStatusCode
+            || !root.TryGetProperty("accessToken", out var tokenEl) || string.IsNullOrEmpty(tokenEl.GetString()))
         {
-            logger.LogWarning("Bambu verify returned no accessToken. Full response: {Body}", raw);
-            throw new BadRequestException("Bambu verify returned no access token");
+            logger.LogWarning("Bambu verify failed ({Status}): {Body}", response.StatusCode, raw);
+            return new CloudVerifyResult(ErrorMessage: "Verification failed — check the code and try again");
         }
 
         var accessToken = tokenEl.GetString()!;
-        return await FetchAndStoreAsync(client, accessToken, pending.Email, pending.Password, ct);
+        var available = await FetchAndStoreAsync(client, accessToken, pending.Email, pending.Password, ct);
+        return new CloudVerifyResult(AvailablePrinters: available);
     }
 
     public async Task<IReadOnlyList<PrinterResponse>> SelectAsync(IReadOnlyList<string> serials, CancellationToken ct)

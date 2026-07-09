@@ -83,8 +83,10 @@ public class PrinterController(
     [HttpPost("cloud/verify")]
     public async Task<IActionResult> VerifyCloud([FromBody] CloudVerifyRequest request, CancellationToken ct)
     {
-        var available = await cloudRegistrationService.VerifyAsync(request, ct);
-        return Ok(available);
+        var result = await cloudRegistrationService.VerifyAsync(request, ct);
+        if (result.ErrorMessage is not null)
+            return BadRequest(new ProblemDetails { Status = 400, Title = "Bad Request", Detail = result.ErrorMessage });
+        return Ok(result.AvailablePrinters ?? []);
     }
 
     // Save selected cloud printers — body: { serials: ["ABC123", ...] }

@@ -293,18 +293,24 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
 
   async function handleVerify(e: React.SyntheticEvent) {
     e.preventDefault()
+    const code = otpDigits.join('')
+    if (!/^\d{6}$/.test(code)) {
+      setError(t('addPrinter.codeIncomplete'))
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
-      const printers = await printersApi.verifyCloud({ code: otpDigits.join('') })
+      const printers = await printersApi.verifyCloud({ code })
       if (printers.length > 0) {
         setCloudPrinters(printers)
         setStep('cloud_select')
       } else {
         setStep('choose')
       }
-    } catch {
-      setError(t('addPrinter.verifyError'))
+    } catch (err) {
+      const detail = isAxiosError(err) ? err.response?.data?.detail : null
+      setError(typeof detail === 'string' && detail ? detail : t('addPrinter.verifyError'))
     } finally {
       setSubmitting(false)
     }
@@ -562,7 +568,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             {submitting ? t('addPrinter.verifying') : t('addPrinter.verifyAndConnect')}
           </button>
         </div>
-        {error && <div className={styles.error} style={{ marginTop: 12 }}>{error}</div>}
+        {error && <div className={styles.fieldError} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }
