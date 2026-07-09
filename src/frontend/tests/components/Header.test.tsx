@@ -1,15 +1,30 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import Header from '@/components/Header'
 import { SidebarProvider } from '@/context/SidebarContext'
+import { NotificationsProvider } from '@/context/NotificationsContext'
 
-function renderHeader() {
+vi.mock('@/api/activities', () => ({
+  activitiesApi: {
+    getRecent: vi.fn().mockResolvedValue({
+      activities: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    }),
+  },
+}))
+
+function renderHeader(initialEntries: string[] = ['/']) {
   return render(
-    <MemoryRouter>
-      <SidebarProvider>
-        <Header />
-      </SidebarProvider>
+    <MemoryRouter initialEntries={initialEntries}>
+      <NotificationsProvider>
+        <SidebarProvider>
+          <Header />
+        </SidebarProvider>
+      </NotificationsProvider>
     </MemoryRouter>
   )
 }
@@ -38,6 +53,16 @@ describe('Header', () => {
 
   it('renders the notification bell (mobile + desktop)', () => {
     renderHeader()
-    expect(screen.getAllByTitle('Notifications')).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: /Notifications/i })).toHaveLength(2)
+  })
+
+  it('hides the notification bell on the activity page', () => {
+    renderHeader(['/activity'])
+    expect(screen.queryByRole('button', { name: /Notifications/i })).not.toBeInTheDocument()
+  })
+
+  it('hides the notification bell on the scan page', () => {
+    renderHeader(['/scan'])
+    expect(screen.queryByRole('button', { name: /Notifications/i })).not.toBeInTheDocument()
   })
 })

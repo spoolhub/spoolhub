@@ -8,6 +8,7 @@ import { filamentsApi } from '@/api/filaments'
 import { locationsApi } from '@/api/locations'
 import { registerTag, scanTag } from '@/api/nfc'
 import ScanDesktop from '@/components/scan/ScanDesktop'
+import NotificationBell from '@/components/NotificationBell'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
@@ -122,7 +123,10 @@ function ScanStep({ onBack, onClose, onTagFound }: ScanStepProps) {
           <h2>Scan NFC tag</h2>
           <div className={styles.sub}>Hold the spool's NFC tag against your reader</div>
         </div>
-        <button className={styles.closeBtn} onClick={onClose} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        <div className={styles.headerActions}>
+          <NotificationBell variant="bordered" />
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        </div>
       </div>
       <div className={styles.cardBody}>
         <ScanDesktop onTagFound={onTagFound} />
@@ -390,7 +394,10 @@ export default function AddSpoolPage() {
           <h2>Add spool</h2>
           <div className={styles.sub}>How do you want to add this spool?</div>
         </div>
-        <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        <div className={styles.headerActions}>
+          <NotificationBell variant="bordered" />
+          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        </div>
       </div>
       <div className={styles.cardBody}>
         <div className={styles.chooseGrid}>
@@ -441,7 +448,10 @@ export default function AddSpoolPage() {
               <span className={styles.nfcBadge}><i></i>{state.filament ? 'NFC tag' : 'New tag'} · will be written</span>
             )}
           </div>
-          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+          <div className={styles.headerActions}>
+            <NotificationBell variant="bordered" />
+            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+          </div>
         </div>
         <div className={styles.cardBody}>
           <div className={styles.detailPanel}>
@@ -557,6 +567,13 @@ export default function AddSpoolPage() {
 
     return (
       <>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardHeaderTitle} />
+          <div className={styles.headerActions}>
+            <NotificationBell variant="bordered" />
+            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+          </div>
+        </div>
         <div className={styles.cardBody}>
           <div className={styles.detailPanel}>
             <div className={styles.selectedCard}>

@@ -623,6 +623,11 @@
     "viewProfile": "Visa profil",
     "logOut": "Logga ut"
   },
+  "notifications": {
+    "title": "Aviseringar",
+    "empty": "Ingen senaste aktivitet",
+    "viewAll": "Visa all aktivitet"
+  },
   "settings": {
     "pageTitle": "Inställningar",
     "tabNotifications": "Notiser",

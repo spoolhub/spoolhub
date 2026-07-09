@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import AddPrinterPage from '@/pages/AddPrinterPage/AddPrinterPage'
+import { withNotificationsProvider } from '../utils/withNotificationsProvider'
 
 vi.mock('@/api/printers', () => ({
   printersApi: {
@@ -15,12 +16,14 @@ import { printersApi } from '@/api/printers'
 
 function renderPage() {
   return render(
-    <MemoryRouter initialEntries={['/printers/addprinter']}>
-      <Routes>
-        <Route path="/printers/addprinter" element={<AddPrinterPage />} />
-        <Route path="/printers" element={<div>Printers list</div>} />
-      </Routes>
-    </MemoryRouter>
+    withNotificationsProvider(
+      <MemoryRouter initialEntries={['/printers/addprinter']}>
+        <Routes>
+          <Route path="/printers/addprinter" element={<AddPrinterPage />} />
+          <Route path="/printers" element={<div>Printers list</div>} />
+        </Routes>
+      </MemoryRouter>,
+    ),
   )
 }
 

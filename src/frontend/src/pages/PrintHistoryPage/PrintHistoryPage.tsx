@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { printJobsApi } from '@/api/printJobs'
 import { SpoolIcon } from '@/components/icons'
+import NotificationBell from '@/components/NotificationBell'
 import type { PrintJobResponse } from '@/types/printJob'
 import styles from './PrintHistoryPage.module.css'
 
@@ -120,11 +121,7 @@ export default function PrintHistoryPage() {
           />
           <span className={styles.k}>⌘K</span>
         </label>
-        <button className={`${styles.btn} ${styles.btnIcon}`} title="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M9.5 20a2.5 2.5 0 0 0 5 0" />
-          </svg>
-        </button>
+        <NotificationBell variant="bordered" />
       </header>
 
       {/* Filter chips */}

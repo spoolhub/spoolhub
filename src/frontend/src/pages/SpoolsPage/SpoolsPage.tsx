@@ -7,6 +7,7 @@ import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import SpoolProfileCard from '@/components/SpoolProfileCard'
 import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
 import Pagination from '@/components/Pagination'
+import NotificationBell from '@/components/NotificationBell'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
@@ -124,6 +125,7 @@ export default function SpoolsPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
           <input placeholder="Search spools, brands, colors…" value={query} onChange={e => updateQuery(e.target.value)} />
         </label>
+        <NotificationBell variant="bordered" />
         {isProfileView ? (
           <Link to="/spool-profiles/new" className={styles.primaryBtn}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
