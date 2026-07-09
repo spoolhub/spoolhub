@@ -99,6 +99,7 @@ builder.Services.AddHttpClient("ofd", client =>
 builder.Services.AddSingleton(logBuffer);
 builder.Services.AddHostedService<LogBroadcastService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAppSettingRepository, AppSettingRepository>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();

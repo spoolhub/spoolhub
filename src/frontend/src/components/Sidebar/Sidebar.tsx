@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { clearSession } from '@/api/session'
+import { clearSession, getSessionUser } from '@/api/session'
 import SpoolHubLogo from '@/components/SpoolHubLogo'
 import styles from './Sidebar.module.css'
 
@@ -17,10 +17,29 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 const COLLAPSE_KEY = 'spoolhub-sidebar-collapsed'
 
+function userInitials(fullName: string | null | undefined, username: string): string {
+  if (fullName?.trim()) {
+    const parts = fullName.trim().split(/\s+/)
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    return parts[0].slice(0, 2).toUpperCase()
+  }
+  return username.slice(0, 2).toUpperCase()
+}
+
 export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === 'true')
+  const [sessionVersion, setSessionVersion] = useState(0)
+  const sessionUser = useMemo(() => getSessionUser(), [sessionVersion])
+  const displayName = sessionUser?.fullName?.trim() || sessionUser?.username || 'User'
+  const initials = userInitials(sessionUser?.fullName, sessionUser?.username ?? 'U')
+
+  useEffect(() => {
+    const refresh = () => setSessionVersion(v => v + 1)
+    window.addEventListener('session-user-updated', refresh)
+    return () => window.removeEventListener('session-user-updated', refresh)
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(COLLAPSE_KEY, String(collapsed))
@@ -102,20 +121,20 @@ export default function Sidebar({ isOpen, onClose, spoolCount }: SidebarProps) {
 
           <div className={styles.spacer} />
 
-          <div className={styles.usercard}>
-            <div className={styles.avatar}>MK</div>
+          <NavLink to="/profile" onClick={onClose} className={styles.usercard} title={t('profile.viewProfile')}>
+            <div className={styles.avatar}>{initials}</div>
             <div className={styles.who}>
-              <div className={styles.name}>Mira Kovač</div>
-              <div className={styles.email}>studio · pro plan</div>
+              <div className={styles.name}>{displayName}</div>
+              <div className={styles.email}>@{sessionUser?.username ?? 'user'}</div>
             </div>
             <button
               className={styles.logoutBtn}
-              title="Log out"
-              onClick={() => { clearSession(); navigate('/login') }}
+              title={t('profile.logOut')}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); clearSession(); navigate('/login') }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
             </button>
-          </div>
+          </NavLink>
 
         </nav>
       </aside>
