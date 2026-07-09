@@ -48,20 +48,20 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: src/frontend/web/package-lock.json
+          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: src/frontend/web
+        working-directory: src/frontend
 
       - name: Type-check and build
         run: npm run build
-        working-directory: src/frontend/web
+        working-directory: src/frontend
 
       - name: Lint
         run: npm run lint
-        working-directory: src/frontend/web
+        working-directory: src/frontend
 
       - name: Test
         run: npm test -- --run
-        working-directory: src/frontend/web
+        working-directory: src/frontend
