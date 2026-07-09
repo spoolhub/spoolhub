@@ -3,6 +3,15 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import Sidebar from '@/components/Sidebar'
 
+vi.mock('@/api/session', () => ({
+  clearSession: vi.fn(),
+  getSessionUser: vi.fn(() => ({
+    id: 'user-1',
+    username: 'mira.kovac',
+    fullName: 'Mira Kovač',
+  })),
+}))
+
 function renderSidebar(isOpen = true, onClose = vi.fn(), initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
@@ -54,6 +63,12 @@ describe('Sidebar', () => {
   it('renders Locations link pointing to /locations', () => {
     renderSidebar()
     expect(screen.getByRole('link', { name: /^Locations/ })).toHaveAttribute('href', '/locations')
+  })
+
+  it('renders profile link pointing to /profile', () => {
+    renderSidebar()
+    expect(screen.getByRole('link', { name: /Mira Kovač/i })).toHaveAttribute('href', '/profile')
+    expect(screen.getByText('@mira.kovac')).toBeInTheDocument()
   })
 
   // ── Sub-items are not rendered ─────────────────────────────────

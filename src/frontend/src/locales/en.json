@@ -127,6 +127,7 @@
   "common": {
     "save": "Save",
     "saving": "Saving…",
+    "loading": "Loading…",
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
@@ -618,6 +619,30 @@
     "noSpoolsNote": "No spools are logged under this brand yet.",
     "deleteBrand": "Delete brand",
     "deleteError": "Failed to delete brand. Please try again."
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Manage your account details",
+    "accountDetails": "Account details",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your name",
+    "fullNameDesc": "Shown in the sidebar and across the app",
+    "username": "Username",
+    "usernameDesc": "Used to log in, cannot be changed",
+    "memberSince": "Member since",
+    "changePassword": "Change password",
+    "changePasswordDesc": "Use a strong password with at least 8 characters",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "updatePassword": "Update password",
+    "passwordMismatch": "New passwords do not match.",
+    "passwordUpdated": "Password updated.",
+    "profileUpdated": "Profile updated.",
+    "loadError": "Could not load your profile.",
+    "saveError": "Could not save changes.",
+    "viewProfile": "View profile",
+    "logOut": "Log out"
   },
   "settings": {
     "pageTitle": "Settings",

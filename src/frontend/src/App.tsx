@@ -18,6 +18,7 @@ import AddPrinterPage from '@/pages/AddPrinterPage'
 import ActivityPage from '@/pages/ActivityPage'
 import SelectSpoolPage from '@/pages/SelectSpoolPage'
 import LocationsPage from '@/pages/LocationsPage'
+import ProfilePage from '@/pages/ProfilePage'
 import PrintHistoryPage from './pages/PrintHistoryPage/PrintHistoryPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
@@ -70,6 +71,7 @@ function AppShell() {
               <Route path="/print-history" element={<PrintHistoryPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/locations" element={<LocationsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </main>
         </div>

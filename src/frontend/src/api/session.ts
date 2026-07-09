@@ -37,6 +37,13 @@ export function isAuthenticated(): boolean {
   return true
 }
 
+export function updateSessionUser(patch: Partial<SessionUser>) {
+  const current = getSessionUser()
+  if (!current) return
+  localStorage.setItem(USER_KEY, JSON.stringify({ ...current, ...patch }))
+  window.dispatchEvent(new CustomEvent('session-user-updated'))
+}
+
 export function getSessionUser(): SessionUser | null {
   const raw = localStorage.getItem(USER_KEY)
   if (!raw) return null
