@@ -557,6 +557,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             )}
           </div>
         </div>
+        {error && <div className={styles.fieldError} style={{ marginTop: 12 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className={`${styles.btn} ${styles.back}`} onClick={goBack}>Back</button>
           <button
@@ -568,7 +569,6 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
             {submitting ? t('addPrinter.verifying') : t('addPrinter.verifyAndConnect')}
           </button>
         </div>
-        {error && <div className={styles.fieldError} style={{ marginTop: 12 }}>{error}</div>}
       </div>
     )
   }
