@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: src/frontend/web/package-lock.json
+          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Restore dependencies
         run: dotnet restore src/backend/backend.sln
@@ -41,11 +41,11 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: src/frontend/web
+        working-directory: src/frontend
 
       - name: Build frontend
         run: npm run build
-        working-directory: src/frontend/web
+        working-directory: src/frontend
 
       - name: Deploy to Development Environment
         run: echo "Deploying to Development Environment — Docker deployment will be wired up in M8"

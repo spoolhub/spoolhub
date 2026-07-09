@@ -1,9 +1,9 @@
 # Stage 1: Build frontend
 FROM node:22-alpine AS frontend-build
 WORKDIR /app
-COPY src/frontend/web/package*.json ./
+COPY src/frontend/package*.json ./
 RUN npm ci --prefer-offline
-COPY src/frontend/web/ ./
+COPY src/frontend/ ./
 RUN npm run build
 
 # Stage 2: Build backend

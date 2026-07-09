@@ -204,7 +204,7 @@ export default function SettingsPage() {
               title: '✅ SpoolHub Connected',
               description: 'Notifications are now set up! SpoolHub will send you alerts here when events occur.',
               color: 0x22C55E,
-              thumbnail: { url: 'https://raw.githubusercontent.com/spoolhub/spoolhub/develop/src/frontend/web/public/logo.png' },
+              thumbnail: { url: 'https://raw.githubusercontent.com/spoolhub/spoolhub/develop/src/frontend/public/logo.png' },
               footer: { text: 'SpoolHub' },
               timestamp: new Date().toISOString(),
             }],
