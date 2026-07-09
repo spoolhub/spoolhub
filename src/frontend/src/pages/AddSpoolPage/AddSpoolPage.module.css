@@ -530,22 +530,4 @@
   animation: spin .7s linear infinite;
 }
 
-/* ── Inline add location ── */
-.addWrap { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-.addWrap input { flex: 1; }
-.btnCancel {
-  width: 32px; height: 32px; flex: none;
-  border-radius: var(--r-sm); border: 1px solid var(--border);
-  background: var(--surface); color: var(--muted);
-  cursor: pointer; font-size: 16px; display: grid; place-items: center;
-}
-.btnCancel:hover { background: var(--surface-alt); color: var(--text-primary); }
-.btnAdd {
-  height: 36px; padding: 0 14px; margin-top: 8px;
-  border: 1px solid var(--accent); border-radius: var(--r-sm);
-  background: var(--accent-soft); color: var(--accent-ink);
-  font: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
-}
-.btnAdd:hover { background: var(--accent); color: #fff; }
-.btnAdd:disabled { opacity: .5; cursor: not-allowed; }
-.btnAdd:disabled:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.locInput { margin-top: 8px; }
