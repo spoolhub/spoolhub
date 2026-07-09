@@ -74,6 +74,15 @@ const MOCK_PROFILE = {
   spoolCount: 3,
 }
 
+const MOCK_LOCATION = {
+  id: 'loc-1',
+  name: 'Shelf A1',
+  type: 'shelf' as const,
+  capacity: 12,
+  humidity: null,
+  createdAt: '2026-01-01T00:00:00Z',
+}
+
 const createdSpool = {
   id: 'spool-999',
   brand: 'Bambu Lab',
@@ -153,7 +162,7 @@ function mockDefaults() {
   vi.mocked(spoolProfilesApi.getAll).mockResolvedValue([MOCK_PROFILE])
   vi.mocked(printersApi.getAll).mockResolvedValue([])
   vi.mocked(spoolsApi.getAll).mockResolvedValue([])
-  vi.mocked(locationsApi.getAll).mockResolvedValue([])
+  vi.mocked(locationsApi.getAll).mockResolvedValue([MOCK_LOCATION])
   vi.mocked(scanTag).mockResolvedValue({ status: 'unknown', tagUid: '', spool: null, message: null })
 }
 
@@ -273,6 +282,55 @@ describe('AddSpoolPage — profiles and catalog', () => {
     await waitFor(() => screen.getByRole('button', { name: /Add spool/ }))
     expect(screen.getByDisplayValue('190')).toBeInTheDocument()
     expect(screen.getByDisplayValue('230')).toBeInTheDocument()
+  })
+
+  it('can add a new storage location from the details form', async () => {
+    vi.mocked(locationsApi.add).mockResolvedValue({
+      ...MOCK_LOCATION,
+      id: 'loc-2',
+      name: 'Server Room',
+    })
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    const input = screen.getByPlaceholderText('Enter new location...')
+    fireEvent.change(input, { target: { value: 'Server Room' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add "Server Room"' }))
+    await waitFor(() => expect(locationsApi.add).toHaveBeenCalledWith({ name: 'Server Room' }))
+    expect(screen.getByDisplayValue('Server Room')).toBeInTheDocument()
+  })
+})
+
+describe('AddSpoolPage — storage location', () => {
+  beforeEach(mockDefaults)
+
+  it('lists database locations and a add-new option in the dropdown', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    const dropdown = screen.getByDisplayValue('Shelf A1')
+    expect(dropdown).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Shelf A1' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '+ Add new location' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Drybox 1' })).not.toBeInTheDocument()
+  })
+
+  it('shows inline add controls under the dropdown like other location forms', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    expect(screen.getByDisplayValue('Shelf A1')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter new location...')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add ""' })).toBeDisabled()
+  })
+
+  it('hides the add controls when cancel is clicked', async () => {
+    renderPage('/spools/add/manual')
+    await selectFilament()
+    fireEvent.change(screen.getByDisplayValue('Shelf A1'), { target: { value: '__add_new' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByDisplayValue('Shelf A1')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Enter new location...')).not.toBeInTheDocument()
   })
 })
 

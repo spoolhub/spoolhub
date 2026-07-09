@@ -49,8 +49,6 @@ interface AddState {
   density: string
 }
 
-const SHELVES = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
-
 // ───── 3/4 perspective spool icon ─────
 function isNearBlack(hex: string) {
   if (!hex.startsWith('#') || hex.length < 7) return false
@@ -148,6 +146,9 @@ export default function AddSpoolPage() {
   const [pickView, setPickView] = useState<PickView>('profiles')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [locationNames, setLocationNames] = useState<string[]>([])
+  const [showAddLocation, setShowAddLocation] = useState(false)
+  const [newLocation, setNewLocation] = useState('')
+  const [savingLocation, setSavingLocation] = useState(false)
 
   const [state, setState] = useState<AddState>(() => ({
     step: (isNfc || searchParams.get('mode') === 'nfc') ? 'scan' : (isManual ? 'pick' : 'choose'),
@@ -177,7 +178,7 @@ export default function AddSpoolPage() {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
     spoolProfilesApi.getAll().then(setProfiles).catch(() => {}).finally(() => setProfilesLoading(false))
     printersApi.getAll().then(setPrinters).catch(() => {})
-    locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name))).catch(() => {})
+    locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name).sort((a, b) => a.localeCompare(b)))).catch(() => {})
   }, [])
 
   const showSavedProfiles = useCallback(() => {
@@ -188,6 +189,23 @@ export default function AddSpoolPage() {
   const showCatalog = useCallback(() => {
     setPickView('catalog')
   }, [])
+
+  const handleAddLocation = useCallback(async () => {
+    const name = newLocation.trim()
+    if (!name || savingLocation) return
+    setSavingLocation(true)
+    try {
+      const created = await locationsApi.add({ name })
+      setLocationNames(prev => [...new Set([...prev, created.name])].sort((a, b) => a.localeCompare(b)))
+      setState(s => ({ ...s, loc: created.name }))
+      setShowAddLocation(false)
+      setNewLocation('')
+    } catch {
+      /* ignore */
+    } finally {
+      setSavingLocation(false)
+    }
+  }, [newLocation, savingLocation])
 
   const close = useCallback(() => {
     navigate(isNfc ? '/scan' : isManual ? '/spools/add' : '/spools')
@@ -680,12 +698,60 @@ export default function AddSpoolPage() {
             {state.place === 'stock' && (
               <div className={styles.field}>
                 <label>Storage location</label>
-                <select value={state.loc} onChange={e => setState(s => ({ ...s, loc: e.target.value }))}>
+                <select
+                  value={state.loc}
+                  onChange={e => {
+                    if (e.target.value === '__add_new') {
+                      setShowAddLocation(true)
+                      setNewLocation('')
+                      return
+                    }
+                    setShowAddLocation(false)
+                    setNewLocation('')
+                    setState(s => ({ ...s, loc: e.target.value }))
+                  }}
+                >
                   <option value="">Select location…</option>
-                  {[...new Set([...locationNames, ...SHELVES])].map(l => (
+                  {locationNames.map(l => (
                     <option key={l} value={l}>{l}</option>
                   ))}
+                  <option value="__add_new">+ Add new location</option>
                 </select>
+                {showAddLocation && (
+                  <div className={styles.addWrap}>
+                    <input
+                      type="text"
+                      placeholder="Enter new location..."
+                      value={newLocation}
+                      disabled={savingLocation}
+                      onChange={e => setNewLocation(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); void handleAddLocation() }
+                        if (e.key === 'Escape') { setShowAddLocation(false); setNewLocation('') }
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className={styles.btnCancel}
+                      aria-label="Cancel"
+                      disabled={savingLocation}
+                      onClick={() => { setShowAddLocation(false); setNewLocation('') }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {showAddLocation && (
+                  <button
+                    type="button"
+                    className={styles.btnAdd}
+                    disabled={!newLocation.trim() || savingLocation}
+                    onClick={() => void handleAddLocation()}
+                  >
+                    {savingLocation ? 'Adding…' : `Add "${newLocation.trim()}"`}
+                  </button>
+                )}
               </div>
             )}
 

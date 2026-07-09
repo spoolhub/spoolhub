@@ -6,6 +6,7 @@ import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
 import { spoolsApi } from '@/api/spools'
 import { printJobsApi } from '@/api/printJobs'
+import { locationsApi } from '@/api/locations'
 import type { SpoolResponse, UpdateSpoolRequest } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import type { PrintJobResponse } from '@/types/printJob'
@@ -18,8 +19,6 @@ const MATNAME: Record<string, string> = {
   TPU: 'Thermoplastic Polyurethane', Nylon: 'Nylon', PC: 'Polycarbonate', ASA: 'Acrylonitrile Styrene Acrylate',
   HIPS: 'High Impact Polystyrene', PVA: 'Polyvinyl Alcohol', PP: 'Polypropylene', PEI: 'Polyetherimide',
 }
-
-const BASE_LOCATIONS = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
 
 function formatRelativeTime(dateStr: string | null): string {
   if (!dateStr) return 'Never'
@@ -48,8 +47,15 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [newLocation, setNewLocation] = useState('')
   const [customLocations, setCustomLocations] = useState<string[]>([])
+  const [dbLocations, setDbLocations] = useState<string[]>([])
   const [pendingDelete, setPendingDelete] = useState(false)
   const [printJobs, setPrintJobs] = useState<PrintJobResponse[]>([])
+
+  useEffect(() => {
+    locationsApi.getAll()
+      .then(data => setDbLocations(data.map(l => l.name).sort((a, b) => a.localeCompare(b))))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -70,7 +76,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
 
   const startEdit = (s: SpoolResponse) => {
     setEditForm({ ...s, isLoadedInPrinter: !!s.printerId, printerId: s.printerId ?? null, amsSlot: s.amsSlot ?? null })
-    if (s.stockLocation && !BASE_LOCATIONS.includes(s.stockLocation)) {
+    if (s.stockLocation && !dbLocations.includes(s.stockLocation)) {
       setCustomLocations(prev => prev.includes(s.stockLocation!) ? prev : [...prev, s.stockLocation!])
     }
     setEditMode(true)
@@ -389,8 +395,8 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
               <div className={styles.ff}><label>Storage location</label>
                 <select value={f.stockLocation ?? ''} onChange={e => { if (e.target.value === '__add_new') setShowAddLocation(true); else setEditForm(p => ({ ...p, stockLocation: e.target.value || null })) }}>
                   <option value="">Select location</option>
-                  {BASE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                  {customLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                  {dbLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                  {customLocations.filter(l => !dbLocations.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
                   <option value="__add_new">+ Add new location</option>
                 </select>
                 {showAddLocation && (<div className={styles.addWrap}><input type="text" placeholder="Enter new location..." value={newLocation} onChange={e => setNewLocation(e.target.value)} autoFocus /><button type="button" className={styles.btnCancel} onClick={() => { setShowAddLocation(false); setNewLocation('') }}>x</button></div>)}
