@@ -29,11 +29,24 @@ public class BambuCloudHandler(
             new { account = email, password },
             ct);
 
-        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.BadRequest)
-            throw new BadRequestException($"Bambu login failed: {response.StatusCode}");
+        var raw = await response.Content.ReadAsStringAsync(ct);
 
-        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.BadRequest)
+        {
+            logger.LogWarning("Bambu login failed ({Status}): {Body}", response.StatusCode, raw);
+            throw new BadRequestException($"Bambu login failed: {response.StatusCode}");
+        }
+
+        using var doc = JsonDocument.Parse(raw);
         var root = doc.RootElement;
+
+        // Bambu reports failures (wrong credentials, risk control, region mismatch) as JSON with an "error" field
+        if (root.TryGetProperty("error", out var err) && err.ValueKind == JsonValueKind.String
+            && !string.IsNullOrEmpty(err.GetString()))
+        {
+            logger.LogWarning("Bambu login error ({Status}): {Body}", response.StatusCode, raw);
+            throw new BadRequestException($"Bambu login failed: {err.GetString()}");
+        }
 
         var loginType = root.TryGetProperty("loginType", out var lt) ? lt.GetString() : null;
         if (loginType == "verifyCode" || loginType == "tfa")
@@ -47,8 +60,12 @@ public class BambuCloudHandler(
             return new CloudLoginResult(RequiresVerification: true, Message: "A verification code was sent to your email");
         }
 
-        if (!root.TryGetProperty("accessToken", out var tokenEl))
+        // accessToken can also be present but empty when verification is required
+        if (!root.TryGetProperty("accessToken", out var tokenEl) || string.IsNullOrEmpty(tokenEl.GetString()))
+        {
+            logger.LogWarning("Bambu login returned no access token ({Status}): {Body}", response.StatusCode, raw);
             throw new BadRequestException("Bambu login returned no access token");
+        }
 
         var accessToken = tokenEl.GetString()!;
         var available = await FetchAndStoreAsync(client, accessToken, email, password, ct);

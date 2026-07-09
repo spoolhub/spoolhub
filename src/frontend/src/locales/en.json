@@ -562,6 +562,7 @@
     "adding": "Adding",
     "addPrinter": "Add Printer",
     "signInError": "Sign in failed. Check your email and password and try again.",
+    "emailInvalid": "Enter a valid email address, e.g. you@example.com",
     "verifyError": "Invalid code. Check the email and try again.",
     "addError": "Failed to add printer. Check the details and try again.",
     "registerTitle": "Register LAN Printer",

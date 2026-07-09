@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { isAxiosError } from 'axios'
 import { printersApi } from '@/api/printers'
 import type { LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
 import styles from './AddPrinterPage.module.css'
@@ -31,6 +32,7 @@ export default function AddPrinterPage() {
   const [step, setStep]             = useState<Step>('brand')
   const [brand, setBrand]           = useState('')
   const [email, setEmail]           = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [password, setPassword]     = useState('')
   const [digits, setDigits]         = useState<string[]>(Array(6).fill(''))
   const digitRefs                   = useRef<(HTMLInputElement | null)[]>([])
@@ -172,12 +174,19 @@ export default function AddPrinterPage() {
     setStep('lan_form')
   }
 
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setEmailError(t('addPrinter.emailInvalid'))
+      return
+    }
+    setEmailError(null)
     setSubmitting(true)
     setError(null)
     try {
-      const result = await printersApi.registerCloud({ brand, email, password })
+      const result = await printersApi.registerCloud({ brand, email: email.trim(), password })
       if (result.requiresVerification) {
         setCountdown(300)
         setDigits(Array(6).fill(''))
@@ -188,8 +197,9 @@ export default function AddPrinterPage() {
       } else {
         navigate('/printers')
       }
-    } catch {
-      setError(t('addPrinter.signInError'))
+    } catch (err) {
+      const detail = isAxiosError(err) ? err.response?.data?.detail : null
+      setError(typeof detail === 'string' && detail ? detail : t('addPrinter.signInError'))
     } finally {
       setSubmitting(false)
     }
@@ -618,11 +628,13 @@ export default function AddPrinterPage() {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                 </svg>
                 <input
-                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  type="email" value={email}
+                  onChange={e => { setEmail(e.target.value); setEmailError(null) }}
                   placeholder="you@example.com" required autoFocus autoComplete="email"
                   className={`${styles.input} ${styles.inputWithIcon}`}
                 />
               </div>
+              {emailError && <p className={styles.fieldError}>{emailError}</p>}
             </div>
             <div>
               <label className={styles.fieldLabel}>{t('addPrinter.labelPassword')}</label>

@@ -542,6 +542,7 @@
     "adding": "Lägger till",
     "addPrinter": "Lägg till skrivare",
     "signInError": "Inloggning misslyckades. Kontrollera din e-post och ditt lösenord och försök igen.",
+    "emailInvalid": "Ange en giltig e-postadress, t.ex. du@exempel.se",
     "verifyError": "Ogiltig kod. Kontrollera e-posten och försök igen.",
     "addError": "Det gick inte att lägga till skrivaren. Kontrollera uppgifterna och försök igen.",
     "registerTitle": "Registrera LAN-skrivare",

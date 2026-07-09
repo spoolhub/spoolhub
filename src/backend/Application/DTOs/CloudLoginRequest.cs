@@ -4,6 +4,6 @@ namespace Application.DTOs;
 
 public record CloudLoginRequest(
     [Required] string Brand,
-    [Required] string Email,
+    [Required, EmailAddress] string Email,
     [Required] string Password
 );
