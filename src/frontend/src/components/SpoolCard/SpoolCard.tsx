@@ -79,7 +79,7 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
 
       <div className={styles.barWrap}>
         <div className={styles.bar}>
-          <div className={styles.barFill} style={{ width: `${pct}%`, backgroundColor: barColor, boxShadow: `0 0 8px ${barColor}66` }} />
+          <div className={styles.barFill} style={{ width: `${pct}%`, backgroundColor: barColor, boxShadow: `0 0 4px ${barColor}44` }} />
         </div>
       </div>
 

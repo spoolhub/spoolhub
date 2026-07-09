@@ -125,9 +125,9 @@
 .pctMedium { color: #f59e0b; }
 .pctGood   { color: #22c55e; }
 
-.barWrap { padding: 0 0.875rem 0.625rem; }
+.barWrap { padding: 0 0.875rem 0.5rem; }
 .bar {
-  height: 0.4375rem;
+  height: 0.25rem;
   background: var(--bg-tertiary);
   border-radius: var(--radius-full);
   overflow: hidden;
