@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import AddSpoolPage from '@/pages/AddSpoolPage'
 
 vi.mock('@/api/spools', () => ({ spoolsApi: { add: vi.fn(), getAll: vi.fn(), assignPrinter: vi.fn() } }))
+vi.mock('@/api/spoolProfiles', () => ({ spoolProfilesApi: { getAll: vi.fn() } }))
 vi.mock('@/api/nfc', () => ({ scanTag: vi.fn(), registerTag: vi.fn() }))
 vi.mock('@/api/filaments', () => ({ filamentsApi: { getAll: vi.fn() } }))
 vi.mock('@/api/printers', () => ({ printersApi: { getAll: vi.fn() } }))
@@ -27,6 +28,7 @@ vi.mock('@/hooks/useAgentNfc', () => ({
 }))
 
 import { spoolsApi } from '@/api/spools'
+import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { scanTag, registerTag } from '@/api/nfc'
 import { filamentsApi } from '@/api/filaments'
 import { printersApi } from '@/api/printers'
@@ -48,6 +50,28 @@ const MOCK_FILAMENT = {
   discontinued: false,
   dataSheetUrl: null,
   safetySheetUrl: null,
+}
+
+const MOCK_PROFILE = {
+  id: 'profile-1',
+  name: 'Bambu PLA Jade White',
+  brand: 'Bambu Lab',
+  material: 'PLA',
+  colorName: 'Jade White',
+  colorHex: '#E8E8E8',
+  initialWeightG: 1000,
+  spoolWeightG: 250,
+  lowStockThresholdG: 120,
+  density: 1.24,
+  diameterTolerance: 1.75,
+  extruderMin: 190,
+  extruderMax: 230,
+  bedMin: 35,
+  bedMax: 60,
+  price: 29.99,
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+  spoolCount: 3,
 }
 
 const createdSpool = {
@@ -126,6 +150,7 @@ function mockDefaults() {
   agentState = 'ready'
   fireTagScan = null
   vi.mocked(filamentsApi.getAll).mockResolvedValue([MOCK_FILAMENT])
+  vi.mocked(spoolProfilesApi.getAll).mockResolvedValue([MOCK_PROFILE])
   vi.mocked(printersApi.getAll).mockResolvedValue([])
   vi.mocked(spoolsApi.getAll).mockResolvedValue([])
   vi.mocked(locationsApi.getAll).mockResolvedValue([])
@@ -204,6 +229,50 @@ describe('AddSpoolPage — scan step (real reader via agent)', () => {
     renderPage('/spools/add/nfctag?tagUid=04:AA:BB:CC')
     await waitFor(() => expect(scanTag).toHaveBeenCalledWith('04:AA:BB:CC'))
     await waitFor(() => expect(screen.getByText(/will be written/)).toBeInTheDocument())
+  })
+})
+
+describe('AddSpoolPage — profiles and catalog', () => {
+  beforeEach(mockDefaults)
+
+  it('shows saved profiles by default with a segmented Saved profiles / Catalog control', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => expect(screen.getByText('Jade White', { selector: 'div' })).toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Saved profiles' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText('Bambu Lab · PLA', { selector: 'div' })).toBeInTheDocument()
+  })
+
+  it('switches to catalog filaments when a material is selected', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.change(screen.getByDisplayValue('Select brand…'), { target: { value: 'Bambu Lab' } })
+    await waitFor(() => expect(screen.getByDisplayValue('Select material…')).not.toBeDisabled())
+    fireEvent.change(screen.getByDisplayValue('Select material…'), { target: { value: 'PLA' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByText('1 filament')).toBeInTheDocument()
+    expect(screen.queryByText('Bambu Lab · PLA', { selector: 'div' })).not.toBeInTheDocument()
+  })
+
+  it('returns to saved profiles when the Saved profiles segment is clicked', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.change(screen.getByDisplayValue('Select brand…'), { target: { value: 'Bambu Lab' } })
+    fireEvent.change(screen.getByDisplayValue('Select material…'), { target: { value: 'PLA' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'true'))
+    fireEvent.click(screen.getByRole('button', { name: 'Saved profiles' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Saved profiles' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByText('Bambu Lab · PLA', { selector: 'div' })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Select material…')).toHaveValue('')
+  })
+
+  it('opens the details form with profile data when a saved profile card is clicked', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Jade White', { selector: 'div' }))
+    fireEvent.click(screen.getByText('Jade White', { selector: 'div' }))
+    await waitFor(() => screen.getByRole('button', { name: /Add spool/ }))
+    expect(screen.getByDisplayValue('190')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('230')).toBeInTheDocument()
   })
 })
 

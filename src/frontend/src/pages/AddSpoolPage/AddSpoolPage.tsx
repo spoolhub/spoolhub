@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { spoolsApi } from '@/api/spools'
+import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { printersApi } from '@/api/printers'
 import { filamentsApi } from '@/api/filaments'
 import { locationsApi } from '@/api/locations'
@@ -10,12 +11,15 @@ import ScanDesktop from '@/components/scan/ScanDesktop'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
+import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import type { PrinterResponse } from '@/types/printer'
 import styles from './AddSpoolPage.module.css'
 
 type AddStep = 'choose' | 'scan' | 'pick' | 'details'
 type Mode = 'nfc' | 'manual'
 type PlaceType = 'stock' | 'printer'
+
+type PickView = 'profiles' | 'catalog'
 
 interface AddState {
   step: AddStep
@@ -139,6 +143,9 @@ export default function AddSpoolPage() {
   const tagUidParam = isNfc ? (searchParams.get('tagUid') ?? '') : ''
 
   const [filaments, setFilaments] = useState<FilamentProfile[]>([])
+  const [profiles, setProfiles] = useState<SpoolProfileResponse[]>([])
+  const [profilesLoading, setProfilesLoading] = useState(true)
+  const [pickView, setPickView] = useState<PickView>('profiles')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [locationNames, setLocationNames] = useState<string[]>([])
 
@@ -168,8 +175,18 @@ export default function AddSpoolPage() {
   // Load data
   useEffect(() => {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
+    spoolProfilesApi.getAll().then(setProfiles).catch(() => {}).finally(() => setProfilesLoading(false))
     printersApi.getAll().then(setPrinters).catch(() => {})
     locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name))).catch(() => {})
+  }, [])
+
+  const showSavedProfiles = useCallback(() => {
+    setPickView('profiles')
+    setState(s => ({ ...s, material: '', colorName: '', filament: null }))
+  }, [])
+
+  const showCatalog = useCallback(() => {
+    setPickView('catalog')
   }, [])
 
   const close = useCallback(() => {
@@ -204,6 +221,44 @@ export default function AddSpoolPage() {
     }))
   }, [])
 
+  const selectProfile = useCallback((profile: SpoolProfileResponse) => {
+    const filament: FilamentProfile = {
+      brand: profile.brand,
+      filamentName: profile.name,
+      material: profile.material,
+      density: profile.density,
+      extruderMin: profile.extruderMin,
+      extruderMax: profile.extruderMax,
+      bedMin: profile.bedMin,
+      bedMax: profile.bedMax,
+      colorHex: profile.colorHex,
+      colorName: profile.colorName,
+      diameterTolerance: profile.diameterTolerance,
+      discontinued: false,
+      dataSheetUrl: null,
+      safetySheetUrl: null,
+    }
+    setState(s => ({
+      ...s,
+      filament,
+      brand: profile.brand,
+      material: profile.material,
+      colorName: profile.colorName,
+      step: 'details',
+      cur: String(profile.initialWeightG),
+      init: String(profile.initialWeightG),
+      emptyw: String(profile.spoolWeightG),
+      lowstock: String(profile.lowStockThresholdG),
+      value: profile.price != null ? String(profile.price) : s.value,
+      nozMin: profile.extruderMin != null ? String(profile.extruderMin) : s.nozMin,
+      nozMax: profile.extruderMax != null ? String(profile.extruderMax) : s.nozMax,
+      bedMin: profile.bedMin != null ? String(profile.bedMin) : s.bedMin,
+      bedMax: profile.bedMax != null ? String(profile.bedMax) : s.bedMax,
+      dia: profile.diameterTolerance != null ? String(profile.diameterTolerance) : s.dia,
+      density: profile.density != null ? String(profile.density) : s.density,
+    }))
+  }, [])
+
   const handleTagFound = useCallback(async (tagUid: string) => {
     try {
       const result = await scanTag(tagUid)
@@ -212,6 +267,7 @@ export default function AddSpoolPage() {
         return
       }
     } catch { /* lookup failed — treat as a new tag */ }
+    setPickView('profiles')
     setState(s => ({
       ...s,
       step: 'pick',
@@ -326,7 +382,7 @@ export default function AddSpoolPage() {
             <span className={styles.choiceTitle}>Scan NFC tag</span>
             <span className={styles.choiceDesc}>Tap the spool's NFC tag — details autofill and the tag is written to your library.</span>
           </button>
-          <button className={styles.choiceCard} onClick={() => { setState(s => ({ ...s, step: 'pick', mode: 'manual', brand: '', material: '', colorName: '' })) }}>
+          <button className={styles.choiceCard} onClick={() => { setPickView('profiles'); setState(s => ({ ...s, step: 'pick', mode: 'manual', brand: '', material: '', colorName: '' })) }}>
             <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: PEN_SVG }} />
             <span className={styles.choiceTitle}>Enter manually</span>
             <span className={styles.choiceDesc}>Pick the filament and type in the spool details yourself. No NFC tag is written.</span>
@@ -375,14 +431,22 @@ export default function AddSpoolPage() {
             <div className={styles.pickGrid3}>
               <div className={styles.field}>
                 <label>Brand</label>
-                <select value={state.brand} onChange={e => setState(s => ({ ...s, brand: e.target.value, material: '', colorName: '', filament: null }))}>
+                <select value={state.brand} onChange={e => {
+                  setState(s => ({ ...s, brand: e.target.value, material: '', colorName: '', filament: null }))
+                  setPickView('profiles')
+                }}>
                   <option value="">Select brand…</option>
                   {filteredBrands.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
               <div className={styles.field}>
                 <label>Material</label>
-                <select value={state.material} disabled={!state.brand} onChange={e => setState(s => ({ ...s, material: e.target.value, colorName: '', filament: null }))}>
+                <select value={state.material} disabled={!state.brand} onChange={e => {
+                  const material = e.target.value
+                  setState(s => ({ ...s, material, colorName: '', filament: null }))
+                  if (material) setPickView('catalog')
+                  else setPickView('profiles')
+                }}>
                   <option value="">{state.brand ? 'Select material…' : '—'}</option>
                   {filteredMats.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
@@ -395,27 +459,73 @@ export default function AddSpoolPage() {
                 </select>
               </div>
             </div>
-            <div className={styles.sectionLabel}>
-              {state.brand && state.material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Choose brand & material to see filaments'}
+            <div className={styles.segGroup}>
+              <button
+                type="button"
+                className={pickView === 'profiles' ? styles.on : ''}
+                aria-pressed={pickView === 'profiles'}
+                onClick={showSavedProfiles}
+              >
+                Saved profiles
+              </button>
+              <button
+                type="button"
+                className={pickView === 'catalog' ? styles.on : ''}
+                aria-pressed={pickView === 'catalog'}
+                onClick={showCatalog}
+              >
+                Catalog
+              </button>
             </div>
-            {state.brand && state.material ? (
-              matched.length > 0 ? (
-                <div className={styles.filaGrid}>
-                  {matched.map((f, i) => (
-                    <button key={i} className={styles.filaCard} onClick={() => selectFilament(f)}>
-                      <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 40, 'p' + i) }} />
-                      <div className={styles.filaMeta}>
-                        <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
-                        <div className={styles.filaBrand}>{f.material}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.emptyState}>No catalog match — pick a different material.</div>
-              )
+
+            {pickView === 'profiles' ? (
+              <>
+                <div className={styles.sectionLabel}>Spool profiles</div>
+                {profilesLoading ? (
+                  <div className={styles.filaGrid}>
+                    {[1, 2, 3, 4].map(i => <div key={i} className={styles.filaSkeleton} />)}
+                  </div>
+                ) : profiles.length > 0 ? (
+                  <div className={styles.filaGrid}>
+                    {profiles.map((p, i) => (
+                      <button key={p.id} type="button" className={styles.filaCard} onClick={() => selectProfile(p)}>
+                        <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(p.colorHex || '#888', 40, 'prof' + i) }} />
+                        <div className={styles.filaMeta}>
+                          <div className={styles.filaName}>{p.colorName || p.name}</div>
+                          <div className={styles.filaBrand}>{p.brand} · {p.material}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.emptyState}>No saved profiles yet — switch to Catalog and pick a brand & material.</div>
+                )}
+              </>
             ) : (
-              <div className={styles.emptyState}>Select a brand and material above.</div>
+              <>
+                <div className={styles.sectionLabel}>
+                  {state.material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Catalog filaments'}
+                </div>
+                {state.brand && state.material ? (
+                  matched.length > 0 ? (
+                    <div className={styles.filaGrid}>
+                      {matched.map((f, i) => (
+                        <button key={i} className={styles.filaCard} onClick={() => selectFilament(f)}>
+                          <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 40, 'p' + i) }} />
+                          <div className={styles.filaMeta}>
+                            <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
+                            <div className={styles.filaBrand}>{f.material}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.emptyState}>No catalog match — pick a different material.</div>
+                  )
+                ) : (
+                  <div className={styles.emptyState}>Select a brand and material above to browse filaments.</div>
+                )}
+              </>
             )}
           </div>
         </div>
