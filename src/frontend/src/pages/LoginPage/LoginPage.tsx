@@ -53,7 +53,7 @@ export default function LoginPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2.5" /><circle cx="9" cy="11" r="2" /><path d="M6 16c0-1.7 1.3-2.5 3-2.5s3 .8 3 2.5M14 9.5h5M14 13h4" /></svg>
                 <input
                   type="text"
-                  placeholder="mira.kovac"
+                  placeholder="your.username"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   required
