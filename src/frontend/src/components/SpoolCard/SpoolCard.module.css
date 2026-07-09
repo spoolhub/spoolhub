@@ -15,41 +15,24 @@
 }
 
 .top {
-  position: relative;
   display: flex;
-  gap: 0.75rem;
-  padding: 1rem 1rem 0.75rem;
-  overflow: hidden;
-}
-
-.topBg {
-  position: absolute;
-  inset: 0;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-.topGrad {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, transparent 40%, var(--surface) 100%);
-  pointer-events: none;
+  gap: 0.625rem;
+  padding: 0.875rem 0.875rem 0.625rem;
 }
 
 .iconWrap {
-  flex-shrink: 0;
   position: relative;
-  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
 }
 
 .nfcBadge {
   position: absolute;
-  bottom: -4px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
+  bottom: -2px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -59,7 +42,7 @@
   border: 2px solid var(--surface);
 }
 
-.info { position: relative; z-index: 1; flex: 1; min-width: 0; }
+.info { flex: 1; min-width: 0; }
 
 .nameRow {
   display: flex;
@@ -71,7 +54,7 @@
 .minW0 { min-width: 0; }
 
 .colorName {
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.25;
@@ -81,7 +64,7 @@
 }
 
 .brand {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -98,10 +81,10 @@
 }
 
 .badgeActive {
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
   background: oklch(0.6 0.13 150 / 0.15);
   color: oklch(0.5 0.12 150);
   letter-spacing: 0.04em;
@@ -113,10 +96,10 @@
 .materialBadge {
   display: inline-flex;
   align-items: center;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
   background: var(--accent-soft);
   color: var(--accent-ink);
   letter-spacing: 0.04em;
@@ -129,22 +112,22 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 0.25rem 1rem 0.5rem;
+  padding: 0.2rem 0.875rem 0.4rem;
 }
 
-.weightLabel { font-size: 0.9375rem; }
-.weightValue { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
-.weightSep   { font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0.1rem; }
-.weightInitial { font-size: 0.9375rem; color: var(--text-secondary); }
+.weightLabel { font-size: 0.8125rem; }
+.weightValue { font-size: 1.0625rem; font-weight: 700; color: var(--text-primary); }
+.weightSep   { font-size: 0.8125rem; color: var(--text-secondary); margin: 0 0.1rem; }
+.weightInitial { font-size: 0.8125rem; color: var(--text-secondary); }
 
-.pct { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.2rem; }
+.pct { font-size: 0.875rem; font-weight: 700; display: flex; align-items: center; gap: 0.2rem; }
 .pctLow    { color: #ef4444; }
 .pctMedium { color: #f59e0b; }
 .pctGood   { color: #22c55e; }
 
-.barWrap { padding: 0 1rem 0.75rem; }
+.barWrap { padding: 0 0.875rem 0.5rem; }
 .bar {
-  height: 0.5rem;
+  height: 0.25rem;
   background: var(--bg-tertiary);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -161,14 +144,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem 0.75rem;
+  padding: 0.4rem 0.875rem 0.625rem;
   border-top: 1px solid var(--border);
   margin-top: auto;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
 }
-.metaItem { display: flex; align-items: center; gap: 0.3rem; }
+.metaItem { display: flex; align-items: center; gap: 0.25rem; }
 
 .locationText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iconFlexShrink { flex-shrink: 0; }
-.printerIcon { width: 14px; height: 14px; flex-shrink: 0; }
+.printerIcon { width: 12px; height: 12px; flex-shrink: 0; }

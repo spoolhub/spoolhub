@@ -32,10 +32,8 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
   return (
     <Link to={`/spools/${spool.id}`} className={styles.card} onClick={handleClick}>
       <div className={styles.top}>
-        <div className={styles.topBg} style={{ backgroundColor: spool.colorHex }} />
-        <div className={styles.topGrad} />
         <div className={styles.iconWrap}>
-          <SpoolIcon color={spool.colorHex} size={72} />
+          <SpoolIcon color={spool.colorHex} size={56} />
           {spool.hasNfcTag && (
             <span className={styles.nfcBadge} aria-label={t('spools.nfcTagLinked')}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -81,7 +79,7 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
 
       <div className={styles.barWrap}>
         <div className={styles.bar}>
-          <div className={styles.barFill} style={{ width: `${pct}%`, backgroundColor: barColor, boxShadow: `0 0 8px ${barColor}66` }} />
+          <div className={styles.barFill} style={{ width: `${pct}%`, backgroundColor: barColor, boxShadow: `0 0 4px ${barColor}44` }} />
         </div>
       </div>
 

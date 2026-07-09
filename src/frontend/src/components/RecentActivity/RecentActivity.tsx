@@ -33,6 +33,7 @@ function applyJobToSnapshot(a: Activity, job: PrintJobResponse): Activity {
       estimatedMins: remainingMins      ?? a.snapshot?.estimatedMins,
       printFileName: job.printFileName  ?? undefined,
       gramsUsed:     job.gramsUsed,
+      printerName:   job.printerName    ?? undefined,
     },
   }
 }
@@ -93,11 +94,29 @@ function relativeTime(iso: string, t: (k: string, o?: { count: number }) => stri
 // Build activity description lines as JSX (mimics handoff's ACTS array pattern)
 interface ActionLine { text: string; bold?: boolean }
 
-function buildActionLines(a: Activity, t: (k: string) => string): { line1: ActionLine[]; line2?: string } {
+function spoolLabel(a: Activity): string {
   const snap = a.snapshot
   const snapBrand = snap?.brand ?? ''
   const snapColor = snap?.colorName ?? ''
-  const spoolName = snapBrand && snapColor ? `${snapBrand} ${snapColor}` : snapBrand || snapColor || a.resourceName || ''
+  return snapBrand && snapColor ? `${snapBrand} ${snapColor}` : snapBrand || snapColor || a.resourceName || ''
+}
+
+function printerFromDescription(description: string | null, prefix: 'to' | 'from'): string | null {
+  if (!description) return null
+  const match = description.match(prefix === 'to' ? /^to\s+(.+)/i : /^from\s+(.+)/i)
+  return match?.[1]?.trim() ?? null
+}
+
+function printerLine(printerName: string, t: (k: string) => string): ActionLine[] {
+  return [
+    { text: ` ${t('recentActivity.onPrinter')} ` },
+    { text: printerName, bold: true },
+  ]
+}
+
+function buildActionLines(a: Activity, t: (k: string) => string): { line1: ActionLine[]; line2?: ActionLine[] } {
+  const snap = a.snapshot
+  const spoolName = spoolLabel(a)
 
   const bold = (text: string): ActionLine => ({ text, bold: true })
   const plain = (text: string): ActionLine => ({ text })
@@ -115,10 +134,20 @@ function buildActionLines(a: Activity, t: (k: string) => string): { line1: Actio
       return { line1: [bold(spoolName), plain(` ${t('activityCard.spoolDeleted')}`)] }
     case 'SpoolScanned':
       return { line1: [bold(spoolName), plain(` ${t('activityCard.spoolScanned')}`)] }
-    case 'SpoolAssigned':
-      return { line1: [bold(spoolName), plain(` ${t('activityCard.spoolAssigned')}`)] }
-    case 'SpoolUnassigned':
-      return { line1: [bold(spoolName), plain(` ${t('activityCard.spoolUnassigned')}`)] }
+    case 'SpoolAssigned': {
+      const printer = printerFromDescription(a.description, 'to')
+      return {
+        line1: [bold(spoolName), plain(` ${t('activityCard.spoolAssigned')}`)],
+        ...(printer ? { line2: printerLine(printer, t) } : {}),
+      }
+    }
+    case 'SpoolUnassigned': {
+      const printer = printerFromDescription(a.description, 'from')
+      return {
+        line1: [bold(spoolName), plain(` ${t('activityCard.spoolUnassigned')}`)],
+        ...(printer ? { line2: printerLine(printer, t) } : {}),
+      }
+    }
     case 'PrinterAdded':
       return { line1: [bold(a.resourceName), plain(` ${t('activityCard.printerAdded')}`)] }
     case 'PrinterUpdated':
@@ -126,17 +155,34 @@ function buildActionLines(a: Activity, t: (k: string) => string): { line1: Actio
     case 'PrinterDeleted':
       return { line1: [bold(a.resourceName), plain(` ${t('activityCard.printerDeleted')}`)] }
     case 'PrintStarted':
-      return {
-        line1: [plain(t('activityCard.printStarted')), bold(a.resourceName ? ` ${a.resourceName}` : '')],
-      }
-    case 'PrintCompleted':
-      return {
-        line1: [plain(t('activityCard.printCompleted')), bold(a.resourceName ? ` ${a.resourceName}` : '')],
-      }
     case 'PrintPaused':
-      return { line1: [plain(t('activityCard.printPaused')), bold(a.resourceName ? ` ${a.resourceName}` : '')] }
+    case 'PrintResumed':
     case 'PrintFailed':
-      return { line1: [plain(`⚠ ${t('activityCard.printFailed')}`), bold(a.resourceName ? ` ${a.resourceName}` : '')] }
+    case 'PrintCancelled':
+    case 'PrintCompleted': {
+      const printer = snap?.printerName ?? a.resourceName
+      const actionKey = {
+        PrintStarted: 'activityCard.printStarted',
+        PrintPaused: 'activityCard.printPaused',
+        PrintResumed: 'activityCard.printResumed',
+        PrintFailed: 'activityCard.printFailed',
+        PrintCancelled: 'activityCard.printCancelled',
+        PrintCompleted: 'activityCard.printCompleted',
+      }[a.eventType] as string
+      const prefix = a.eventType === 'PrintFailed' ? '⚠ ' : ''
+      if (spoolName && spoolName !== printer) {
+        const gramsSuffix = a.eventType === 'PrintCompleted' && snap?.gramsUsed != null && snap.gramsUsed > 0
+          ? ` · ${snap.gramsUsed}g ${t('activityCard.used')}`
+          : ''
+        return {
+          line1: [bold(spoolName), plain(`${gramsSuffix} · ${prefix}${t(actionKey)}`)],
+          ...(printer ? { line2: printerLine(printer, t) } : {}),
+        }
+      }
+      return {
+        line1: [plain(`${prefix}${t(actionKey)}`), bold(printer ? ` ${printer}` : '')],
+      }
+    }
     case 'NfcTagRegistered':
     case 'NfcTagRemoved':
       return { line1: [plain(t('activityCard.nfcRegistered')), bold(spoolName ? ` ${spoolName}` : '')] }
@@ -199,7 +245,7 @@ export default function RecentActivity({ limit = 5, spools }: { limit?: number; 
   return (
     <div className={styles.act}>
       {activities.slice(0, limit).map(a => {
-        const { line1 } = buildActionLines(a, t)
+        const { line1, line2 } = buildActionLines(a, t)
         const time = relativeTime(a.createdAt, t as (k: string, o?: { count: number }) => string)
         return (
           <div key={a.id} className={styles.actitem}>
@@ -210,6 +256,13 @@ export default function RecentActivity({ limit = 5, spools }: { limit?: number; 
                   seg.bold ? <b key={i}>{seg.text}</b> : <span key={i}>{seg.text}</span>
                 )}
               </div>
+              {line2 && (
+                <div className={styles.sub}>
+                  {line2.map((seg, i) =>
+                    seg.bold ? <b key={i}>{seg.text}</b> : <span key={i}>{seg.text}</span>
+                  )}
+                </div>
+              )}
               <div className={styles.b}>{time}</div>
             </div>
           </div>
