@@ -74,6 +74,15 @@ const MOCK_PROFILE = {
   spoolCount: 3,
 }
 
+const MOCK_LOCATION = {
+  id: 'loc-1',
+  name: 'Shelf A1',
+  type: 'shelf' as const,
+  capacity: 12,
+  humidity: null,
+  createdAt: '2026-01-01T00:00:00Z',
+}
+
 const createdSpool = {
   id: 'spool-999',
   brand: 'Bambu Lab',
@@ -153,7 +162,7 @@ function mockDefaults() {
   vi.mocked(spoolProfilesApi.getAll).mockResolvedValue([MOCK_PROFILE])
   vi.mocked(printersApi.getAll).mockResolvedValue([])
   vi.mocked(spoolsApi.getAll).mockResolvedValue([])
-  vi.mocked(locationsApi.getAll).mockResolvedValue([])
+  vi.mocked(locationsApi.getAll).mockResolvedValue([MOCK_LOCATION])
   vi.mocked(scanTag).mockResolvedValue({ status: 'unknown', tagUid: '', spool: null, message: null })
 }
 

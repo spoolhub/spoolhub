@@ -49,8 +49,6 @@ interface AddState {
   density: string
 }
 
-const SHELVES = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
-
 // ───── 3/4 perspective spool icon ─────
 function isNearBlack(hex: string) {
   if (!hex.startsWith('#') || hex.length < 7) return false
@@ -177,7 +175,7 @@ export default function AddSpoolPage() {
     filamentsApi.getAll().then(setFilaments).catch(() => {})
     spoolProfilesApi.getAll().then(setProfiles).catch(() => {}).finally(() => setProfilesLoading(false))
     printersApi.getAll().then(setPrinters).catch(() => {})
-    locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name))).catch(() => {})
+    locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name).sort((a, b) => a.localeCompare(b)))).catch(() => {})
   }, [])
 
   const showSavedProfiles = useCallback(() => {
@@ -682,7 +680,7 @@ export default function AddSpoolPage() {
                 <label>Storage location</label>
                 <select value={state.loc} onChange={e => setState(s => ({ ...s, loc: e.target.value }))}>
                   <option value="">Select location…</option>
-                  {[...new Set([...locationNames, ...SHELVES])].map(l => (
+                  {locationNames.map(l => (
                     <option key={l} value={l}>{l}</option>
                   ))}
                 </select>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
+import { locationsApi } from '@/api/locations'
 import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
@@ -10,8 +11,6 @@ import { getPrinterImage } from '@/utils/printerImages'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
-
-const BASE_LOCATIONS = ['Shelf A1', 'Shelf A2', 'Shelf B1', 'Shelf B2', 'Drybox 1', 'Drybox 2']
 
 const NFC_UID_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -55,14 +54,22 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const [stockLocation, setStockLocation] = useState<string | null>(spool.stockLocation)
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [newLocation, setNewLocation] = useState('')
-  const [customLocations, setCustomLocations] = useState<string[]>(
-    spool.stockLocation && !BASE_LOCATIONS.includes(spool.stockLocation) ? [spool.stockLocation] : []
-  )
+  const [dbLocations, setDbLocations] = useState<string[]>([])
+  const [customLocations, setCustomLocations] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     printersApi.getAll().then(setPrinters).catch(() => {})
+    locationsApi.getAll()
+      .then(data => setDbLocations(data.map(l => l.name).sort((a, b) => a.localeCompare(b))))
+      .catch(() => {})
   }, [spool.id])
+
+  useEffect(() => {
+    if (spool.stockLocation && !dbLocations.includes(spool.stockLocation)) {
+      setCustomLocations(prev => prev.includes(spool.stockLocation!) ? prev : [...prev, spool.stockLocation!])
+    }
+  }, [spool.stockLocation, dbLocations])
 
   const selectedPrinter = useMemo(
     () => printers.find(p => p.id === printerId),
@@ -348,8 +355,8 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                     }}
                   >
                     <option value="">{t('scan.selectLocation')}</option>
-                    {BASE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                    {customLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                    {dbLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                    {customLocations.filter(l => !dbLocations.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
                     <option value="__add_new">{t('scan.addNewLocation')}</option>
                   </select>
                   {showAddLocation && (
