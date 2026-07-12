@@ -136,6 +136,7 @@ function renderPage(path = '/spools/add') {
           <Route path="/spools/add/manual" element={<AddSpoolPage />} />
           <Route path="/spools/add/nfctag" element={<AddSpoolPage />} />
           <Route path="/spools/:id" element={<div>Spool detail</div>} />
+          <Route path="/scan" element={<div>Scan result</div>} />
           <Route path="/spools" element={<div>Spools list</div>} />
           <Route path="/" element={<div>Home</div>} />
         </Routes>
@@ -228,13 +229,13 @@ describe('AddSpoolPage — scan step (real reader via agent)', () => {
     expect(screen.getByText(/will be written/)).toBeInTheDocument()
   })
 
-  it('navigates to the spool when the scanned tag is already registered', async () => {
+  it('navigates to the scan result when the scanned tag is already registered', async () => {
     vi.mocked(scanTag).mockResolvedValue({ status: 'found', tagUid: '04:AA:BB:CC', spool: createdSpool, message: null })
     renderPage()
     fireEvent.click(screen.getByText('Scan NFC tag'))
     await waitFor(() => expect(fireTagScan).not.toBeNull())
     await act(async () => { fireTagScan!('04:AA:BB:CC') })
-    await waitFor(() => screen.getByText('Spool detail'))
+    await waitFor(() => screen.getByText('Scan result'))
   })
 
   it('moves to pick with the NFC badge when tagUid arrives via URL', async () => {

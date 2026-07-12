@@ -285,7 +285,7 @@ export default function AddSpoolPage() {
     try {
       const result = await scanTag(tagUid)
       if (result.status === 'found' && result.spool) {
-        navigate(`/spools/${result.spool.id}`)
+        navigate(`/scan?tagUid=${encodeURIComponent(tagUid)}`)
         return
       }
     } catch { /* lookup failed — treat as a new tag */ }
@@ -311,7 +311,7 @@ export default function AddSpoolPage() {
     }))
     scanTag(tagUidParam).then(result => {
       if (result.status === 'found' && result.spool) {
-        navigate(`/spools/${result.spool.id}`, { replace: true })
+        navigate(`/scan?tagUid=${encodeURIComponent(tagUidParam)}`, { replace: true })
       } else {
         toPick()
       }
