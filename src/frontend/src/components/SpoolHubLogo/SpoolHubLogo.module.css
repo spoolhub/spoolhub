@@ -1,9 +1,25 @@
-.filament {
+.wheel {
   stroke: #0a0a0a;
 }
 
-:global(.dark) .filament {
+.wheelFill {
+  fill: #0a0a0a;
+}
+
+.hole {
   stroke: #ffffff;
+}
+
+:global(.dark) .wheel {
+  stroke: #ffffff;
+}
+
+:global(.dark) .wheelFill {
+  fill: #ffffff;
+}
+
+:global(.dark) .hole {
+  stroke: #0a0a0a;
 }
 
 .tile {
