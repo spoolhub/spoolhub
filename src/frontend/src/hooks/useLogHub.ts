@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 import { apiClient } from '@/api/client'
+import { getToken } from '@/api/session'
 
 export interface LogEntry {
   timestamp: string
@@ -19,7 +20,7 @@ export function useLogHub() {
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL)
+      .withUrl(HUB_URL, { accessTokenFactory: () => getToken() ?? '' })
       .withAutomaticReconnect()
       .build()
 

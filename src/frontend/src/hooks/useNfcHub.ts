@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 import type { NfcScanResult, NfcReaderStatus } from '@/types/nfc'
 import type { SpoolResponse } from '@/types/spool'
+import { getToken } from '@/api/session'
 
 const HUB_URL = `${import.meta.env.VITE_API_URL}/hubs/nfc`
 
@@ -22,7 +23,7 @@ export function useNfcHub(
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL)
+      .withUrl(HUB_URL, { accessTokenFactory: () => getToken() ?? '' })
       .withAutomaticReconnect()
       .build()
 

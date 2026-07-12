@@ -89,6 +89,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+        // SignalR websocket/SSE clients cannot send an Authorization header;
+        // they pass the JWT as ?access_token= on hub URLs.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -167,10 +182,10 @@ app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" 
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
-app.MapHub<NfcScanHub>("/hubs/nfc");
-app.MapHub<PrinterHub>("/hubs/printer");
-app.MapHub<LogHub>("/hubs/logs");
+app.MapControllers().RequireAuthorization();
+app.MapHub<NfcScanHub>("/hubs/nfc").RequireAuthorization();
+app.MapHub<PrinterHub>("/hubs/printer").RequireAuthorization();
+app.MapHub<LogHub>("/hubs/logs").RequireAuthorization();
 
 if (Directory.Exists(app.Environment.WebRootPath))
 {
