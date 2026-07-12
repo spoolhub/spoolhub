@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { scanTag } from '@/api/nfc'
+import { printersApi } from '@/api/printers'
 import { writeAgentTagUrl, appBaseUrl } from '@/hooks/useAgentNfc'
 import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
@@ -131,7 +132,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
 
   useEffect(() => {
     if (!detailSpool) return
-    fetch('/api/printers').then(r => r.json()).then(setPrinters).catch(() => {})
+    printersApi.getAll().then(setPrinters).catch(() => {})
   }, [detailSpool])
 
   const handleTagFound = useCallback(async (uid: string) => {

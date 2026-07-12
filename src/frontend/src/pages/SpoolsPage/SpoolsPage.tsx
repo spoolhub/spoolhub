@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import SpoolCard from '@/components/SpoolCard'
@@ -12,6 +12,8 @@ import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
+import { spoolsApi } from '@/api/spools'
+import { printersApi } from '@/api/printers'
 import styles from './SpoolsPage.module.css'
 
 function NfcBadge({ label }: { label: string }) {
@@ -47,6 +49,8 @@ const locationLabel = (s: SpoolResponse): string => {
 export default function SpoolsPage() {
   const { t } = useTranslation()
   const location = useLocation()
+  const navigate = useNavigate()
+  const { id: spoolIdParam } = useParams<{ id: string }>()
   const [spools, setSpools] = useState<SpoolResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -64,14 +68,20 @@ export default function SpoolsPage() {
   const isProfileView = activeFilter === 'profile'
 
   useEffect(() => {
-    fetch('/api/spools').then(r => r.json()).then((data: SpoolResponse[]) => {
+    spoolsApi.getAll().then(data => {
       setSpools(data)
       setLoading(false)
     }).catch(() => setLoading(false))
-    fetch('/api/printers').then(r => r.json()).then((data: PrinterResponse[]) => {
-      setPrinters(data)
-    }).catch(() => {})
+    printersApi.getAll().then(setPrinters).catch(() => {})
   }, [])
+
+  // Deep link: /spools/:id opens the detail drawer for that spool
+  useEffect(() => {
+    if (!spoolIdParam || loading) return
+    const spool = spools.find(s => s.id === spoolIdParam)
+    if (spool) setSelected(spool)
+    else navigate('/spools', { replace: true })
+  }, [spoolIdParam, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isProfileView) return
@@ -311,7 +321,10 @@ export default function SpoolsPage() {
         <SpoolDetailDrawer
           spool={selected}
           printers={printers}
-          onClose={() => setSelected(null)}
+          onClose={() => {
+            setSelected(null)
+            if (spoolIdParam) navigate('/spools', { replace: true })
+          }}
           onUpdated={updated => {
             setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
             setSelected(updated)
@@ -319,6 +332,7 @@ export default function SpoolsPage() {
           onDeleted={id => {
             setSpools(prev => prev.filter(s => s.id !== id))
             setSelected(null)
+            if (spoolIdParam) navigate('/spools', { replace: true })
           }}
         />
       )}

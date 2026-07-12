@@ -4,6 +4,10 @@ import { SpoolIcon } from '@/components/icons'
 import AddBrandModal from '@/components/AddBrandModal'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import { settingsApi } from '@/api/settings'
+import { brandsApi } from '@/api/brands'
+import { spoolsApi } from '@/api/spools'
+import { filamentsApi } from '@/api/filaments'
+import { printersApi } from '@/api/printers'
 import type { BrandApiResponse as Brand } from '@/types/brand'
 import type { SpoolResponse } from '@/types/spool'
 import type { FilamentProfile } from '@/types/filament'
@@ -39,10 +43,10 @@ export default function BrandsPage() {
 
   const refresh = useCallback(() => {
     return Promise.all([
-      fetch('/api/brands').then(r => r.json()),
-      fetch('/api/spools').then(r => r.json()),
-      fetch('/api/filaments').then(r => r.json()),
-      fetch('/api/printers').then(r => r.json()),
+      brandsApi.getAll(),
+      spoolsApi.getAll(),
+      filamentsApi.getAll(),
+      printersApi.getAll(),
     ]).then(([brandList, spools, filaments, printerList]: [Brand[], SpoolResponse[], FilamentProfile[], PrinterResponse[]]) => {
       const stats: BrandStats[] = brandList.map(b => {
         const brandSpools = spools.filter(s => s.brand === b.name)
