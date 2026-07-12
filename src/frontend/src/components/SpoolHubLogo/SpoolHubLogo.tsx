@@ -46,6 +46,10 @@ function SpoolIcon({
   const spoke = color || BRIGHT
   const hole = color ? color : 'white'
   const waveColor = color || DEEP
+  // no explicit color → wheel (rim, hub, spokes) follows the theme (black in light, white in dark)
+  const wheelClass = color ? undefined : styles.wheel
+  const wheelFillClass = color ? undefined : styles.wheelFill
+  const holeClass = color ? undefined : styles.hole
 
   return (
     <svg
@@ -60,12 +64,13 @@ function SpoolIcon({
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={spoke} strokeWidth="2" opacity="0.5"
+              className={wheelClass}
               transform={angle ? `rotate(${angle})` : undefined}
             />
           ))}
         </g>
       </defs>
-      <circle cx="115" cy="90" r="65" fill="none" stroke={rim} strokeWidth="3" />
+      <circle cx="115" cy="90" r="65" fill="none" stroke={rim} strokeWidth="3" className={wheelClass} />
       <g transform="translate(115,90)">
         <g>
           {animated && (
@@ -76,8 +81,8 @@ function SpoolIcon({
           <circle r="33" fill="none" stroke={ring} strokeWidth="6" opacity="0.9" />
           <use href={`#spk-${uid}`} />
         </g>
-        <circle r="17" fill={hub} />
-        <circle r="9" fill="none" stroke={hole} strokeWidth="2" opacity="0.6" />
+        <circle r="17" fill={hub} className={wheelFillClass} />
+        <circle r="9" fill="none" stroke={hole} strokeWidth="2" opacity="0.6" className={holeClass} />
       </g>
       {waves && WAVES.map(([from, to, r, strokeWidth, maxOpacity, begin]) => (
         <path
@@ -112,12 +117,13 @@ function FullLogo({ size, uid, animated = true }: { size: number; uid: string; a
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={BRIGHT} strokeWidth="2" opacity="0.5"
+              className={styles.wheel}
               transform={angle ? `rotate(${angle})` : undefined}
             />
           ))}
         </g>
       </defs>
-      <circle cx="115" cy="90" r="65" fill="none" stroke={DEEP} strokeWidth="3" />
+      <circle cx="115" cy="90" r="65" fill="none" stroke={DEEP} strokeWidth="3" className={styles.wheel} />
       <g transform="translate(115,90)">
         <g>
           {animated && (
@@ -128,8 +134,8 @@ function FullLogo({ size, uid, animated = true }: { size: number; uid: string; a
           <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" />
           <use href={`#spk-${uid}`} />
         </g>
-        <circle r="17" fill={DEEP} />
-        <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6" />
+        <circle r="17" fill={DEEP} className={styles.wheelFill} />
+        <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6" className={styles.hole} />
       </g>
       {WAVES.map(([from, to, r, strokeWidth, maxOpacity, begin]) => (
         <path

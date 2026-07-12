@@ -29,13 +29,14 @@ export default function SpoolHubLogo({ height = 40, className }: SpoolHubLogoPro
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={BRIGHT} strokeWidth="2" opacity="0.5"
+              className={styles.wheel}
               transform={angle === 0 ? undefined : `rotate(${angle})`}
             />
           ))}
         </g>
       </defs>
 
-      <circle cx="115" cy="90" r="65" fill="none" stroke={DEEP} strokeWidth="3" />
+      <circle cx="115" cy="90" r="65" fill="none" stroke={DEEP} strokeWidth="3" className={styles.wheel} />
       <g transform="translate(115,90)">
         <g>
           <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
@@ -44,8 +45,8 @@ export default function SpoolHubLogo({ height = 40, className }: SpoolHubLogoPro
           <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" />
           <use href={`#spk-${uid}`} />
         </g>
-        <circle r="17" fill={DEEP} />
-        <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6" />
+        <circle r="17" fill={DEEP} className={styles.wheelFill} />
+        <circle r="9" fill="none" stroke="white" strokeWidth="2" opacity="0.6" className={styles.hole} />
       </g>
 
       <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke={DEEP} strokeWidth="3.5" strokeLinecap="round">

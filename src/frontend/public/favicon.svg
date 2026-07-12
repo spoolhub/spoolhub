@@ -1,18 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 25 130 130">
-  <circle cx="115" cy="90" r="65" fill="none" stroke="#0EA5E9" stroke-width="3"/>
-  <circle cx="115" cy="90" r="53" fill="none" stroke="#F97316" stroke-width="6" opacity="0.4"/>
-  <circle cx="115" cy="90" r="43" fill="none" stroke="#F97316" stroke-width="6" opacity="0.65"/>
-  <circle cx="115" cy="90" r="33" fill="none" stroke="#F97316" stroke-width="6" opacity="0.9"/>
-  <g transform="translate(115,90)">
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(45)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(90)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(135)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(180)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(225)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(270)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(315)"/>
-    <circle cx="0" cy="0" r="17" fill="#0EA5E9"/>
-    <circle cx="0" cy="0" r="9" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136 136">
+  <style>
+    .wheel { stroke: #0a0a0a; }
+    .hub { fill: #0a0a0a; }
+    .hole { stroke: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .wheel { stroke: #ffffff; }
+      .hub { fill: #ffffff; }
+      .hole { stroke: #0a0a0a; }
+    }
+  </style>
+  <g transform="translate(68,68)">
+    <circle class="wheel" r="64" fill="none" stroke-width="6"/>
+    <circle r="51" fill="none" stroke="#22C55E" stroke-width="9" opacity="0.45"/>
+    <circle r="40" fill="none" stroke="#22C55E" stroke-width="9" opacity="0.7"/>
+    <circle r="29" fill="none" stroke="#22C55E" stroke-width="9"/>
+    <circle class="hub" r="19"/>
+    <circle class="hole" r="10" fill="none" stroke-width="3" opacity="0.7"/>
   </g>
 </svg>
