@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 25 130 130">
-  <circle cx="115" cy="90" r="65" fill="none" stroke="#0EA5E9" stroke-width="3"/>
-  <circle cx="115" cy="90" r="53" fill="none" stroke="#F97316" stroke-width="6" opacity="0.4"/>
-  <circle cx="115" cy="90" r="43" fill="none" stroke="#F97316" stroke-width="6" opacity="0.65"/>
-  <circle cx="115" cy="90" r="33" fill="none" stroke="#F97316" stroke-width="6" opacity="0.9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="45 20 140 140">
+  <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" stroke-width="3"/>
+  <circle cx="115" cy="90" r="53" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.4"/>
+  <circle cx="115" cy="90" r="43" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.65"/>
+  <circle cx="115" cy="90" r="33" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.9"/>
   <g transform="translate(115,90)">
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(45)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(90)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(135)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(180)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(225)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(270)"/>
-    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#F97316" stroke-width="2" opacity="0.5" transform="rotate(315)"/>
-    <circle cx="0" cy="0" r="17" fill="#0EA5E9"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(45)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(90)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(135)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(180)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(225)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(270)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(315)"/>
+    <circle cx="0" cy="0" r="17" fill="#15803D"/>
     <circle cx="0" cy="0" r="9" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
   </g>
 </svg>
