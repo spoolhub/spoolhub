@@ -556,3 +556,65 @@
 .btnAdd:hover { background: var(--accent); color: #fff; }
 .btnAdd:disabled { opacity: .5; cursor: not-allowed; }
 .btnAdd:disabled:hover { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* ── Inline add brand (matches AddSpoolProfileModal) ── */
+.addBrandOption { font-weight: 600; color: var(--accent-ink); }
+.selectHighlight { animation: brandFlash 1.5s ease-out; }
+@keyframes brandFlash {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  30% { box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--accent); }
+}
+.addBrandPolling {
+  font-size: 12px; font-weight: 600; color: var(--accent-ink);
+  margin-top: 6px; display: flex; align-items: baseline; gap: 0;
+}
+.dots span { animation: dotBlink 1.4s infinite; }
+.dots span:nth-child(1) { animation-delay: 0s; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBlink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+
+.inlineBrandSearch { position: relative; }
+.inlineBrandInput {
+  width: 100%; height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt); color: var(--text-primary);
+  border-radius: var(--r-sm);
+  padding: 0 36px 0 13px; font: inherit; font-size: 14px;
+  outline: 0; transition: .15s var(--ease);
+}
+.inlineBrandInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.inlineBrandSpinner {
+  position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+.inlineBrandDropdown {
+  position: absolute; z-index: 50; margin-top: 4px; width: 100%;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); box-shadow: var(--shadow-card);
+  overflow: hidden; max-height: 208px; overflow-y: auto;
+  list-style: none; padding: 0; margin: 4px 0 0;
+}
+.inlineBrandResult {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 13px; text-align: left;
+  background: none; border: none; cursor: pointer;
+  font: inherit; color: var(--text-primary);
+  transition: background .15s var(--ease);
+}
+.inlineBrandResult:hover:not(:disabled) { background: var(--surface-alt); }
+.inlineBrandResult:disabled { opacity: .55; cursor: not-allowed; }
+.inlineBrandMeta { font-size: 12px; color: var(--muted); flex: none; margin-left: 12px; }
+.inlineBrandError { font-size: 12px; color: var(--danger, #dc2626); margin: 6px 0 0; }
+.inlineBrandClose {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; display: grid; place-items: center;
+  background: none; border: none; cursor: pointer; color: var(--muted); padding: 0;
+}
+.inlineBrandClose:hover { color: var(--text-primary); }
+.inlineBrandClose svg { width: 14px; height: 14px; }

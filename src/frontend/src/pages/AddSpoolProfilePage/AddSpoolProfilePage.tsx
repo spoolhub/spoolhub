@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { filamentsApi } from '@/api/filaments'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
+import BrandPickerField from '@/components/BrandPickerField'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
 import type { FilamentProfile } from '@/types/filament'
 import styles from '@/pages/AddSpoolPage/AddSpoolPage.module.css'
@@ -74,7 +75,12 @@ export default function AddSpoolProfilePage() {
 
   const close = useCallback(() => navigate('/spools', { state: { filter: 'profile' } }), [navigate])
 
-  const filteredBrands = [...new Set(filaments.map(f => f.brand))]
+  const handleBrandChange = useCallback((nextBrand: string) => {
+    setBrand(nextBrand)
+    setMaterial('')
+    setColorName('')
+  }, [])
+
   const filteredMats = brand ? [...new Set(filaments.filter(f => f.brand === brand).map(f => f.material))] : []
   const filteredColors = brand && material ? [...new Set(filaments.filter(f => f.brand === brand && f.material === material).map(f => f.colorName ?? ''))] : []
   const matched = brand && material
@@ -137,13 +143,12 @@ export default function AddSpoolProfilePage() {
         <div className={styles.detailPanel}>
           <div className={styles.sectionLabel}>Filament</div>
           <div className={styles.pickGrid3}>
-            <div className={styles.field}>
-              <label>Brand</label>
-              <select value={brand} onChange={e => { setBrand(e.target.value); setMaterial(''); setColorName('') }}>
-                <option value="">Select brand…</option>
-                {filteredBrands.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
+            <BrandPickerField
+              value={brand}
+              onChange={handleBrandChange}
+              filaments={filaments}
+              onFilamentsChange={setFilaments}
+            />
             <div className={styles.field}>
               <label>Material</label>
               <select value={material} disabled={!brand} onChange={e => { setMaterial(e.target.value); setColorName('') }}>

@@ -7,7 +7,8 @@ import { withNotificationsProvider } from '../utils/withNotificationsProvider'
 vi.mock('@/api/spools', () => ({ spoolsApi: { add: vi.fn(), getAll: vi.fn(), assignPrinter: vi.fn() } }))
 vi.mock('@/api/spoolProfiles', () => ({ spoolProfilesApi: { getAll: vi.fn() } }))
 vi.mock('@/api/nfc', () => ({ scanTag: vi.fn(), registerTag: vi.fn() }))
-vi.mock('@/api/filaments', () => ({ filamentsApi: { getAll: vi.fn() } }))
+vi.mock('@/api/filaments', () => ({ filamentsApi: { getAll: vi.fn(), refresh: vi.fn() } }))
+vi.mock('@/api/brands', () => ({ brandsApi: { getAll: vi.fn(), searchOfd: vi.fn(), add: vi.fn() } }))
 vi.mock('@/api/printers', () => ({ printersApi: { getAll: vi.fn() } }))
 vi.mock('@/api/locations', () => ({ locationsApi: { getAll: vi.fn(), add: vi.fn() } }))
 
@@ -32,6 +33,7 @@ import { spoolsApi } from '@/api/spools'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { scanTag, registerTag } from '@/api/nfc'
 import { filamentsApi } from '@/api/filaments'
+import { brandsApi } from '@/api/brands'
 import { printersApi } from '@/api/printers'
 import { locationsApi } from '@/api/locations'
 
@@ -163,6 +165,10 @@ function mockDefaults() {
   agentState = 'ready'
   fireTagScan = null
   vi.mocked(filamentsApi.getAll).mockResolvedValue([MOCK_FILAMENT])
+  vi.mocked(filamentsApi.refresh).mockResolvedValue(undefined)
+  vi.mocked(brandsApi.getAll).mockResolvedValue([])
+  vi.mocked(brandsApi.searchOfd).mockResolvedValue([])
+  vi.mocked(brandsApi.add).mockResolvedValue({ id: 'brand-1', name: 'eSUN', domain: '', ofdSlug: 'esun', createdAt: '2026-01-01T00:00:00Z' })
   vi.mocked(spoolProfilesApi.getAll).mockResolvedValue([MOCK_PROFILE])
   vi.mocked(printersApi.getAll).mockResolvedValue([])
   vi.mocked(spoolsApi.getAll).mockResolvedValue([])
@@ -471,5 +477,49 @@ describe('AddSpoolPage — form', () => {
     await waitFor(() => expect(screen.getByText('Adding…')).toBeInTheDocument())
     await waitFor(() => screen.getByText('Spools list'), { timeout: 3000 })
     expect(screen.queryByText('Spool added')).not.toBeInTheDocument()
+  })
+})
+
+describe('AddSpoolPage — add brand', () => {
+  beforeEach(mockDefaults)
+
+  it('lists synced brands with filament counts and an add-brand option', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    expect(screen.getByRole('option', { name: 'Bambu Lab (1 filament)' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '+ Add brand' })).toBeInTheDocument()
+  })
+
+  it('opens OFD search when add brand is chosen', async () => {
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.change(screen.getByDisplayValue('Select brand…'), { target: { value: '__add__' } })
+    expect(screen.getByPlaceholderText('Search Open Filament Database…')).toBeInTheDocument()
+  })
+
+  it('searches OFD and syncs a selected brand', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.mocked(brandsApi.searchOfd).mockResolvedValue([
+      { name: 'eSUN', slug: 'esun', materialCount: 42 },
+    ])
+    vi.mocked(filamentsApi.getAll)
+      .mockResolvedValueOnce([MOCK_FILAMENT])
+      .mockResolvedValue([
+        MOCK_FILAMENT,
+        { ...MOCK_FILAMENT, brand: 'eSUN', filamentName: 'PLA+', colorName: 'Blue' },
+      ])
+
+    renderPage('/spools/add/manual')
+    await waitFor(() => screen.getByText('Select brand…'))
+    fireEvent.change(screen.getByDisplayValue('Select brand…'), { target: { value: '__add__' } })
+    fireEvent.change(screen.getByPlaceholderText('Search Open Filament Database…'), { target: { value: 'esun' } })
+    await waitFor(() => expect(brandsApi.searchOfd).toHaveBeenCalledWith('esun', expect.any(AbortSignal)))
+    await waitFor(() => screen.getByRole('button', { name: /42 materials/ }))
+    fireEvent.click(screen.getByRole('button', { name: /42 materials/ }))
+    await waitFor(() => expect(brandsApi.add).toHaveBeenCalledWith({ name: 'eSUN', domain: '', ofdSlug: 'esun' }))
+    await waitFor(() => expect(filamentsApi.refresh).toHaveBeenCalled())
+    await act(async () => { vi.advanceTimersByTime(2500) })
+    await waitFor(() => expect(screen.getByRole('option', { name: 'eSUN (1 filament)' }).selected).toBe(true))
+    vi.useRealTimers()
   })
 })

@@ -6,6 +6,7 @@ import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { printersApi } from '@/api/printers'
 import { filamentsApi } from '@/api/filaments'
 import { locationsApi } from '@/api/locations'
+import BrandPickerField from '@/components/BrandPickerField'
 import { registerTag, scanTag } from '@/api/nfc'
 import ScanDesktop from '@/components/scan/ScanDesktop'
 import NotificationBell from '@/components/NotificationBell'
@@ -183,6 +184,11 @@ export default function AddSpoolPage() {
     spoolProfilesApi.getAll().then(setProfiles).catch(() => {}).finally(() => setProfilesLoading(false))
     printersApi.getAll().then(setPrinters).catch(() => {})
     locationsApi.getAll().then(data => setLocationNames(data.map(l => l.name).sort((a, b) => a.localeCompare(b)))).catch(() => {})
+  }, [])
+
+  const handleBrandChange = useCallback((brand: string) => {
+    setState(s => ({ ...s, brand, material: '', colorName: '', filament: null }))
+    if (brand) setPickView('profiles')
   }, [])
 
   const showSavedProfiles = useCallback(() => {
@@ -418,7 +424,6 @@ export default function AddSpoolPage() {
   )
 
   const renderPick = () => {
-    const filteredBrands = [...new Set(filaments.map(f => f.brand))]
     const filteredMats = state.brand
       ? [...new Set(filaments.filter(f => f.brand === state.brand).map(f => f.material))]
       : []
@@ -457,16 +462,12 @@ export default function AddSpoolPage() {
           <div className={styles.detailPanel}>
             <div className={styles.sectionLabel}>Filament</div>
             <div className={styles.pickGrid3}>
-              <div className={styles.field}>
-                <label>Brand</label>
-                <select value={state.brand} onChange={e => {
-                  setState(s => ({ ...s, brand: e.target.value, material: '', colorName: '', filament: null }))
-                  setPickView('profiles')
-                }}>
-                  <option value="">Select brand…</option>
-                  {filteredBrands.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
+              <BrandPickerField
+                value={state.brand}
+                onChange={handleBrandChange}
+                filaments={filaments}
+                onFilamentsChange={setFilaments}
+              />
               <div className={styles.field}>
                 <label>Material</label>
                 <select value={state.material} disabled={!state.brand} onChange={e => {
