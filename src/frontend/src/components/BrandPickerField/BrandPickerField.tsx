@@ -38,6 +38,8 @@ export default function BrandPickerField({ value, onChange, filaments, onFilamen
     [filaments],
   )
 
+  const visibleResults = inlineBrandQuery.trim() ? inlineBrandResults : []
+
   useEffect(() => {
     brandsApi.getAll().then(setDbBrands).catch(() => {})
   }, [])
@@ -48,10 +50,7 @@ export default function BrandPickerField({ value, onChange, filaments, onFilamen
 
   useEffect(() => {
     if (inlineSearchTimerRef.current) clearTimeout(inlineSearchTimerRef.current)
-    if (!inlineBrandQuery.trim()) {
-      setInlineBrandResults([])
-      return
-    }
+    if (!inlineBrandQuery.trim()) return
     inlineSearchTimerRef.current = setTimeout(async () => {
       inlineAbortRef.current?.abort()
       const ctrl = new AbortController()
@@ -165,9 +164,9 @@ export default function BrandPickerField({ value, onChange, filaments, onFilamen
             </svg>
           </button>
           {inlineBrandSearching && <div className={styles.inlineBrandSpinner} />}
-          {inlineBrandResults.length > 0 && (
+          {visibleResults.length > 0 && (
             <ul className={styles.inlineBrandDropdown}>
-              {inlineBrandResults.map(r => {
+              {visibleResults.map(r => {
                 const alreadyAdded = dbBrands.some(b => b.ofdSlug === r.slug)
                 return (
                   <li key={r.slug}>
