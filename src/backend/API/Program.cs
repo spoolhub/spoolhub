@@ -278,7 +278,7 @@ static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicatio
                         if (newTableGuards.TryGetValue(suffix, out var requiredTable)
                             && !existingTables.Contains(requiredTable))
                             continue;
-                        db.Database.ExecuteSqlRaw($"INSERT INTO \"__EFMigrationsHistory\" VALUES ('{id}', '10.0.0')");
+                        db.Database.ExecuteSql($"INSERT INTO \"__EFMigrationsHistory\" VALUES ({id}, '10.0.0')");
                         seeded++;
                     }
                     logger.LogInformation("Seeded migration history for pre-migration database ({Count} entries).", seeded);
