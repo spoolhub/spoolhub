@@ -58,6 +58,7 @@ function AppShell() {
               <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/spools" element={<SpoolsPage />} />
+              <Route path="/spools/:id" element={<SpoolsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/scan" element={<ScanPage />} />
               <Route path="/printers" element={<PrintersPage />} />
