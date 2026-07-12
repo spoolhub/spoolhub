@@ -51,4 +51,5 @@ jobs:
         run: echo "Deploying to Master Environment — Docker deployment will be wired up in M8"
 
       - name: Delete Branch
+        if: github.event.pull_request.head.ref != 'develop' && github.event.pull_request.head.ref != 'master'
         run: git push --delete origin ${{ github.event.pull_request.head.ref }}
