@@ -1,0 +1,13 @@
+/* ── Page shell ── */
+.page {
+  display: flex; flex-direction: column;
+  gap: var(--gap); height: 100%;
+  overflow-y: auto; padding: var(--pad);
+  padding-bottom: 80px;
+}
+
+/* ── Topbar ── */
+.topbar { display: flex; align-items: center; gap: 16px; flex-shrink: 0 }
+.h { flex: 1; min-width: 0 }
+.h h1 { margin: 0; font-family: var(--font-display); font-size: 25px; font-weight: 700; letter-spacing: -.03em; color: var(--text-primary) }
+.sub { color: var(--muted); font-size: 13.5px; margin-top: 3px }

@@ -1,0 +1,95 @@
+name: Docker
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+  push:
+    branches:
+      - develop
+      - master
+  release:
+    types: [published]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/spoolhub/spoolhub
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          # docker/metadata-action produces no tags on pull_request events, so
+          # always carry this fixed local tag for the smoke test step below.
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            spoolhub:smoke-test
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Smoke test image
+        run: |
+          set -e
+          docker run -d --name smoke -p 4848:4848 spoolhub:smoke-test
+
+          echo "Waiting for the container to come up..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4848/ > /dev/null; then
+              echo "Root route OK"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Container did not become ready in time"
+              docker logs smoke
+              exit 1
+            fi
+            sleep 2
+          done
+
+          # SPA deep-link route must not 404 (regression check for #9)
+          status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4848/spools)
+          if [ "$status" != "200" ]; then
+            echo "Deep link /spools returned $status, expected 200"
+            docker logs smoke
+            exit 1
+          fi
+          echo "Deep link route OK"
+
+      - name: Stop smoke test container
+        if: always()
+        run: docker rm -f smoke || true
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        run: |
+          set -e
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && docker push "$tag"
+          done <<< "${{ steps.meta.outputs.tags }}"

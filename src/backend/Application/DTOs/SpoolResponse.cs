@@ -1,0 +1,31 @@
+namespace Application.DTOs;
+
+public record SpoolResponse(
+    Guid Id,
+    string Brand,
+    string Material,
+    string ColorName,
+    string ColorHex,
+    float InitialWeightG,
+    float CurrentWeightG,
+    float SpoolWeightG,
+    float LowStockThresholdG,
+    bool IsActive,
+    bool IsArchived,
+    DateTime CreatedAt,
+    DateTime? LastScannedAt,
+    string? Notes,
+    float? Density,
+    float? DiameterTolerance,
+    int? ExtruderMin,
+    int? ExtruderMax,
+    int? BedMin,
+    int? BedMax,
+    bool HasNfcTag,
+    string? NfcTagUid,
+    Guid? PrinterId,
+    string? PrinterName,
+    int? AmsSlot,
+    decimal? Price,
+    string? StockLocation
+);

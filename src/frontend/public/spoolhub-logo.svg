@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" role="img" aria-label="SpoolHub">
+  <circle cx="115" cy="90" r="65" fill="none" stroke="#15803D" stroke-width="3"/>
+  <circle cx="115" cy="90" r="53" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.4"/>
+  <circle cx="115" cy="90" r="43" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.65"/>
+  <circle cx="115" cy="90" r="33" fill="none" stroke="#22C55E" stroke-width="6" opacity="0.9"/>
+  <g transform="translate(115,90)">
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(45)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(90)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(135)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(180)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(225)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(270)"/>
+    <line x1="0" y1="-52" x2="0" y2="-34" stroke="#22C55E" stroke-width="2" opacity="0.5" transform="rotate(315)"/>
+    <circle cx="0" cy="0" r="17" fill="#15803D"/>
+    <circle cx="0" cy="0" r="9" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
+  </g>
+  <path d="M 170.2,34.9 A 78,78 0 0,1 170.2,145.1" fill="none" stroke="#15803D" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M 182.9,22.2 A 96,96 0 0,1 182.9,157.8" fill="none" stroke="#15803D" stroke-width="2.5" stroke-linecap="round" opacity="0.65"/>
+  <path d="M 195.6,9.4 A 114,114 0 0,1 195.6,170.6" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+  <text x="242" y="90" fill="#0F172A" font-family="system-ui, sans-serif" font-size="80" font-weight="500" dominant-baseline="middle">Spool<tspan fill="#16A34A">Hub</tspan></text>
+</svg>

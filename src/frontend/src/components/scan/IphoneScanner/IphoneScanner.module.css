@@ -1,0 +1,116 @@
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* Tap view */
+.tapWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.nfcWrap { position: relative; }
+.pingRing1 {
+  position: absolute; inset: 0;
+  border-radius: var(--radius-full);
+  background: rgba(6,182,212,0.15);
+  animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;
+}
+.pingRing2 {
+  position: absolute; inset: 0;
+  transform: scale(1.25);
+  border-radius: var(--radius-full);
+  background: rgba(6,182,212,0.08);
+  animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;
+  animation-delay: 400ms;
+}
+.nfcCircle {
+  position: relative;
+  width: 8rem; height: 8rem;
+  border-radius: var(--radius-full);
+  background: rgba(6,182,212,0.1);
+  display: flex; align-items: center; justify-content: center;
+}
+.nfcCircle svg { width: 4rem; height: 4rem; color: var(--accent); }
+.backBtn svg { width: 1rem; height: 1rem; }
+
+.title { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+.subtitle { font-size: 0.875rem; color: var(--text-secondary); }
+
+.btnPrimary {
+  width: 100%; font-size: 0.875rem; font-weight: 500; padding: 0.625rem;
+  border-radius: var(--radius-lg); background: var(--accent); color: #fff;
+  border: none; cursor: pointer; transition: background var(--t-fast);
+}
+.btnPrimary:hover { background: var(--accent-hover); }
+
+/* Setup view */
+.setupWrap { padding: 1.5rem; }
+.backBtn {
+  display: flex; align-items: center; gap: 0.375rem;
+  font-size: 0.875rem; color: var(--text-secondary);
+  background: none; border: none; cursor: pointer;
+  margin-bottom: 1.25rem;
+  transition: color var(--t-fast); padding: 0;
+}
+.backBtn:hover { color: var(--text-secondary); }
+
+.setupTitle { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+.setupSubtitle { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+.steps { list-style: none; padding: 0; margin: 0 0 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.step { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.875rem; color: var(--text-secondary); }
+.stepNum {
+  flex-shrink: 0; width: 1.25rem; height: 1.25rem;
+  border-radius: var(--radius-full); background: var(--accent); color: #fff;
+  font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: 0.125rem;
+}
+.stepText { line-height: 1.5; }
+
+.urlBox {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  padding: 1rem;
+}
+.urlLabel { font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.uidInput {
+  width: 100%; padding: 0.5rem 0.625rem;
+  font-size: 0.8125rem; font-family: monospace;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); color: var(--text-primary);
+  margin-bottom: 0.5rem; box-sizing: border-box;
+  transition: border-color var(--t-fast);
+}
+.uidInput::placeholder { color: var(--text-secondary); }
+.uidInput:focus { outline: none; border-color: var(--accent); }
+.urlText {
+  font-size: 0.75rem; font-family: monospace;
+  color: var(--text-primary); word-break: break-all;
+  line-height: 1.5; margin-bottom: 1rem; user-select: all;
+}
+.copyBtn {
+  width: 100%; font-size: 0.875rem; font-weight: 600; padding: 0.625rem;
+  border-radius: var(--radius-lg); color: #fff; border: 1px solid transparent; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  background: var(--accent);
+}
+.copyBtn:hover:not(:disabled) { background: var(--accent-hover); }
+.copyBtnDisabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+.uidHint { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.copyBtnCopied {
+  background: #22c55e;
+  border-color: #22c55e;
+  transform: scale(0.98);
+}

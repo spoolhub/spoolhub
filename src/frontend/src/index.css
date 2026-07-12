@@ -1,0 +1,135 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+  --spool-holder:     #27272a;
+  --spool-holder-dim: #52525b;
+  --spool-axle:       #09090b;
+  --spool-bg:         #f4f4f5;
+}
+html.dark {
+  color-scheme: dark;
+  --spool-holder:     #d4d4d8;
+  --spool-holder-dim: #a1a1aa;
+  --spool-axle:       #71717a;
+  --spool-bg:         #161b22;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: var(--tracking);
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background .35s var(--ease), color .35s var(--ease);
+}
+.num {
+  font-family: var(--font-num);
+  font-feature-settings: var(--num-feat);
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--accent-soft); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+
+/* Global scrollbar styling - matches handoff design */
+.page, .main {
+  overflow-y: auto;
+}
+
+/* Clear the fixed mobile Header topbar (rendered globally in AppShell).
+   !important is required: each page's own module CSS sets `padding: var(--pad)`
+   as a shorthand (same specificity, later in bundle order), which would
+   otherwise reset padding-top and hide content under the fixed header. */
+@media (max-width: 767px) {
+  .page {
+    padding-top: calc(var(--pad) + 56px + 14px) !important;
+  }
+}
+html[data-theme] .page,
+html.dark .page,
+html:not(.dark) .page,
+html[data-theme] .main,
+html.dark .main,
+html:not(.dark) .main {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--border) transparent !important;
+}
+html[data-theme] .page::-webkit-scrollbar,
+html.dark .page::-webkit-scrollbar,
+html:not(.dark) .page::-webkit-scrollbar,
+html[data-theme] .main::-webkit-scrollbar,
+html.dark .main::-webkit-scrollbar,
+html:not(.dark) .main::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html[data-theme] .page::-webkit-scrollbar-thumb,
+html.dark .page::-webkit-scrollbar-thumb,
+html:not(.dark) .page::-webkit-scrollbar-thumb,
+html[data-theme] .main::-webkit-scrollbar-thumb,
+html.dark .main::-webkit-scrollbar-thumb,
+html:not(.dark) .main::-webkit-scrollbar-thumb {
+  background: var(--border) !important;
+  border-radius: 20px !important;
+  border: 3px solid var(--bg) !important;
+}
+html[data-theme] .page::-webkit-scrollbar-track,
+html.dark .page::-webkit-scrollbar-track,
+html:not(.dark) .page::-webkit-scrollbar-track,
+html[data-theme] .main::-webkit-scrollbar-track,
+html.dark .main::-webkit-scrollbar-track,
+html:not(.dark) .main::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html[data-theme] .page::-webkit-scrollbar-thumb:hover,
+html.dark .page::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .page::-webkit-scrollbar-thumb:hover,
+html[data-theme] .main::-webkit-scrollbar-thumb:hover,
+html.dark .main::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .main::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong) !important;
+}
+html[data-theme] .page::-webkit-scrollbar-corner,
+html.dark .page::-webkit-scrollbar-corner,
+html:not(.dark) .page::-webkit-scrollbar-corner,
+html[data-theme] .main::-webkit-scrollbar-corner,
+html.dark .main::-webkit-scrollbar-corner,
+html:not(.dark) .main::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Legacy cyan scrollbar class (kept for backward compat) */
+.scrollbar-pretty {
+  scrollbar-width: thin;
+  scrollbar-color: #06b6d4 transparent;
+}
+.scrollbar-pretty::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-pretty::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-pretty::-webkit-scrollbar-thumb {
+  background: #06b6d4;
+  border-radius: 9999px;
+}
+.scrollbar-pretty::-webkit-scrollbar-thumb:hover {
+  background: #22d3ee;
+}

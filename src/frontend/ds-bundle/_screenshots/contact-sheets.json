@@ -1,0 +1,73 @@
+[
+  {
+    "sheet": 1,
+    "components": [
+      "ActiveSpoolIcon",
+      "ActivityCard",
+      "AddBrandModal",
+      "AddPrinterModal",
+      "AddSpoolForm",
+      "AddSpoolProfileModal",
+      "AmsConflictModal",
+      "AndroidScanner",
+      "BrandCard",
+      "BrandFilterBar",
+      "BrandLogo",
+      "DarkModeToggle",
+      "DesktopScanner",
+      "FilamentCard",
+      "FilamentFilterDropdown",
+      "FilamentIcon"
+    ]
+  },
+  {
+    "sheet": 2,
+    "components": [
+      "Header",
+      "InfoCircleIcon",
+      "InfoIcon",
+      "IphoneScanner",
+      "LanguageSelector",
+      "LockIcon",
+      "LowStockSpools",
+      "MaterialTag",
+      "MetricCard",
+      "NfcIcon",
+      "NfcScanModal",
+      "Pagination",
+      "PenIcon",
+      "PrinterIcon",
+      "PrinterPicker",
+      "PrintHistoryList"
+    ]
+  },
+  {
+    "sheet": 3,
+    "components": [
+      "RecentActivity",
+      "ReloadIcon",
+      "ScanResult",
+      "ScanView",
+      "Sidebar",
+      "SpoolCard",
+      "SpoolDetail",
+      "SpoolDetailsForm",
+      "SpoolEditor",
+      "SpoolFilterDropdown",
+      "SpoolHubLogo",
+      "SpoolIcon",
+      "SpoolOutlineIcon",
+      "SpoolScanPopup",
+      "SpoolSearchBar",
+      "StatusRing"
+    ]
+  },
+  {
+    "sheet": 4,
+    "components": [
+      "UnassignedTagPanel",
+      "UpdatesIcon",
+      "UsbOffIcon"
+    ]
+  }
+]

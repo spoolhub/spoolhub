@@ -1,0 +1,483 @@
+.flatRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+}
+
+.flatRow:last-child {
+  border-bottom: none;
+}
+
+.flatIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.flatContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Line 1: action (left) · day (right) */
+.flatLine1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.flatLine1Left {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.flatPrinterName {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.flatAction {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.flatDay {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Line 2: identity cluster (left) · relative time (right) */
+.flatLine2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Resource detail cluster inside line 2 */
+.flatSub {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.flatName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flatColorName {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flatDesc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.flatSep {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+:global(.dark) .flatSep { color: #30363d; }
+
+.flatMat {
+  font-size: 0.575rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: #15803d;
+  background: rgba(21,128,61,.1);
+}
+
+:global(.dark) .flatMat {
+  color: #4ade80;
+  background: rgba(74,222,128,.12);
+}
+
+.flatTime {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Line 3: remaining weight / filament chip */
+.flatLine3 {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  color: var(--text-secondary);
+}
+
+.flatRowIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.flatWeightLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.flatWeight {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.flatSubName {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flatTagUid {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flatUsedBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  background: #111827;
+  color: #f9fafb;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:global(.dark) .flatUsedBadge {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.flatUsedLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flatPrintingBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  background: #111827;
+  color: #f9fafb;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flatPauseSlot {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.flatPrintFile {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flatEstTime {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@keyframes flatFileSkelShimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.flatFileSkeleton {
+  display: inline-block;
+  width: 110px;
+  height: 0.6875rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: flatFileSkelShimmer 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid var(--accent, #e5e7eb);
+  background: #fff;
+  transition: background 0.12s, border-color 0.12s;
+  cursor: default;
+}
+
+.card:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+:global(.dark) .card {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+:global(.dark) .card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+/* ── Row 1 ────────────────────────────────────────────── */
+.row1 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.iconWrap {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.weight {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  padding-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.date {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+:global(.dark) .date { color: var(--text-secondary); }
+
+.timeMobile {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+:global(.dark) .timeMobile { color: var(--text-secondary); }
+
+/* ── Row 2 ────────────────────────────────────────────── */
+.row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 1.85rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,.1);
+}
+
+.name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:global(.dark) .name { color: var(--text-secondary); }
+
+.colorName {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:global(.dark) .colorName { color: var(--text-secondary); }
+
+.mat {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.time {
+  display: none;
+}
+
+:global(.dark) .time { color: var(--text-secondary); }
+
+/* ── Row 3: filament chip (print events) ─────────────── */
+.filamentRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 1.85rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Mobile ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .row2 {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .desc {
+    order: 10;
+    flex-basis: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    padding-left: 0;
+    margin-top: 0.1rem;
+  }
+}
+
+

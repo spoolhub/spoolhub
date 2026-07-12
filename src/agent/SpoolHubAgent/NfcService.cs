@@ -1,0 +1,321 @@
+using System.Collections.Concurrent;
+using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
+using PCSC;
+using PCSC.Monitoring;
+
+namespace SpoolHubAgent;
+
+public sealed class NfcService : IHostedService, IDisposable
+{
+    private readonly ILogger<NfcService> _logger;
+    private readonly ConcurrentDictionary<Guid, WebSocket> _clients = new();
+    private CancellationTokenSource? _cts;
+    private ISCardMonitor? _monitor;
+
+    private static readonly byte[] GetUidApdu = [0xFF, 0xCA, 0x00, 0x00, 0x00];
+
+    // NTAG21x / Ultralight user memory starts at page 4, 4 bytes per page.
+    private const int NdefStartPage = 4;
+    private const int PageSize = 4;
+
+    public string? ActiveReader { get; private set; }
+    public IReadOnlyList<string> AvailableReaders { get; private set; } = [];
+
+    public NfcService(ILogger<NfcService> logger) => _logger = logger;
+
+    public Task StartAsync(CancellationToken ct)
+    {
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _logger.LogInformation("SpoolHub Agent listening on http://localhost:8765");
+        _ = Task.Run(() => WatchReadersAsync(_cts.Token));
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken ct)
+    {
+        _cts?.Cancel();
+        return Task.CompletedTask;
+    }
+
+    // Called from /events WebSocket endpoint — keeps the socket alive until the client disconnects.
+    public async Task HandleClientAsync(WebSocket ws)
+    {
+        var id = Guid.NewGuid();
+        _clients[id] = ws;
+
+        // Send current reader state immediately on connect
+        await SendAsync(ws, new { @event = "reader_status", connected = ActiveReader != null, reader = ActiveReader });
+
+        var buf = new byte[256];
+        try
+        {
+            while (ws.State == WebSocketState.Open)
+            {
+                var result = await ws.ReceiveAsync(buf, CancellationToken.None);
+                if (result.MessageType == WebSocketMessageType.Close) break;
+            }
+        }
+        catch { /* client disconnected */ }
+        finally
+        {
+            _clients.TryRemove(id, out _);
+        }
+    }
+
+    public async Task DisconnectAsync()
+    {
+        StopMonitor();
+        ActiveReader = null;
+        AvailableReaders = [];
+        await BroadcastAsync(new { @event = "reader_status", connected = false, reader = (string?)null });
+        _logger.LogInformation("Reader manually disconnected");
+    }
+
+    private async Task WatchReadersAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                using var ctx = ContextFactory.Instance.Establish(SCardScope.System);
+                var readers = ctx.GetReaders().ToList();
+
+                if (!readers.SequenceEqual(AvailableReaders))
+                {
+                    AvailableReaders = readers.AsReadOnly();
+
+                    if (ActiveReader != null && !readers.Contains(ActiveReader))
+                    {
+                        StopMonitor();
+                        ActiveReader = null;
+                        await BroadcastAsync(new { @event = "reader_status", connected = false, reader = (string?)null });
+                        _logger.LogInformation("NFC reader disconnected");
+                    }
+
+                    if (ActiveReader == null && readers.Count > 0)
+                    {
+                        ActiveReader = readers[0];
+                        StartMonitor(ActiveReader);
+                        await BroadcastAsync(new { @event = "reader_status", connected = true, reader = ActiveReader });
+                        _logger.LogInformation("NFC reader connected: {Reader}", ActiveReader);
+                    }
+                }
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                _logger.LogDebug("PC/SC poll: {Msg}", ex.Message);
+                if (ActiveReader != null)
+                {
+                    StopMonitor();
+                    ActiveReader = null;
+                    AvailableReaders = [];
+                    await BroadcastAsync(new { @event = "reader_status", connected = false, reader = (string?)null });
+                }
+            }
+
+            try { await Task.Delay(5_000, ct); }
+            catch (OperationCanceledException) { break; }
+        }
+    }
+
+    private void StartMonitor(string readerName)
+    {
+        _monitor = MonitorFactory.Instance.Create(SCardScope.System);
+        _monitor.CardInserted += (_, args) => _ = Task.Run(() => HandleCardAsync(args.ReaderName));
+        _monitor.MonitorException += (_, ex) =>
+        {
+            _logger.LogDebug("Monitor exception: {Msg}", ex.Message);
+            StopMonitor();
+            ActiveReader = null;
+        };
+        _monitor.Start(readerName);
+    }
+
+    private void StopMonitor()
+    {
+        if (_monitor is null) return;
+        try { _monitor.Cancel(); } catch { }
+        _monitor.Dispose();
+        _monitor = null;
+    }
+
+    private async Task HandleCardAsync(string readerName)
+    {
+        try
+        {
+            using var ctx = ContextFactory.Instance.Establish(SCardScope.System);
+            using var reader = ctx.ConnectReader(readerName, SCardShareMode.Shared, SCardProtocol.Any);
+
+            var response = new byte[18];
+            var recvLen = reader.Transmit(GetUidApdu, response);
+            if (recvLen < 4) return;
+            if (response[recvLen - 2] != 0x90 || response[recvLen - 1] != 0x00) return;
+
+            var uid = BitConverter.ToString(response[..(recvLen - 2)]).Replace("-", ":");
+            _logger.LogInformation("Tag scanned: {Uid}", uid);
+
+            await BroadcastAsync(new { @event = "tag_scanned", uid });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Error reading NFC tag: {Msg}", ex.Message);
+        }
+    }
+
+    /// Writes a URI as an NDEF Type 2 Tag message onto whatever tag is currently
+    /// on the active reader. Skips the write (returns true, no-op) if the tag
+    /// already has NDEF content. Returns false if there's no reader/tag or the
+    /// write fails.
+    public bool TryWriteNdefUri(string url)
+    {
+        if (ActiveReader is null) return false;
+        try
+        {
+            using var ctx = ContextFactory.Instance.Establish(SCardScope.System);
+            using var reader = ctx.ConnectReader(ActiveReader, SCardShareMode.Shared, SCardProtocol.Any);
+
+            if (HasExistingNdefMessage(reader))
+            {
+                _logger.LogInformation("Tag already has stored NDEF content; skipping write");
+                return true;
+            }
+
+            var ndef = BuildNdefUriMessage(url);
+            var response = new byte[18];
+
+            for (var offset = 0; offset < ndef.Length; offset += PageSize)
+            {
+                var chunk = new byte[PageSize];
+                var len = Math.Min(PageSize, ndef.Length - offset);
+                Array.Copy(ndef, offset, chunk, 0, len);
+
+                var page = NdefStartPage + offset / PageSize;
+                var apdu = new byte[] { 0xFF, 0xD6, 0x00, (byte)page, PageSize, chunk[0], chunk[1], chunk[2], chunk[3] };
+
+                var recvLen = reader.Transmit(apdu, response);
+                if (recvLen < 2 || response[recvLen - 2] != 0x90 || response[recvLen - 1] != 0x00)
+                {
+                    _logger.LogWarning("NDEF write failed at page {Page}", page);
+                    return false;
+                }
+            }
+
+            _logger.LogInformation("Wrote NDEF URI to tag: {Url}", url);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Error writing NFC tag: {Msg}", ex.Message);
+            return false;
+        }
+    }
+
+    /// Reads the tag's user memory (starting at page 4) and checks whether it
+    /// already contains a non-empty NDEF Message TLV.
+    private static bool HasExistingNdefMessage(ICardReader reader)
+    {
+        const int readPages = 36; // covers NTAG213/215/216 user memory
+        var data = new List<byte>();
+        var response = new byte[PageSize * 4 + 2];
+
+        for (var page = NdefStartPage; page < NdefStartPage + readPages; page += 4)
+        {
+            var apdu = new byte[] { 0xFF, 0xB0, 0x00, (byte)page, (byte)(PageSize * 4) };
+            var recvLen = reader.Transmit(apdu, response);
+            if (recvLen < 2 || response[recvLen - 2] != 0x90 || response[recvLen - 1] != 0x00) break;
+            data.AddRange(response[..(recvLen - 2)]);
+        }
+
+        var bytes = data.ToArray();
+        var i = 0;
+        while (i < bytes.Length)
+        {
+            var tag = bytes[i];
+            if (tag == 0x00) { i++; continue; } // NULL TLV padding
+            if (tag == 0xFE) break;              // terminator, nothing found
+            if (i + 1 >= bytes.Length) break;
+
+            var len = bytes[i + 1];
+            var valueStart = i + 2;
+            if (tag == 0x03)
+            {
+                if (len == 0 || valueStart + len > bytes.Length) return false;
+                return HasNonEmptyUriRecord(bytes, valueStart, len);
+            }
+
+            i = valueStart + len;
+        }
+        return false;
+    }
+
+    /// Factory-fresh NTAG21x tags often ship with an empty NDEF placeholder
+    /// record (TNF=Empty, zero-length payload) already written -- that alone
+    /// shouldn't count as "already has a stored URL". Only treat it as
+    /// existing content if it's specifically a URI ('U') record with an
+    /// actual non-empty payload beyond the 1-byte prefix code.
+    private static bool HasNonEmptyUriRecord(byte[] bytes, int start, int len)
+    {
+        if (len < 4) return false;
+
+        var header = bytes[start];
+        var tnf = header & 0x07;
+        var typeLen = bytes[start + 1];
+        var payloadLen = bytes[start + 2]; // short-record form (SR bit set)
+        var type = bytes[start + 3];
+
+        return tnf == 0x01 && typeLen == 1 && type == (byte)'U' && payloadLen > 1;
+    }
+
+    private static byte[] BuildNdefUriMessage(string url)
+    {
+        var uriBytes = Encoding.UTF8.GetBytes(url);
+        var payload = new byte[1 + uriBytes.Length];
+        payload[0] = 0x00; // URI prefix code: 0 = no abbreviation, full URI follows
+        Array.Copy(uriBytes, 0, payload, 1, uriBytes.Length);
+
+        // NDEF record: MB=1 ME=1 SR=1 TNF=0x01 (well-known), type 'U' (URI)
+        var record = new List<byte> { 0xD1, 0x01, (byte)payload.Length, (byte)'U' };
+        record.AddRange(payload);
+
+        var tlv = new List<byte> { 0x03, (byte)record.Count };
+        tlv.AddRange(record);
+        tlv.Add(0xFE); // NDEF terminator TLV
+
+        return tlv.ToArray();
+    }
+
+    private async Task BroadcastAsync(object message)
+    {
+        var json = JsonSerializer.Serialize(message);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var segment = new ArraySegment<byte>(bytes);
+
+        foreach (var (id, ws) in _clients)
+        {
+            try
+            {
+                if (ws.State == WebSocketState.Open)
+                    await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+            catch
+            {
+                _clients.TryRemove(id, out _);
+            }
+        }
+    }
+
+    private static async Task SendAsync(WebSocket ws, object message)
+    {
+        var json = JsonSerializer.Serialize(message);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        StopMonitor();
+    }
+}

@@ -1,0 +1,238 @@
+/* ════════════════════════════════════════════════════════
+   Topbar — matches SpoolHub Dashboard.html handoff
+   Desktop: [Search input... ⌘K] [🔔]
+   Mobile:  [menu] Logo [🔍][🔔]
+   ════════════════════════════════════════════════════════ */
+
+/* ── Container ── */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  z-index: 20;
+  padding-top: var(--pad);
+  padding-bottom: 14px;
+}
+
+/* ── Search bar ── */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 13px;
+  height: 42px;
+  width: 280px;
+  max-width: 280px;
+  flex: 1 1 160px;
+  min-width: 120px;
+  color: var(--muted);
+  transition: 0.18s var(--ease);
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.search input {
+  border: 0;
+  background: 0;
+  outline: 0;
+  color: var(--text);
+  font: inherit;
+  width: 100%;
+}
+.search input::placeholder {
+  color: var(--faint);
+}
+.k {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* ── Button base ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: 0.16s var(--ease);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Icon button (bell, hamburger, search mobile) ──
+   Ghost style: no box, just the glyph — matches the hamburger. */
+.btnIcon {
+  width: 42px;
+  padding: 0;
+  justify-content: center;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+}
+.btnIcon svg {
+  width: 21px;
+  height: 21px;
+}
+.btnIcon:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+/* ── Hamburger (hidden desktop, shown ≤900px) ──
+   Two asymmetric lines: the short one stretches on hover,
+   both morph into an X while the sidebar is open. */
+.menubtn {
+  display: none;
+}
+.menuLines {
+  position: relative;
+  width: 22px;
+  height: 14px;
+  display: block;
+}
+.menuLine {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: width 0.22s var(--ease), transform 0.28s var(--ease), top 0.28s var(--ease);
+}
+.menuLine:first-child {
+  top: 3px;
+  width: 22px;
+}
+.menuLine:last-child {
+  top: 10px;
+  width: 14px;
+}
+.menubtn:hover .menuLine:last-child {
+  width: 22px;
+}
+.menubtnOpen .menuLine {
+  top: 6px;
+  width: 22px;
+}
+.menubtnOpen .menuLine:first-child {
+  transform: rotate(45deg);
+}
+.menubtnOpen .menuLine:last-child {
+  transform: rotate(-45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .menuLine {
+    transition: none;
+  }
+}
+
+/* ── Brand logo in topbar (shown on both mobile and desktop) ── */
+.topbarLogo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  margin-left: -14px;
+}
+.topbarLogo svg {
+  width: auto;
+  height: 44px;
+  flex: none;
+}
+.topbarLogoName {
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.topbarLogoName b {
+  color: #16A34A;
+}
+
+/* ── Search icon button (hidden desktop, shown on mobile) ── */
+.searchMobile {
+  display: none;
+}
+
+/* ── Bell mobile (hidden desktop, shown on mobile) ── */
+.bellMobile {
+  display: none;
+}
+
+/* ── Bell desktop (shown on desktop, hidden on mobile) ── */
+.bellDesktop {
+  display: inline-flex;
+}
+
+/* ══════════════════ RESPONSIVE ════════════════════════ */
+
+/* ≤ 767px — mobile */
+@media (max-width: 767px) {
+  .menubtn {
+    display: inline-flex;
+  }
+  .searchMobile {
+    display: inline-flex;
+  }
+  .bellMobile {
+    display: inline-flex;
+  }
+  .bellDesktop {
+    display: none;
+  }
+  .search {
+    display: none;
+  }
+  .topbar {
+            flex-wrap: wrap;
+            row-gap: 12px;
+            background: var(--surface);
+            padding-left: var(--pad);
+            padding-right: var(--pad);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+          }
+}
+
+/* ≤ 600px — small screen */
+@media (max-width: 600px) {
+  .searchMobile {
+    margin-left: auto;
+  }
+}
+

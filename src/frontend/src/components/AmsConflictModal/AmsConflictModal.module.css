@@ -1,0 +1,62 @@
+.overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 1rem;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  width: 100%; max-width: 24rem; overflow: hidden;
+}
+
+.imgArea {
+  background: var(--bg-secondary);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.img { width: 8rem; height: 8rem; object-fit: contain; }
+
+.body { padding: 1.25rem; }
+
+.printerMeta { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.125rem; }
+
+.title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+
+.subtitle { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+.spoolPreview {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-xl);
+  background: var(--bg-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.spoolName {
+  font-size: 0.875rem; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.spoolMeta { font-size: 0.75rem; color: var(--text-secondary); }
+.spoolInfo { min-width: 0; }
+
+.btnRow { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+.btnCancel {
+  padding: 0.625rem; border-radius: var(--radius-xl);
+  border: 1px solid var(--border); font-size: 0.875rem; font-weight: 600;
+  color: var(--text-secondary); background: none; cursor: pointer;
+  transition: background var(--t-fast);
+}
+.btnCancel:hover { background: var(--surface-hover); }
+
+.btnConfirm {
+  padding: 0.625rem; border-radius: var(--radius-xl);
+  background: var(--accent); color: #fff; font-size: 0.875rem; font-weight: 600;
+  border: none; cursor: pointer; transition: background var(--t-fast);
+}
+.btnConfirm:hover { background: var(--accent-hover); }

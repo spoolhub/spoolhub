@@ -1,0 +1,50 @@
+.toggle {
+  position: relative;
+  width: 3.5rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: background var(--t-slow);
+  outline: none;
+}
+.toggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent);
+}
+
+.toggleLight { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.toggleDark  { background: linear-gradient(135deg, #1e1b4b, #312e81); }
+
+.stars { position: absolute; transition: all var(--t-normal); }
+.stars1 { top: 5px; left: 6px; }
+.stars2 { top: 10px; left: 10px; }
+
+.starsVisible { opacity: 1; transform: scale(1); }
+.starsHidden  { opacity: 0; transform: scale(0); }
+.starsDelay   { transition-delay: 100ms; }
+
+.sunRays {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 0.375rem;
+  transition: all var(--t-normal);
+}
+.sunRaysHidden { opacity: 0; }
+
+.thumb {
+  position: absolute;
+  top: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  transition: all var(--t-normal);
+}
+.thumbLight { left: 0.125rem; background: linear-gradient(135deg, #fff7ed, #ffffff); }
+.thumbDark  { left: calc(100% - 1.625rem); background: linear-gradient(135deg, #c7d2fe, #e0e7ff); }

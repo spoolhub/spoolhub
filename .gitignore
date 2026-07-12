@@ -1,0 +1,20 @@
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+.env
+appsettings.*.json
+!appsettings.Development.json
+.vs/
+*.user
+
+# Agent build artifacts
+src/agent/SpoolHubAgent/publish/
+src/agent/Output/
+
+# Node.js
+node_modules/
+
+# Local-only dev seed data - never ship demo data in the repo or Docker image
+seed-data.local.json
