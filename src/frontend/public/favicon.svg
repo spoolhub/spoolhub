@@ -1,16 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136 136">
-  <style>
-    .filament { stroke: #0a0a0a; }
-    @media (prefers-color-scheme: dark) {
-      .filament { stroke: #ffffff; }
-    }
-  </style>
-  <g transform="translate(68,68)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <rect width="160" height="160" rx="42" fill="#ffffff"/>
+  <g transform="translate(80,80)">
     <circle r="64" fill="none" stroke="#15803D" stroke-width="6"/>
-    <circle class="filament" r="51" fill="none" stroke-width="9" opacity="0.45"/>
-    <circle class="filament" r="40" fill="none" stroke-width="9" opacity="0.7"/>
-    <circle class="filament" r="29" fill="none" stroke-width="9"/>
+    <circle r="51" fill="none" stroke="#0a0a0a" stroke-width="9" opacity="0.45"/>
+    <circle r="40" fill="none" stroke="#0a0a0a" stroke-width="9" opacity="0.7"/>
+    <circle r="29" fill="none" stroke="#0a0a0a" stroke-width="9"/>
     <circle r="19" fill="#15803D"/>
-    <circle r="10" fill="none" stroke="white" stroke-width="3" opacity="0.7"/>
+    <circle r="10" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.7"/>
   </g>
 </svg>
