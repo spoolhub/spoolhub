@@ -1,4 +1,5 @@
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -30,6 +31,13 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
             services.AddDbContext<FilamentDbContext>(options =>
                 options.UseSqlite(_connection.ConnectionString));
+
+            // Authenticate every request so RequireAuthorization() passes in tests
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
 
             // Suppress hardware/network background services that slow tests
             var toRemove = services
