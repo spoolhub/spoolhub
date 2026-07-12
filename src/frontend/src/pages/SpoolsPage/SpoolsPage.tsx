@@ -76,12 +76,15 @@ export default function SpoolsPage() {
   }, [])
 
   // Deep link: /spools/:id opens the detail drawer for that spool
+  const urlSpool = useMemo(
+    () => spoolIdParam ? spools.find(s => s.id === spoolIdParam) ?? null : null,
+    [spoolIdParam, spools],
+  )
+  const activeSpool = selected ?? urlSpool
+
   useEffect(() => {
-    if (!spoolIdParam || loading) return
-    const spool = spools.find(s => s.id === spoolIdParam)
-    if (spool) setSelected(spool)
-    else navigate('/spools', { replace: true })
-  }, [spoolIdParam, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (spoolIdParam && !loading && !urlSpool) navigate('/spools', { replace: true })
+  }, [spoolIdParam, loading, urlSpool, navigate])
 
   useEffect(() => {
     if (!isProfileView) return
@@ -317,9 +320,9 @@ export default function SpoolsPage() {
       </section>
       <div style={{ height: 70 }} />
 
-      {selected && (
+      {activeSpool && (
         <SpoolDetailDrawer
-          spool={selected}
+          spool={activeSpool}
           printers={printers}
           onClose={() => {
             setSelected(null)
