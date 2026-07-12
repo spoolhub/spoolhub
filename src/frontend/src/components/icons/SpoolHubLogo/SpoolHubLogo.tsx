@@ -29,6 +29,7 @@ export default function SpoolHubLogo({ height = 40, className }: SpoolHubLogoPro
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={BRIGHT} strokeWidth="2" opacity="0.5"
+              className={styles.filament}
               transform={angle === 0 ? undefined : `rotate(${angle})`}
             />
           ))}
@@ -39,9 +40,9 @@ export default function SpoolHubLogo({ height = 40, className }: SpoolHubLogoPro
       <g transform="translate(115,90)">
         <g>
           <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
-          <circle r="53" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.4" />
-          <circle r="43" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.65" />
-          <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" />
+          <circle r="53" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.4" className={styles.filament} />
+          <circle r="43" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.65" className={styles.filament} />
+          <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" className={styles.filament} />
           <use href={`#spk-${uid}`} />
         </g>
         <circle r="17" fill={DEEP} />

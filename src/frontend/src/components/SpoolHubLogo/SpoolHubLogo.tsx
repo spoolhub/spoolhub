@@ -46,6 +46,8 @@ function SpoolIcon({
   const spoke = color || BRIGHT
   const hole = color ? color : 'white'
   const waveColor = color || DEEP
+  // no explicit color → filament follows the theme (black in light, white in dark)
+  const filamentClass = color ? undefined : styles.filament
 
   return (
     <svg
@@ -60,6 +62,7 @@ function SpoolIcon({
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={spoke} strokeWidth="2" opacity="0.5"
+              className={filamentClass}
               transform={angle ? `rotate(${angle})` : undefined}
             />
           ))}
@@ -71,9 +74,9 @@ function SpoolIcon({
           {animated && (
             <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
           )}
-          <circle r="53" fill="none" stroke={ring} strokeWidth="6" opacity="0.4" />
-          <circle r="43" fill="none" stroke={ring} strokeWidth="6" opacity="0.65" />
-          <circle r="33" fill="none" stroke={ring} strokeWidth="6" opacity="0.9" />
+          <circle r="53" fill="none" stroke={ring} strokeWidth="6" opacity="0.4" className={filamentClass} />
+          <circle r="43" fill="none" stroke={ring} strokeWidth="6" opacity="0.65" className={filamentClass} />
+          <circle r="33" fill="none" stroke={ring} strokeWidth="6" opacity="0.9" className={filamentClass} />
           <use href={`#spk-${uid}`} />
         </g>
         <circle r="17" fill={hub} />
@@ -112,6 +115,7 @@ function FullLogo({ size, uid, animated = true }: { size: number; uid: string; a
               key={angle}
               x1="0" y1="-52" x2="0" y2="-34"
               stroke={BRIGHT} strokeWidth="2" opacity="0.5"
+              className={styles.filament}
               transform={angle ? `rotate(${angle})` : undefined}
             />
           ))}
@@ -123,9 +127,9 @@ function FullLogo({ size, uid, animated = true }: { size: number; uid: string; a
           {animated && (
             <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
           )}
-          <circle r="53" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.4" />
-          <circle r="43" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.65" />
-          <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" />
+          <circle r="53" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.4" className={styles.filament} />
+          <circle r="43" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.65" className={styles.filament} />
+          <circle r="33" fill="none" stroke={BRIGHT} strokeWidth="6" opacity="0.9" className={styles.filament} />
           <use href={`#spk-${uid}`} />
         </g>
         <circle r="17" fill={DEEP} />

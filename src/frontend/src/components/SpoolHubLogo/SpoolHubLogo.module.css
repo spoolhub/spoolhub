@@ -1,3 +1,11 @@
+.filament {
+  stroke: #0a0a0a;
+}
+
+:global(.dark) .filament {
+  stroke: #ffffff;
+}
+
 .tile {
   display: grid;
   place-items: center;
