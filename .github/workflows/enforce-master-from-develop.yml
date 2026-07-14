@@ -1,0 +1,21 @@
+name: Master branch guard
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  develop-only:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only develop may merge to master
+        if: github.head_ref != 'develop'
+        run: |
+          echo "Only the develop branch can be merged into master."
+          echo "Open a pull request from develop → master for releases."
+          exit 1
+
+      - name: Allowed
+        if: github.head_ref == 'develop'
+        run: echo "Source branch develop is allowed to merge into master."
