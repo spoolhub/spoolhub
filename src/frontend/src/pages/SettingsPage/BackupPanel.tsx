@@ -84,7 +84,16 @@ export default function BackupPanel({ isActive }: BackupPanelProps) {
 
   useEffect(() => {
     if (!isActive) return
-    void loadPanel()
+
+    let cancelled = false
+    void (async () => {
+      if (cancelled) return
+      await loadPanel()
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [isActive, loadPanel])
 
   async function persistSettings(next: BackupSettings) {

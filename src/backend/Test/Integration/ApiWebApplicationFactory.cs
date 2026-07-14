@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -12,18 +13,27 @@ namespace Test.Integration;
 
 public class ApiWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly string _dbPath;
     private readonly SqliteConnection _connection;
 
     public ApiWebApplicationFactory()
     {
-        var dbName = $"test_{Guid.NewGuid():N}";
-        _connection = new SqliteConnection($"DataSource={dbName};Mode=Memory;Cache=Shared");
+        _dbPath = Path.Combine(Path.GetTempPath(), $"spoolhub-test-{Guid.NewGuid():N}.db");
+        _connection = new SqliteConnection($"Data Source={_dbPath};Cache=Shared");
         _connection.Open();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Environments.Production);
+
+        builder.ConfigureAppConfiguration(config =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = $"Data Source={_dbPath}",
+            });
+        });
 
         builder.ConfigureTestServices(services =>
         {
@@ -63,6 +73,18 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing) _connection.Dispose();
+        if (disposing)
+        {
+            _connection.Dispose();
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(_dbPath))
+                File.Delete(_dbPath);
+            foreach (var side in new[] { "-wal", "-shm" })
+            {
+                var path = _dbPath + side;
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
     }
 }
