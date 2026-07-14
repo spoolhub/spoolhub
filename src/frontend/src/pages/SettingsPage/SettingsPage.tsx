@@ -9,6 +9,7 @@ import {
   NtfyIcon,
   WebhookIcon,
 } from '@/components/icons'
+import UpdatesPanel from './UpdatesPanel'
 import styles from './SettingsPage.module.css'
 
 const PROVIDERS = [
@@ -22,9 +23,6 @@ export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { dir, setDir, mode: themeMode, setMode: setThemeMode } = useDesign()
   const [activeTab, setActiveTab] = useState('app')
-  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'none' | 'available' | 'error'>('idle')
-  const [latestRelease, setLatestRelease] = useState<{ tag: string; url: string } | null>(null)
-  const [lastChecked, setLastChecked] = useState<Date | null>(null)
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
   const [openProviders, setOpenProviders] = useState<Set<string>>(new Set())
@@ -303,21 +301,6 @@ export default function SettingsPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  async function checkForUpdates() {
-    setUpdateStatus('checking')
-    try {
-      const res = await fetch('https://api.github.com/repos/spoolhub/spoolhub/releases/latest')
-      setLastChecked(new Date())
-      if (res.status === 404) { setUpdateStatus('none'); return }
-      const data = await res.json()
-      setLatestRelease({ tag: data.tag_name, url: data.html_url })
-      setUpdateStatus('available')
-    } catch {
-      setLastChecked(new Date())
-      setUpdateStatus('error')
-    }
-  }
-
   const LANGS = [
     { code: 'en', flag: 'gb', label: 'English' },
     { code: 'es', flag: 'es', label: 'Español' },
@@ -473,37 +456,8 @@ export default function SettingsPage() {
           </section>
 
           {/* UPDATES */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'updates' ? styles.on : ''}`}>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>
-                  {t('settings.currentVersion', 'Current version')} <span className={styles.vbadge}>dev</span>
-                  {updateStatus === 'none' && <span className={styles.upok}>{t('settings.upToDate', 'No releases yet')}</span>}
-                  {updateStatus === 'available' && latestRelease && (
-                    <a className={styles.upnew} href={latestRelease.url} target="_blank" rel="noreferrer">{latestRelease.tag} {t('settings.available', 'available')}</a>
-                  )}
-                  {updateStatus === 'error' && <span className={styles.uperr}>{t('settings.updateError', 'Could not check')}</span>}
-                </div>
-                <div className={styles.d}>
-                  {lastChecked
-                    ? `${t('settings.lastChecked', 'Last checked')} ${lastChecked.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    : t('settings.neverChecked', 'Never checked')}
-                </div>
-              </div>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={checkForUpdates} disabled={updateStatus === 'checking'}>
-                {updateStatus === 'checking' ? t('settings.checking', 'Checking…') : t('settings.checkUpdates', 'Check for updates')}
-              </button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.stableRelease', 'Stable release')}</div>
-                <div className={styles.d}>{t('settings.stableReleaseDesc', 'Download the latest stable release from GitHub')}</div>
-              </div>
-              <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://github.com/spoolhub/spoolhub/releases" target="_blank" rel="noreferrer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-                {t('settings.viewReleases', 'View releases')}
-              </a>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.updatesPane} ${activeTab === 'updates' ? styles.on : ''}`}>
+            <UpdatesPanel isActive={activeTab === 'updates'} />
           </section>
 
           {/* NOTIFICATIONS */}
