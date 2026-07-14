@@ -1,0 +1,36 @@
+name: Sync develop after master release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  sync-develop:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'develop'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge master into develop
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin master develop
+          if git merge-base --is-ancestor origin/master origin/develop; then
+            echo "develop already contains master — nothing to sync"
+            exit 0
+          fi
+          git checkout develop
+          git merge origin/master --no-edit -m "Sync develop with master after release"
+          git push origin develop
