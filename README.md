@@ -117,11 +117,6 @@ Download [`SpoolHubAgent-Setup.exe`](https://github.com/spoolhub/spoolhub/releas
 
 ---
 
-## Supporters
-
-SpoolHub is built and maintained for free. Without community support, this project cannot grow.
-[**Become a backer or sponsor**](https://opencollective.com/spoolhub) and help keep it alive!
-
 ## Contributing
 
 By submitting a pull request, you agree to the [Contributor License Agreement](CLA.md).
