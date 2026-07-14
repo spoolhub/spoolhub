@@ -10,6 +10,7 @@ import {
   WebhookIcon,
 } from '@/components/icons'
 import UpdatesPanel from './UpdatesPanel'
+import LogsPanel from './LogsPanel'
 import styles from './SettingsPage.module.css'
 
 const PROVIDERS = [
@@ -44,7 +45,6 @@ export default function SettingsPage() {
   const [lowStockThreshold, setLowStockThreshold] = useState(120)
   const [autoDeduct, setAutoDeduct] = useState(true)
   const [emptyReminder, setEmptyReminder] = useState(true)
-  const [logLevel, setLogLevel] = useState('Info')
   const [saving, setSaving] = useState(false)
 
   // ── alerts state ──
@@ -66,7 +66,6 @@ export default function SettingsPage() {
     lowStockThreshold: 120,
     autoDeduct: true,
     emptyReminder: true,
-    logLevel: 'Info',
     lang: i18n.language,
   })
 
@@ -87,7 +86,6 @@ export default function SettingsPage() {
           lowStockThreshold: app.defaultLowStockThresholdG ?? 120,
           autoDeduct: true,
           emptyReminder: true,
-          logLevel: 'Info',
           lang: app.language || i18n.language,
         })
         try {
@@ -126,7 +124,6 @@ export default function SettingsPage() {
     lowStockThreshold !== saved.lowStockThreshold ||
     autoDeduct !== saved.autoDeduct ||
     emptyReminder !== saved.emptyReminder ||
-    logLevel !== saved.logLevel ||
     i18n.language !== saved.lang
 
   async function handleSave() {
@@ -140,7 +137,7 @@ export default function SettingsPage() {
       })
       setSaved({
         currency, dir, themeMode, lowStockThreshold,
-        autoDeduct, emptyReminder, logLevel,
+        autoDeduct, emptyReminder,
         lang: i18n.language,
       })
     } catch (err) {
@@ -631,30 +628,8 @@ export default function SettingsPage() {
             </section>
 
           {/* LOGS */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'logs' ? styles.on : ''}`}>
-            <div className={styles.ph}>
-              <span className={styles.meta}>debug.log</span>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.logLevel', 'Log level')}</div>
-                <div className={styles.d}>{t('settings.logLevelDesc', 'How much detail to record')}</div>
-              </div>
-              <select className={styles.sortsel} value={logLevel} onChange={e => setLogLevel(e.target.value)}>
-                <option>Info</option><option>Warn</option><option>Error</option><option>Debug</option>
-              </select>
-            </div>
-            <div className={styles.logbox}>
-              <div><span className={styles.lt}>08:12:04</span> <span className={styles.lo}>INFO</span>  Connected to Bambu Lab Cloud (4 printers)</div>
-              <div><span className={styles.lt}>08:12:05</span> <span className={styles.lo}>INFO</span>  Synced 128 spools across 9 brands</div>
-              <div><span className={styles.lt}>08:14:22</span> <span className={styles.lt}>DEBUG</span> NFC reader ready on /dev/ttyACM0</div>
-              <div><span className={styles.lt}>09:01:48</span> <span className={styles.lt}>DEBUG</span> Job started · X1 Carbon · Voron Stealthburner</div>
-              <div><span className={styles.lt}>10:47:13</span> <span className={styles.le}>ERROR</span> Prusa Connect token expired — reconnect required</div>
-            </div>
-            <div className={styles.rowbtns}>
-              <button className={styles.btn}>{t('settings.exportLogs', 'Export logs')}</button>
-              <button className={styles.btn}>{t('settings.clearLogs', 'Clear logs')}</button>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.logsPane} ${activeTab === 'logs' ? styles.on : ''}`}>
+            <LogsPanel isActive={activeTab === 'logs'} />
           </section>
 
           {/* BACKUP */}
