@@ -29,4 +29,16 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
+  <!-- Backup zips, logs, keys, and the live SQLite file must not trigger dotnet watch / VS restarts. -->
+  <ItemGroup>
+    <Watch Remove="Backups/**" />
+    <Watch Remove="logs/**" />
+    <Watch Remove="data-protection-keys/**" />
+    <Watch Remove="**/*.db" />
+    <Watch Remove="**/*.db-wal" />
+    <Watch Remove="**/*.db-shm" />
+    <Watch Remove="**/*.zip" />
+    <Watch Remove="**/*.txt" />
+  </ItemGroup>
+
 </Project>

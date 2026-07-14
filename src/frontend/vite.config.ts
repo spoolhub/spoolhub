@@ -13,11 +13,13 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'https://localhost:7276',
+        target: 'http://localhost:5018',
         secure: false,
+        timeout: 120_000,
+        proxyTimeout: 120_000,
       },
       '/hubs': {
-        target: 'https://localhost:7276',
+        target: 'http://localhost:5018',
         ws: true,
         secure: false,
       },

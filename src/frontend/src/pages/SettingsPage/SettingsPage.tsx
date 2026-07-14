@@ -9,6 +9,9 @@ import {
   NtfyIcon,
   WebhookIcon,
 } from '@/components/icons'
+import UpdatesPanel from './UpdatesPanel'
+import LogsPanel from './LogsPanel'
+import BackupPanel from './BackupPanel'
 import styles from './SettingsPage.module.css'
 
 const PROVIDERS = [
@@ -22,9 +25,6 @@ export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { dir, setDir, mode: themeMode, setMode: setThemeMode } = useDesign()
   const [activeTab, setActiveTab] = useState('app')
-  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'none' | 'available' | 'error'>('idle')
-  const [latestRelease, setLatestRelease] = useState<{ tag: string; url: string } | null>(null)
-  const [lastChecked, setLastChecked] = useState<Date | null>(null)
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
   const [openProviders, setOpenProviders] = useState<Set<string>>(new Set())
@@ -46,7 +46,6 @@ export default function SettingsPage() {
   const [lowStockThreshold, setLowStockThreshold] = useState(120)
   const [autoDeduct, setAutoDeduct] = useState(true)
   const [emptyReminder, setEmptyReminder] = useState(true)
-  const [logLevel, setLogLevel] = useState('Info')
   const [saving, setSaving] = useState(false)
 
   // ── alerts state ──
@@ -68,7 +67,6 @@ export default function SettingsPage() {
     lowStockThreshold: 120,
     autoDeduct: true,
     emptyReminder: true,
-    logLevel: 'Info',
     lang: i18n.language,
   })
 
@@ -89,7 +87,6 @@ export default function SettingsPage() {
           lowStockThreshold: app.defaultLowStockThresholdG ?? 120,
           autoDeduct: true,
           emptyReminder: true,
-          logLevel: 'Info',
           lang: app.language || i18n.language,
         })
         try {
@@ -128,7 +125,6 @@ export default function SettingsPage() {
     lowStockThreshold !== saved.lowStockThreshold ||
     autoDeduct !== saved.autoDeduct ||
     emptyReminder !== saved.emptyReminder ||
-    logLevel !== saved.logLevel ||
     i18n.language !== saved.lang
 
   async function handleSave() {
@@ -142,7 +138,7 @@ export default function SettingsPage() {
       })
       setSaved({
         currency, dir, themeMode, lowStockThreshold,
-        autoDeduct, emptyReminder, logLevel,
+        autoDeduct, emptyReminder,
         lang: i18n.language,
       })
     } catch (err) {
@@ -303,21 +299,6 @@ export default function SettingsPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  async function checkForUpdates() {
-    setUpdateStatus('checking')
-    try {
-      const res = await fetch('https://api.github.com/repos/spoolhub/spoolhub/releases/latest')
-      setLastChecked(new Date())
-      if (res.status === 404) { setUpdateStatus('none'); return }
-      const data = await res.json()
-      setLatestRelease({ tag: data.tag_name, url: data.html_url })
-      setUpdateStatus('available')
-    } catch {
-      setLastChecked(new Date())
-      setUpdateStatus('error')
-    }
-  }
-
   const LANGS = [
     { code: 'en', flag: 'gb', label: 'English' },
     { code: 'es', flag: 'es', label: 'Español' },
@@ -473,37 +454,8 @@ export default function SettingsPage() {
           </section>
 
           {/* UPDATES */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'updates' ? styles.on : ''}`}>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>
-                  {t('settings.currentVersion', 'Current version')} <span className={styles.vbadge}>dev</span>
-                  {updateStatus === 'none' && <span className={styles.upok}>{t('settings.upToDate', 'No releases yet')}</span>}
-                  {updateStatus === 'available' && latestRelease && (
-                    <a className={styles.upnew} href={latestRelease.url} target="_blank" rel="noreferrer">{latestRelease.tag} {t('settings.available', 'available')}</a>
-                  )}
-                  {updateStatus === 'error' && <span className={styles.uperr}>{t('settings.updateError', 'Could not check')}</span>}
-                </div>
-                <div className={styles.d}>
-                  {lastChecked
-                    ? `${t('settings.lastChecked', 'Last checked')} ${lastChecked.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    : t('settings.neverChecked', 'Never checked')}
-                </div>
-              </div>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={checkForUpdates} disabled={updateStatus === 'checking'}>
-                {updateStatus === 'checking' ? t('settings.checking', 'Checking…') : t('settings.checkUpdates', 'Check for updates')}
-              </button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.stableRelease', 'Stable release')}</div>
-                <div className={styles.d}>{t('settings.stableReleaseDesc', 'Download the latest stable release from GitHub')}</div>
-              </div>
-              <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://github.com/spoolhub/spoolhub/releases" target="_blank" rel="noreferrer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-                {t('settings.viewReleases', 'View releases')}
-              </a>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.updatesPane} ${activeTab === 'updates' ? styles.on : ''}`}>
+            <UpdatesPanel isActive={activeTab === 'updates'} />
           </section>
 
           {/* NOTIFICATIONS */}
@@ -677,62 +629,13 @@ export default function SettingsPage() {
             </section>
 
           {/* LOGS */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'logs' ? styles.on : ''}`}>
-            <div className={styles.ph}>
-              <span className={styles.meta}>debug.log</span>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.logLevel', 'Log level')}</div>
-                <div className={styles.d}>{t('settings.logLevelDesc', 'How much detail to record')}</div>
-              </div>
-              <select className={styles.sortsel} value={logLevel} onChange={e => setLogLevel(e.target.value)}>
-                <option>Info</option><option>Warn</option><option>Error</option><option>Debug</option>
-              </select>
-            </div>
-            <div className={styles.logbox}>
-              <div><span className={styles.lt}>08:12:04</span> <span className={styles.lo}>INFO</span>  Connected to Bambu Lab Cloud (4 printers)</div>
-              <div><span className={styles.lt}>08:12:05</span> <span className={styles.lo}>INFO</span>  Synced 128 spools across 9 brands</div>
-              <div><span className={styles.lt}>08:14:22</span> <span className={styles.lt}>DEBUG</span> NFC reader ready on /dev/ttyACM0</div>
-              <div><span className={styles.lt}>09:01:48</span> <span className={styles.lt}>DEBUG</span> Job started · X1 Carbon · Voron Stealthburner</div>
-              <div><span className={styles.lt}>10:47:13</span> <span className={styles.le}>ERROR</span> Prusa Connect token expired — reconnect required</div>
-            </div>
-            <div className={styles.rowbtns}>
-              <button className={styles.btn}>{t('settings.exportLogs', 'Export logs')}</button>
-              <button className={styles.btn}>{t('settings.clearLogs', 'Clear logs')}</button>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.logsPane} ${activeTab === 'logs' ? styles.on : ''}`}>
+            <LogsPanel isActive={activeTab === 'logs'} />
           </section>
 
           {/* BACKUP */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'backup' ? styles.on : ''}`}>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.lastBackup', 'Last backup')}</div>
-                <div className={styles.d}>{t('settings.lastBackupDesc', 'Today at 04:00 · 2.4 MB')}</div>
-              </div>
-              <button className={`${styles.btn} ${styles.btnPrimary}`}>{t('settings.backUpNow', 'Back up now')}</button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.autoBackups', 'Automatic backups')}</div>
-                <div className={styles.d}>{t('settings.autoBackupsDesc', 'Create a backup every night')}</div>
-              </div>
-              <button className={`${styles.tg} ${styles.on}`} aria-label="toggle"></button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.restoreFrom', 'Restore from file')}</div>
-                <div className={styles.d}>{t('settings.restoreFromDesc', 'Replace current data with a backup')}</div>
-              </div>
-              <button className={styles.btn}>{t('settings.restoreAction', 'Restore…')}</button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.exportJson', 'Export all data')}</div>
-                <div className={styles.d}>{t('settings.exportJsonDesc', 'Download spools, brands and history as JSON')}</div>
-              </div>
-              <button className={styles.btn}>{t('settings.exportAction', 'Export JSON')}</button>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.backupPane} ${activeTab === 'backup' ? styles.on : ''}`}>
+            <BackupPanel isActive={activeTab === 'backup'} />
           </section>
         </div>
       </div>

@@ -45,7 +45,6 @@ export function useLogHub() {
           await connection.start()
           if (cancelled) return
           setConnected(true)
-          // load history after connecting
           const res = await apiClient.get<LogEntry[]>('/api/logs?limit=200')
           if (!cancelled) setEntries(res.data)
           return
