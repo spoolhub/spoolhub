@@ -1,97 +1,172 @@
+using API.Services;
+using Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 
 namespace API.Controllers;
 
 [ApiController]
-public class BackupController(IConfiguration configuration) : ControllerBase
+public class BackupController(
+    BackupService backupService,
+    BackupSettingsService backupSettings,
+    ILogger<BackupController> logger) : ControllerBase
 {
-    private string GetDbPath()
-    {
-        var connStr = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("DefaultConnection not configured.");
+    [HttpGet("/api/backup/settings")]
+    public async Task<IActionResult> GetSettings()
+        => Ok(await backupSettings.GetAsync());
 
-        var dataSource = new SqliteConnectionStringBuilder(connStr).DataSource;
-        return Path.IsPathRooted(dataSource)
-            ? dataSource
-            : Path.Combine(AppContext.BaseDirectory, dataSource);
+    [HttpPut("/api/backup/settings")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateBackupSettingsRequest request)
+        => Ok(await backupSettings.SaveAsync(request));
+
+    [HttpGet("/api/backup/files")]
+    public IActionResult ListBackups()
+    {
+        try
+        {
+            var files = backupService.ListBackups()
+                .Select(f => new
+                {
+                    name = f.Name,
+                    size = f.Size,
+                    lastModified = f.LastModified,
+                });
+            return Ok(files);
+        }
+        catch (Exception)
+        {
+            return Ok(Array.Empty<object>());
+        }
+    }
+
+    [HttpPost("/api/backup")]
+    public async Task<IActionResult> CreateBackup()
+    {
+        try
+        {
+            var created = backupService.CreateBackup();
+            await backupSettings.RecordBackupAsync(created.LastModified);
+            await backupSettings.PruneAsync();
+            return Ok(new
+            {
+                name = created.Name,
+                size = created.Size,
+                lastModified = created.LastModified,
+            });
+        }
+        catch (FileNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Backup creation failed");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Could not create backup. Try again in a moment.");
+        }
+    }
+
+    [HttpDelete("/api/backup")]
+    public IActionResult DeleteBackup([FromQuery] string file)
+    {
+        if (string.IsNullOrWhiteSpace(file))
+            return BadRequest("Invalid filename.");
+
+        try
+        {
+            backupService.DeleteBackup(file);
+            return NoContent();
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("Invalid filename.");
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpGet("/api/backup/download")]
+    public IActionResult DownloadBackup([FromQuery] string file)
+    {
+        if (string.IsNullOrWhiteSpace(file))
+            return BadRequest("Invalid filename.");
+
+        try
+        {
+            var path = backupService.ResolveBackupPath(file);
+            return PhysicalFile(path, "application/octet-stream", file, enableRangeProcessing: true);
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("Invalid filename.");
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (IOException ex)
+        {
+            logger.LogWarning(ex, "Backup download failed — {File}", file);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Backup file is busy. Try again in a moment.");
+        }
     }
 
     [HttpGet("/api/backup/export")]
     public IActionResult Export()
     {
-        var dbPath = GetDbPath();
-        if (!System.IO.File.Exists(dbPath))
-            return NotFound("Database file not found.");
-
-        var tempPath = Path.GetTempFileName();
         try
         {
-            using var source = new SqliteConnection($"Data Source={dbPath}");
-            using var dest   = new SqliteConnection($"Data Source={tempPath}");
-            source.Open();
-            dest.Open();
-            source.BackupDatabase(dest);
+            var bytes = backupService.CreateExportZip();
+            var fileName = $"spoolhub_backup_{DateTime.UtcNow:yyyy.MM.dd_HH.mm.ss}.zip";
+            return File(bytes, "application/octet-stream", fileName);
         }
-        catch
+        catch (FileNotFoundException ex)
         {
-            System.IO.File.Delete(tempPath);
-            throw;
+            return NotFound(ex.Message);
         }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Could not export backup.");
+        }
+    }
 
-        var fileName = $"spoolhub-backup-{DateTime.UtcNow:yyyy-MM-dd}.db";
-        var stream = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.None,
-            bufferSize: 4096, options: FileOptions.DeleteOnClose);
-        return File(stream, "application/octet-stream", fileName);
+    [HttpPost("/api/backup/restore")]
+    public async Task<IActionResult> Restore([FromQuery] string? backup, IFormFile? file, CancellationToken ct)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(backup))
+            {
+                await backupService.RestoreFromDiskAsync(backup, ct);
+                return Ok(new { message = "Database restored. Restart the application for all changes to take effect." });
+            }
+
+            if (file is null || file.Length == 0)
+                return BadRequest("No file provided.");
+
+            await using var stream = file.OpenReadStream();
+            await backupService.RestoreFromUploadAsync(stream, file.FileName, ct);
+            return Ok(new { message = "Database restored. Restart the application for all changes to take effect." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("Invalid filename.");
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Restore failed. The file may be invalid or incompatible.");
+        }
     }
 
     [HttpPost("/api/backup/import")]
-    public async Task<IActionResult> Import(IFormFile file, CancellationToken ct)
-    {
-        if (file is null || file.Length == 0)
-            return BadRequest("No file provided.");
-
-        if (!file.FileName.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Invalid file type. Please upload a .db backup file.");
-
-        var dbPath = GetDbPath();
-
-        // Write incoming file to a temp path first so we can validate it before touching the real DB
-        var tempPath = Path.GetTempFileName();
-        try
-        {
-            using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-                await file.CopyToAsync(fs, ct);
-
-            // Quick sanity check: SQLite files start with the magic header
-            var header = new byte[16];
-            using (var fs = new FileStream(tempPath, FileMode.Open, FileAccess.Read))
-                await fs.ReadAsync(header, ct);
-
-            if (!"SQLite format 3\0"u8.SequenceEqual(header))
-            {
-                System.IO.File.Delete(tempPath);
-                return BadRequest("File does not appear to be a valid SQLite database.");
-            }
-
-            // Close all pooled connections before replacing the file
-            SqliteConnection.ClearAllPools();
-
-            // Swap in the new database
-            System.IO.File.Copy(tempPath, dbPath, overwrite: true);
-
-            // Remove stale WAL/SHM files from the old database so SQLite starts clean
-            foreach (var ext in new[] { "-wal", "-shm" })
-            {
-                var side = dbPath + ext;
-                if (System.IO.File.Exists(side)) System.IO.File.Delete(side);
-            }
-
-            return Ok(new { message = "Database restored. Restart the application for all changes to take effect." });
-        }
-        finally
-        {
-            if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath);
-        }
-    }
+    public Task<IActionResult> Import(IFormFile file, CancellationToken ct)
+        => Restore(backup: null, file: file, ct);
 }

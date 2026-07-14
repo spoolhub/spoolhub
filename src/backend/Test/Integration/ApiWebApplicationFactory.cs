@@ -23,6 +23,8 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment(Environments.Production);
+
         builder.ConfigureTestServices(services =>
         {
             var dbDescriptor = services.SingleOrDefault(

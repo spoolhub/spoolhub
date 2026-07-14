@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using API.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Test.Integration;
 
@@ -14,7 +17,9 @@ public class LogFileIntegrationTests : IDisposable
     public LogFileIntegrationTests(ApiWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
-        _logsDir = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location)!, "logs");
+        using var scope = factory.Services.CreateScope();
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+        _logsDir = AppPaths.LogsDirectory(env);
         Directory.CreateDirectory(_logsDir);
     }
 

@@ -2,6 +2,7 @@ using System.Reflection;
 using API.Services;
 using Application.DTOs;
 using Application.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -13,7 +14,8 @@ public class SettingsController(
     IAlertService alertService,
     IFilamentService filamentService,
     LogBuffer logBuffer,
-    FileLogSink fileLog) : ControllerBase
+    FileLogSink fileLog,
+    IWebHostEnvironment environment) : ControllerBase
 {
     // ── Version ─────────────────────────────────────────────────────────────
 
@@ -37,7 +39,7 @@ public class SettingsController(
     [HttpGet("/api/logs/files")]
     public IActionResult GetLogFiles()
     {
-        var logsDir = Path.Combine(AppContext.BaseDirectory, "logs");
+        var logsDir = AppPaths.LogsDirectory(environment);
         if (!Directory.Exists(logsDir))
             return Ok(Array.Empty<object>());
 
@@ -81,7 +83,7 @@ public class SettingsController(
             || filename.Contains('/') || filename.Contains('\\') || filename.Contains(".."))
             return BadRequest("Invalid filename.");
 
-        var filePath = Path.Combine(AppContext.BaseDirectory, "logs", filename);
+        var filePath = Path.Combine(AppPaths.LogsDirectory(environment), filename);
         if (!System.IO.File.Exists(filePath))
             return NotFound();
 

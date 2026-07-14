@@ -1,0 +1,268 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Radarr-style top actions */
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+}
+
+.actions button:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+/* Settings-style schedule row */
+.scheduleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+}
+
+.scheduleLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.scheduleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.scheduleDesc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.frequencySeg {
+  display: flex;
+  flex: none;
+  min-width: 200px;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+}
+
+.frequencySeg button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px;
+  border-radius: var(--r-xs);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: .15s var(--ease);
+}
+
+.frequencySeg button.frequencyOn {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.frequencySeg button:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.error,
+.success,
+.notice {
+  padding: 10px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notice {
+  color: var(--muted);
+}
+
+.error {
+  color: oklch(0.64 0.16 25);
+}
+
+.success {
+  color: oklch(0.55 0.13 150);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 10px var(--card-pad);
+  border-bottom: 1px solid var(--border-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+}
+
+.table thead th.sizeCol,
+.table thead th.timeCol {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table thead th.actionsCol {
+  width: 88px;
+  text-align: right;
+}
+
+.table tbody td {
+  padding: 13px var(--card-pad);
+  border-top: 1px solid var(--border-2);
+  vertical-align: middle;
+}
+
+.table tbody tr:first-child td {
+  border-top: 0;
+}
+
+.table tbody tr:hover {
+  background: color-mix(in oklch, var(--surface) 94%, var(--accent) 6%);
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rowIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  background: var(--surface-alt);
+  color: oklch(0.55 0.14 150);
+}
+
+.rowIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.nameLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.nameLink:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.nameLink:disabled {
+  opacity: .65;
+  cursor: default;
+}
+
+.sizeCell,
+.timeCell {
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: .15s var(--ease);
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: oklch(0.55 0.13 150);
+  border-color: transparent;
+  color: #fff;
+}
+
+.actionBtnDanger:hover:not(:disabled) {
+  background: oklch(0.55 0.15 25);
+  border-color: transparent;
+  color: #fff;
+}
+
+.actionBtn:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+.actionBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.empty {
+  padding: 28px var(--card-pad);
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.spin svg {
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
