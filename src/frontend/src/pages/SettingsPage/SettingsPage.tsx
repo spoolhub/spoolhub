@@ -11,6 +11,7 @@ import {
 } from '@/components/icons'
 import UpdatesPanel from './UpdatesPanel'
 import LogsPanel from './LogsPanel'
+import BackupPanel from './BackupPanel'
 import styles from './SettingsPage.module.css'
 
 const PROVIDERS = [
@@ -633,35 +634,8 @@ export default function SettingsPage() {
           </section>
 
           {/* BACKUP */}
-          <section className={`${styles.panel} ${styles.setpane} ${activeTab === 'backup' ? styles.on : ''}`}>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.lastBackup', 'Last backup')}</div>
-                <div className={styles.d}>{t('settings.lastBackupDesc', 'Today at 04:00 · 2.4 MB')}</div>
-              </div>
-              <button className={`${styles.btn} ${styles.btnPrimary}`}>{t('settings.backUpNow', 'Back up now')}</button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.autoBackups', 'Automatic backups')}</div>
-                <div className={styles.d}>{t('settings.autoBackupsDesc', 'Create a backup every night')}</div>
-              </div>
-              <button className={`${styles.tg} ${styles.on}`} aria-label="toggle"></button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.restoreFrom', 'Restore from file')}</div>
-                <div className={styles.d}>{t('settings.restoreFromDesc', 'Replace current data with a backup')}</div>
-              </div>
-              <button className={styles.btn}>{t('settings.restoreAction', 'Restore…')}</button>
-            </div>
-            <div className={styles.srow}>
-              <div className={styles.sl}>
-                <div className={styles.t}>{t('settings.exportJson', 'Export all data')}</div>
-                <div className={styles.d}>{t('settings.exportJsonDesc', 'Download spools, brands and history as JSON')}</div>
-              </div>
-              <button className={styles.btn}>{t('settings.exportAction', 'Export JSON')}</button>
-            </div>
+          <section className={`${styles.panel} ${styles.setpane} ${styles.backupPane} ${activeTab === 'backup' ? styles.on : ''}`}>
+            <BackupPanel isActive={activeTab === 'backup'} />
           </section>
         </div>
       </div>

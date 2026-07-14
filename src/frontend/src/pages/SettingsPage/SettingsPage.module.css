@@ -318,6 +318,11 @@
   gap: 0;
 }
 
+.backupPane {
+  padding: 0;
+  gap: 0;
+}
+
 /* Mobile: replace tab row with a dropdown */
 @media (max-width: 767px) {
   .setnav { display: none; }

@@ -48,6 +48,8 @@ public static class SeedData
             new AppSetting { Key = "app.default_low_stock_threshold_g", Value = "100" },
             new AppSetting { Key = "app.currency", Value = "USD" },
             new AppSetting { Key = "app.language", Value = "en" },
+            new AppSetting { Key = "backups.schedule", Value = "weekly" },
+            new AppSetting { Key = "backups.retention", Value = "8" },
         });
 
         // ═══════════════════════════════════════════════════════════════

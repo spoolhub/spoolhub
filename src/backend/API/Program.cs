@@ -13,6 +13,7 @@ using Infrastructure.Services.Printer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Data.Sqlite;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
@@ -21,7 +22,11 @@ using Serilog.Events;
 // Create LogBuffer before the builder so the logger provider can reference it
 var logBuffer = new LogBuffer();
 
-var logsPath = Path.Combine(AppContext.BaseDirectory, "logs", "spoolhub.txt");
+var builder = WebApplication.CreateBuilder(args);
+
+AppPaths.MigrateLegacyDevLogsIfNeeded(builder.Environment);
+
+var logsPath = AppPaths.ActiveLogPath(builder.Environment);
 const string logOutputTemplate =
     "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}";
 
@@ -36,13 +41,15 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Sink(fileLog)
     .CreateLogger();
 
-var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton(fileLog);
+builder.Services.AddSingleton<BackupService>();
+builder.Services.AddScoped<BackupSettingsService>();
+builder.Services.AddHostedService<BackupScheduleService>();
 builder.Logging.AddProvider(new BufferLoggerProvider(logBuffer));
 builder.Logging.AddSerilog(Log.Logger, dispose: true);
 
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))
+    .PersistKeysToFileSystem(new DirectoryInfo(AppPaths.DataProtectionKeysDirectory(builder.Environment)))
     .SetApplicationName("SpoolHub");
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -59,7 +66,14 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevPolicy", policy =>
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin)) return false;
+                var uri = new Uri(origin);
+                return uri.Host is "localhost" or "127.0.0.1"
+                    || uri.Host.StartsWith("10.")
+                    || uri.Host.StartsWith("192.168.");
+            })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -71,8 +85,10 @@ builder.Services.AddCors(options =>
               .AllowCredentials());
 });
 
+var sqliteConnectionString = ResolveSqliteConnectionString(builder.Configuration, builder.Environment);
+
 builder.Services.AddDbContext<FilamentDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(sqliteConnectionString));
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
@@ -96,11 +112,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                if (string.IsNullOrEmpty(accessToken))
+                    return Task.CompletedTask;
+
+                var path = context.HttpContext.Request.Path;
+                if (path.StartsWithSegments("/hubs")
+                    || path.StartsWithSegments("/api/backup/download")
+                    || path.StartsWithSegments("/api/backup/export")
+                    || path.StartsWithSegments("/api/logs/download"))
                 {
                     context.Token = accessToken;
                 }
+
                 return Task.CompletedTask;
             }
         };
@@ -219,6 +242,9 @@ else
 
 app.Run();
 
+static string ResolveSqliteConnectionString(IConfiguration configuration, IWebHostEnvironment environment)
+    => SqlitePathResolver.ResolveConnectionString(configuration, environment);
+
 static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicationBuilder builder)
 {
     using var scope = app.ApplicationServices.CreateScope();
@@ -227,8 +253,8 @@ static async Task InitializeDatabaseAsync(IApplicationBuilder app, WebApplicatio
 
     try
     {
-        var connStr = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
-        var dbPath = connStr.Replace("Data Source=", "", StringComparison.OrdinalIgnoreCase).Trim();
+        var connStr = ResolveSqliteConnectionString(builder.Configuration, builder.Environment);
+        var dbPath = new SqliteConnectionStringBuilder(connStr).DataSource;
         var dbDir = Path.GetDirectoryName(dbPath);
         if (!string.IsNullOrEmpty(dbDir))
             Directory.CreateDirectory(dbDir);
