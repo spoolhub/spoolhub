@@ -118,59 +118,8 @@ export default function UpdatesPanel({ isActive }: UpdatesPanelProps) {
     return compareVersions(latestVersion, installedVersion) > 0
   }, [installedVersion, latestVersion])
 
-  const status = error
-    ? 'error'
-    : loading && !lastChecked
-      ? 'loading'
-      : updateAvailable
-        ? 'update'
-        : 'ok'
-
   return (
     <div className={styles.panel}>
-      <div className={`${styles.statusRow} ${status === 'ok' ? styles.statusOk : status === 'update' ? styles.statusWarn : status === 'error' ? styles.statusErr : ''}`}>
-        {status === 'loading' && (
-          <>
-            <span className={styles.spin}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M21 12a9 9 0 1 1-2.6-6.4" />
-                <path d="M21 4v5h-5" />
-              </svg>
-            </span>
-            {t('settings.checkingUpdates', 'Checking for updates…')}
-          </>
-        )}
-        {status === 'ok' && (
-          <>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8 12.5 10.8 15 16 9" />
-            </svg>
-            {t('settings.latestVersionInstalled', 'The latest version of SpoolHub is already installed')}
-          </>
-        )}
-        {status === 'update' && latestVersion && (
-          <>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 9v4" />
-              <path d="M12 17h.01" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-            {t('settings.updateAvailableBanner', 'Update available — version {{version}} is ready', { version: latestVersion })}
-          </>
-        )}
-        {status === 'error' && (
-          <>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 8v5" />
-              <path d="M12 16h.01" />
-            </svg>
-            {t('settings.releasesLoadError', 'Could not load release information.')}
-          </>
-        )}
-      </div>
-
       <div className={styles.toolbar}>
         <span>
           {installedVersion
@@ -197,6 +146,12 @@ export default function UpdatesPanel({ isActive }: UpdatesPanelProps) {
           {loading ? t('settings.checkingUpdates', 'Checking for updates…') : t('settings.refresh', 'Refresh')}
         </button>
       </div>
+
+      {error && (
+        <div className={styles.empty}>
+          {t('settings.releasesLoadError', 'Could not load release information.')}
+        </div>
+      )}
 
       {loading && releases.length === 0 && !error && (
         <div className={styles.loading}>{t('settings.checkingUpdates', 'Checking for updates…')}</div>
@@ -236,7 +191,7 @@ export default function UpdatesPanel({ isActive }: UpdatesPanelProps) {
           {releases.map(release => {
             const version = normalizeVersion(release.tag)
             const badge = installedVersion
-              ? getReleaseBadge(version, installedVersion, latestVersion)
+              ? getReleaseBadge(version, installedVersion, latestVersion, updateAvailable)
               : null
 
             return (
