@@ -22,6 +22,10 @@ using Serilog.Events;
 var logBuffer = new LogBuffer();
 
 var logsPath = Path.Combine(AppContext.BaseDirectory, "logs", "spoolhub.txt");
+const string logOutputTemplate =
+    "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}";
+
+var fileLog = new FileLogSink(logsPath, logOutputTemplate);
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -29,15 +33,11 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.AspNetCore.Routing",  LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database", LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Model",    LogEventLevel.Warning)
-    .WriteTo.File(
-        logsPath,
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"
-    )
+    .WriteTo.Sink(fileLog)
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton(fileLog);
 builder.Logging.AddProvider(new BufferLoggerProvider(logBuffer));
 builder.Logging.AddSerilog(Log.Logger, dispose: true);
 

@@ -1,6 +1,12 @@
 import axios from 'axios'
 import { getToken } from './session'
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipOfflineEvent?: boolean
+  }
+}
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
@@ -17,10 +23,12 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(
   response => response,
   error => {
-    const isNetworkError = !error.response
-    const is5xx = (error.response?.status ?? 0) >= 500
-    if (isNetworkError || is5xx) {
-      window.dispatchEvent(new CustomEvent('app-offline'))
+    if (!error.config?.skipOfflineEvent) {
+      const isNetworkError = !error.response
+      const is5xx = (error.response?.status ?? 0) >= 500
+      if (isNetworkError || is5xx) {
+        window.dispatchEvent(new CustomEvent('app-offline'))
+      }
     }
     return Promise.reject(error)
   }

@@ -15,6 +15,8 @@ export default defineConfig({
       '/api': {
         target: 'https://localhost:7276',
         secure: false,
+        timeout: 120_000,
+        proxyTimeout: 120_000,
       },
       '/hubs': {
         target: 'https://localhost:7276',

@@ -8,7 +8,12 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/settings")]
-public class SettingsController(ISettingsService settingsService, IAlertService alertService, IFilamentService filamentService, LogBuffer logBuffer) : ControllerBase
+public class SettingsController(
+    ISettingsService settingsService,
+    IAlertService alertService,
+    IFilamentService filamentService,
+    LogBuffer logBuffer,
+    FileLogSink fileLog) : ControllerBase
 {
     // ── Version ─────────────────────────────────────────────────────────────
 
@@ -44,18 +49,60 @@ public class SettingsController(ISettingsService settingsService, IAlertService 
         return Ok(files);
     }
 
-    [HttpGet("/api/logs/files/{filename}")]
+    [HttpPost("/api/logs/viewing/start")]
+    public IActionResult BeginLogViewing()
+    {
+        fileLog.BeginViewing();
+        return NoContent();
+    }
+
+    [HttpPost("/api/logs/viewing/stop")]
+    public IActionResult EndLogViewing()
+    {
+        fileLog.EndViewing();
+        return NoContent();
+    }
+
+    [HttpPost("/api/logs/viewing/extend")]
+    public IActionResult ExtendLogViewing()
+    {
+        fileLog.ExtendViewing();
+        return NoContent();
+    }
+
+    [HttpGet("/api/logs/download")]
+    public IActionResult DownloadLogFileQuery([FromQuery] string file)
+        => DownloadLogFile(file);
+
+    [HttpGet("/api/logs/files/{*filename}")]
     public IActionResult DownloadLogFile(string filename)
     {
-        if (filename.Contains('/') || filename.Contains('\\') || filename.Contains(".."))
+        if (string.IsNullOrWhiteSpace(filename)
+            || filename.Contains('/') || filename.Contains('\\') || filename.Contains(".."))
             return BadRequest("Invalid filename.");
 
         var filePath = Path.Combine(AppContext.BaseDirectory, "logs", filename);
         if (!System.IO.File.Exists(filePath))
             return NotFound();
 
-        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        return File(stream, "text/plain; charset=utf-8", filename);
+        try
+        {
+            const long maxBytes = 100 * 1024 * 1024;
+            var info = new FileInfo(filePath);
+            if (info.Length > maxBytes)
+                return StatusCode(StatusCodes.Status413PayloadTooLarge, "Log file is too large to download.");
+
+            var bytes = fileLog.ReadLogFileForDownload(filePath);
+            return File(bytes, "text/plain; charset=utf-8", filename);
+        }
+        catch (IOException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Log file is busy. Try again in a moment.");
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Log file is busy. Try again in a moment.");
+        }
     }
 
 

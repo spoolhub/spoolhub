@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { apiClient } from './client'
 
 export interface LogFileInfo {
@@ -61,8 +62,44 @@ export const logsApi = {
   getFiles: () =>
     apiClient.get<LogFileInfo[]>('/api/logs/files').then(r => r.data),
 
-  downloadUrl: (filename: string) =>
-    `${import.meta.env.VITE_API_URL}/api/logs/files/${encodeURIComponent(filename)}`,
+  beginViewing: () =>
+    apiClient.post('/api/logs/viewing/start', null, { skipOfflineEvent: true }),
+
+  endViewing: () =>
+    apiClient.post('/api/logs/viewing/stop', null, { skipOfflineEvent: true }),
+
+  extendViewing: () =>
+    apiClient.post('/api/logs/viewing/extend', null, { skipOfflineEvent: true }),
+
+  download: async (filename: string, sizeBytes = 0) => {
+    const timeoutMs = Math.max(30_000, Math.ceil(sizeBytes / 200_000) * 1000)
+    try {
+      const response = await apiClient.get<Blob>(
+        '/api/logs/download',
+        {
+          params: { file: filename },
+          responseType: 'blob',
+          skipOfflineEvent: true,
+          timeout: timeoutMs,
+        },
+      )
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+        const message = (await error.response.data.text()).trim()
+        throw new Error(message || 'Download failed', { cause: error })
+      }
+      throw error
+    }
+  },
 }
 
 export const versionApi = {
