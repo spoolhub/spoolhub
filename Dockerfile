@@ -8,10 +8,12 @@ RUN npm run build
 
 # Stage 2: Build backend
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS backend-build
+ARG APP_VERSION=0.0.0-dev
 WORKDIR /src
 COPY src/backend/ ./
 RUN dotnet publish API/API.csproj -c Release -o /publish --no-self-contained \
-    -p:UseAppHost=false
+    -p:UseAppHost=false \
+    -p:Version=${APP_VERSION}
 
 # Stage 3: Runtime (Alpine — ~60MB vs ~200MB Debian)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
