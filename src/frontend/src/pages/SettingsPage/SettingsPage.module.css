@@ -308,6 +308,11 @@
 .upok { font-size: 12px; font-weight: 600; color: oklch(0.55 0.13 150); margin-left: 10px; }
 .upnew { font-size: 12px; font-weight: 600; color: var(--accent-ink); margin-left: 10px; text-decoration: underline; }
 
+.updatesPane {
+  padding: 0;
+  gap: 0;
+}
+
 /* Mobile: replace tab row with a dropdown */
 @media (max-width: 767px) {
   .setnav { display: none; }
