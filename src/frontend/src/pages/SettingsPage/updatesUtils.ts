@@ -103,12 +103,19 @@ export type ReleaseBadge = 'current' | 'previous' | 'new' | null
 
 export function getReleaseBadge(
   releaseVersion: string,
-  currentVersion: string,
+  installedVersion: string,
   latestVersion: string | null,
+  updateAvailable: boolean,
 ): ReleaseBadge {
-  const cmpCurrent = compareVersions(releaseVersion, currentVersion)
-  if (cmpCurrent === 0) return 'current'
-  if (cmpCurrent < 0) return 'previous'
-  if (latestVersion && releaseVersion === latestVersion && cmpCurrent > 0) return 'new'
+  const cmpInstalled = compareVersions(releaseVersion, installedVersion)
+  if (cmpInstalled === 0) return 'current'
+  if (cmpInstalled < 0) return 'previous'
+  if (
+    updateAvailable
+    && latestVersion
+    && compareVersions(releaseVersion, latestVersion) === 0
+  ) {
+    return 'new'
+  }
   return null
 }
