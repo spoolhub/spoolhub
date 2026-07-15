@@ -76,11 +76,3 @@ export default function ActivityPrintLoadDetail({ snap, accentColor, accentBg, l
     </>
   )
 }
-
-export function activityPrintLoadSearchText(snap: ActivitySnapshot | null | undefined): string {
-  const loaded = snap?.loadedSpools ?? []
-  if (loaded.length > 0) {
-    return loaded.flatMap(s => [s.brand, s.colorName, s.material]).filter(Boolean).join(' ')
-  }
-  return [snap?.brand, snap?.colorName, snap?.material].filter(Boolean).join(' ')
-}
