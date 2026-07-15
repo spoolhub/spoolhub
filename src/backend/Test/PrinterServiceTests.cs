@@ -12,12 +12,13 @@ public class PrinterServiceTests
     private readonly IPrinterRepository _repo = Substitute.For<IPrinterRepository>();
     private readonly ISpoolRepository _spoolRepo = Substitute.For<ISpoolRepository>();
     private readonly IActivityService _activity = Substitute.For<IActivityService>();
+    private readonly IPrinterRealtimeNotifier _printerNotifier = Substitute.For<IPrinterRealtimeNotifier>();
     private readonly PrinterService _sut;
 
     public PrinterServiceTests()
     {
         _spoolRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>()).Returns([]);
-        _sut = new PrinterService(_repo, _spoolRepo, _activity, NullLogger<PrinterService>.Instance);
+        _sut = new PrinterService(_repo, _spoolRepo, _activity, _printerNotifier, NullLogger<PrinterService>.Instance);
     }
 
     [Fact]

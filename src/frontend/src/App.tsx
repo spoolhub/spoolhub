@@ -24,6 +24,7 @@ import PrintHistoryPage from './pages/PrintHistoryPage/PrintHistoryPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import ConnectionBanner from '@/components/ConnectionBanner/ConnectionBanner'
+import { PrinterHubProvider } from '@/components/PrinterHubProvider/PrinterHubProvider'
 import { spoolsApi } from '@/api/spools'
 import styles from './App.module.css'
 
@@ -47,6 +48,7 @@ function AppShell() {
     <>
       <ConnectionBanner />
       <NotificationsProvider>
+        <PrinterHubProvider>
         <div className="min-h-dvh sm:h-dvh flex flex-col bg-[var(--bg)] transition-colors duration-200">
           <div className="sm:h-dvh sm:flex sm:gap-6 sm:overflow-hidden bg-[var(--bg)]">
             <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} spoolCount={spoolCount} />
@@ -79,6 +81,7 @@ function AppShell() {
           </main>
         </div>
       </div>
+        </PrinterHubProvider>
       </NotificationsProvider>
     </>
   )

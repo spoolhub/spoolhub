@@ -1,0 +1,253 @@
+.card {
+  width: 100%;
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s var(--ease), box-shadow .15s var(--ease), transform .15s var(--ease);
+  font: inherit;
+  color: inherit;
+}
+.card:hover:not(.disabled):not(.added) {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px -14px var(--accent);
+  transform: translateY(-1px);
+}
+.card.disabled { opacity: .7; cursor: wait; }
+.card.added { opacity: .55; cursor: default; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+}
+
+.photo {
+  width: 140px;
+  height: 130px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.pimg {
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  object-fit: contain;
+}
+.connDot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.6 0.13 150);
+  border: 1.5px solid var(--surface-alt);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.info { flex: 1; min-width: 0; overflow: hidden; }
+
+.name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex: none;
+}
+.status i { width: 5px; height: 5px; border-radius: 50%; flex: none; }
+.statusOnline { background: oklch(0.6 0.13 150/.14); color: oklch(0.48 0.12 150); }
+.statusOnline i { background: oklch(0.6 0.13 150); }
+.statusOffline { background: oklch(0.62 0.16 25/.12); color: oklch(0.52 0.15 25); }
+.statusOffline i { background: oklch(0.62 0.16 25); }
+
+.trailing { flex: none; margin-top: 2px; }
+
+/* AMS / EXTRA dock — sits under printer name, full content width */
+.dock {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 7px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  min-width: 0;
+}
+
+.dockLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: none;
+  width: 36px;
+  padding: 2px 4px;
+  border-right: 1px solid var(--border-2);
+}
+
+.dockTag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.dockCount {
+  font-size: 10px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  color: var(--faint);
+  line-height: 1;
+}
+
+.slotRow {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  min-width: 0;
+}
+
+.slotWrap {
+  position: relative;
+  min-width: 0;
+}
+.slotWrapExtra { flex: 1; min-width: 0; }
+
+.slot, .extraSlot {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 0;
+  height: 100%;
+  background: var(--surface-alt);
+}
+.slotCompact { padding: 4px 2px; }
+
+.slotEmpty, .extraSlot.slotEmpty {
+  border-style: dashed;
+  background: transparent;
+  opacity: .7;
+}
+.slotLoaded { background: var(--surface-alt); }
+
+.slotNum {
+  font-size: 9px;
+  color: var(--faint);
+  font-family: var(--font-num);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.emptyIcon {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+.slotCaption {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.15;
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extraSlot {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  min-height: 52px;
+}
+
+.previewLoading {
+  font-size: 11px;
+  color: var(--faint);
+  font-style: italic;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+}
+
+@media (max-width: 480px) {
+  .layout { grid-template-columns: 112px 1fr; gap: 10px; }
+  .photo { width: 112px; height: 84px; }
+  .slotRow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .slotCaption { font-size: 7px; }
+}

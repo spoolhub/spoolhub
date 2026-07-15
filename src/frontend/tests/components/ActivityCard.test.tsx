@@ -167,6 +167,16 @@ describe('ActivityCard flat — print started (new design)', () => {
     expect(screen.getByText('Bracket_v2.3mf')).toBeInTheDocument()
   })
 
+  it('shows spool weight left in line 2', () => {
+    renderFlat(makeActivity({
+      eventType: 'PrintStarted',
+      resourceName: 'Bambu X1C',
+      description: 'printing - Bracket_v2.3mf',
+      snapshot: { brand: 'Bambu Lab', colorName: 'Jade White', colorHex: '#E8E8E8', material: 'PLA', weight: 800 },
+    }))
+    expect(screen.getByText('800g left')).toBeInTheDocument()
+  })
+
   it('does not show used weight badge', () => {
     renderFlat(makeActivity({
       eventType: 'PrintStarted',
@@ -370,5 +380,61 @@ describe('ActivityCard flat — NFC event', () => {
     renderFlat(noSnap)
     expect(screen.getByText('Bambu Lab Jade White')).toBeInTheDocument()
     expect(screen.getByText('PLA')).toBeInTheDocument()
+  })
+})
+
+describe('ActivityCard row — single line (activity log)', () => {
+  function renderRow(activity: Activity) {
+    return render(<ActivityCard activity={activity} row />)
+  }
+
+  it('shows print started details on one line', () => {
+    renderRow(makeActivity({
+      eventType: 'PrintStarted',
+      resourceName: 'Bambu X1C',
+      description: 'printing - Bracket_v2.3mf',
+      snapshot: {
+        brand: 'Bambu Lab', colorName: 'Jade White', colorHex: '#E8E8E8', material: 'PLA', weight: 800, estimatedMins: 135,
+        hasAms: false,
+        loadedSpools: [{ slot: 0, brand: 'Bambu Lab', colorName: 'Jade White', colorHex: '#E8E8E8', material: 'PLA', weight: 800, isActive: true }],
+      },
+    }))
+    expect(screen.getByText('Print started')).toBeInTheDocument()
+    expect(screen.getByText('Bambu X1C')).toBeInTheDocument()
+    expect(screen.getByText(/loaded with/i)).toBeInTheDocument()
+    expect(screen.getByText('Bambu Lab')).toBeInTheDocument()
+    expect(screen.getByText('800g left')).toBeInTheDocument()
+    expect(screen.getByText('2h 15m')).toBeInTheDocument()
+    expect(screen.getByText('Bracket_v2.3mf')).toBeInTheDocument()
+  })
+
+  it('shows AMS spool icons and materials without names', () => {
+    renderRow(makeActivity({
+      eventType: 'PrintStarted',
+      resourceName: 'Garage A1',
+      description: 'printing - part.3mf',
+      snapshot: {
+        brand: 'Polymaker', colorName: 'White', colorHex: '#fff', material: 'PLA', weight: 800, estimatedMins: 60,
+        hasAms: true,
+        loadedSpools: [
+          { slot: 0, colorHex: '#fff', material: 'PLA', isActive: true },
+          { slot: 1, colorHex: '#000', material: 'PETG', isActive: false },
+        ],
+      },
+    }))
+    expect(screen.getByText(/loaded with/i)).toBeInTheDocument()
+    expect(screen.getByText('PLA')).toBeInTheDocument()
+    expect(screen.getByText('PETG')).toBeInTheDocument()
+    expect(screen.queryByText('Polymaker')).not.toBeInTheDocument()
+  })
+
+  it('shows spool scanned with weight and location inline', () => {
+    renderRow(makeActivity({
+      snapshot: { brand: 'Polymaker', colorName: 'White', colorHex: '#fff', material: 'PLA', weight: 1000, stockLocation: 'Drawer B1' },
+    }))
+    expect(screen.getByText('Spool scanned')).toBeInTheDocument()
+    expect(screen.getByText('Polymaker')).toBeInTheDocument()
+    expect(screen.getByText('1000g')).toBeInTheDocument()
+    expect(screen.getByText('Drawer B1')).toBeInTheDocument()
   })
 })

@@ -8,6 +8,12 @@ import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
+import { isTrayEmptyMqtt } from '@/utils/printerAms'
+import {
+  selectTrayHintLabel,
+  spoolMismatchesTrayReport,
+  trayContextForSlot,
+} from '@/utils/selectSpoolFilter'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
@@ -42,7 +48,7 @@ interface Props {
   onViewDetails?: (spool: SpoolResponse) => void
 }
 
-type Step = 'info' | 'assign'
+type Step = 'info' | 'assign' | 'done'
 
 export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
@@ -57,6 +63,8 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const [dbLocations, setDbLocations] = useState<string[]>([])
   const [customLocations, setCustomLocations] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [assignedWaitingLoad, setAssignedWaitingLoad] = useState(false)
+  const [showMismatchConfirm, setShowMismatchConfirm] = useState(false)
 
   useEffect(() => {
     printersApi.getAll().then(setPrinters).catch(() => {})
@@ -88,27 +96,72 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
     }
   }, [selectedPrinter])
 
-  async function handleActivate() {
+  const trayOccupiedMap = useMemo((): Record<number, boolean | undefined> => {
+    if (!selectedPrinter) return {}
+    return {
+      1: selectedPrinter.tray1Occupied,
+      2: selectedPrinter.tray2Occupied,
+      3: selectedPrinter.tray3Occupied,
+      4: selectedPrinter.tray4Occupied,
+    }
+  }, [selectedPrinter])
+
+  const isAssigningToEmptySlot = useMemo(() => {
+    if (!isLoadedInPrinter || !selectedPrinter?.hasAms || amsSlot == null) return false
+    return isTrayEmptyMqtt(trayOccupiedMap[amsSlot]) && !traySlotMap[amsSlot]
+  }, [isLoadedInPrinter, selectedPrinter?.hasAms, amsSlot, trayOccupiedMap, traySlotMap])
+
+  const trayMismatch = useMemo(() => {
+    if (!isLoadedInPrinter || !selectedPrinter) return null
+    const slot = selectedPrinter.hasAms ? amsSlot : null
+    if (selectedPrinter.hasAms && slot == null) return null
+    const { trayHint, traySpool } = trayContextForSlot(selectedPrinter, slot)
+    if (!spoolMismatchesTrayReport(spool, trayHint)) return null
+    return {
+      reportedLabel: selectTrayHintLabel(trayHint!, selectedPrinter.brand, [spool], traySpool),
+      traySlot: selectedPrinter.hasAms ? slot ?? undefined : undefined,
+    }
+  }, [isLoadedInPrinter, selectedPrinter, amsSlot, spool])
+
+  async function executeAssign() {
     setSaving(true)
     try {
       await spoolsApi.activate(spool.id)
       if (isLoadedInPrinter && printerId) {
         await spoolsApi.assignPrinter(spool.id, { printerId, amsSlot })
+        setShowMismatchConfirm(false)
+        setAssignedWaitingLoad(isAssigningToEmptySlot)
+        setStep('done')
       } else {
         await spoolsApi.assignPrinter(spool.id, { printerId: null, amsSlot: null })
         await spoolsApi.update(spool.id, { stockLocation: stockLocation ?? '' })
+        window.dispatchEvent(new CustomEvent('spools-updated'))
+        onClose()
       }
-      window.dispatchEvent(new CustomEvent('spools-updated'))
-      onClose()
     } finally {
       setSaving(false)
     }
   }
 
+  async function handleActivate() {
+    if (trayMismatch) {
+      setShowMismatchConfirm(true)
+      return
+    }
+    await executeAssign()
+  }
+
+  function handleDoneClose() {
+    window.dispatchEvent(new CustomEvent('spools-updated'))
+    onClose()
+  }
+
   const pct = Math.min(100, Math.round((spool.currentWeightG / spool.initialWeightG) * 100))
   const isLow = spool.currentWeightG <= spool.lowStockThresholdG
 
-  const canActivate = isLoadedInPrinter ? !!printerId : !!stockLocation
+  const canActivate = isLoadedInPrinter
+    ? !!printerId && (!selectedPrinter?.hasAms || amsSlot != null)
+    : !!stockLocation
 
   return createPortal(
     <>
@@ -332,6 +385,18 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                                 {amsSlot === spool.amsSlot ? 'Already assigned to this slot' : t('spoolForm.slotOccupied')}
                               </div>
                             )}
+                            {isAssigningToEmptySlot && (
+                              <div className={styles.slotNote}>
+                                <InfoCircleIcon className={styles.slotNoteIcon} />
+                                {t('scan.assignToEmptySlotHint')}
+                              </div>
+                            )}
+                            {trayMismatch && (
+                              <div className={`${styles.slotNote} ${styles.slotNoteWarn}`}>
+                                <InfoCircleIcon className={styles.slotNoteIcon} />
+                                {t('scan.trayReportMismatch', { filament: trayMismatch.reportedLabel })}
+                              </div>
+                            )}
                           </>
                         ) : (
                           <div className={styles.singleSlot}>
@@ -340,6 +405,12 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                               <p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p>
                               <p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p>
                             </div>
+                          </div>
+                        )}
+                        {trayMismatch && !selectedPrinter.hasAms && (
+                          <div className={`${styles.slotNote} ${styles.slotNoteWarn}`}>
+                            <InfoCircleIcon className={styles.slotNoteIcon} />
+                            {t('scan.trayReportMismatch', { filament: trayMismatch.reportedLabel })}
                           </div>
                         )}
                       </div>
@@ -393,12 +464,54 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                 </div>
               )}
 
+              {showMismatchConfirm && trayMismatch ? (
+                <div className={styles.askBox}>
+                  <p className={styles.askQuestion}>
+                    {t('scan.trayReportMismatchConfirm', { filament: trayMismatch.reportedLabel })}
+                  </p>
+                  <div className={styles.askRow}>
+                    <button
+                      type="button"
+                      className={styles.btnSecondary}
+                      onClick={() => setShowMismatchConfirm(false)}
+                      disabled={saving}
+                    >
+                      {t('common.cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.btnPrimary}
+                      onClick={() => void executeAssign()}
+                      disabled={saving}
+                    >
+                      {saving ? '…' : t('scan.assignAnyway')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.askRow}>
+                  <button className={styles.btnSecondary} onClick={() => setStep('info')}>
+                    {t('scan.back')}
+                  </button>
+                  <button className={styles.btnPrimary} onClick={handleActivate} disabled={saving || !canActivate}>
+                    {saving ? '…' : t('scan.activate')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 'done' && (
+            <div className={styles.askBox}>
+              <div className={styles.askQuestion}>
+                {assignedWaitingLoad ? t('scan.assignedWaitingLoad') : t('scan.assignedConfirm')}
+                {assignedWaitingLoad && (
+                  <small className={styles.askHint}>{t('scan.assignedWaitingLoadHint')}</small>
+                )}
+              </div>
               <div className={styles.askRow}>
-                <button className={styles.btnSecondary} onClick={() => setStep('info')}>
-                  {t('scan.back')}
-                </button>
-                <button className={styles.btnPrimary} onClick={handleActivate} disabled={saving || !canActivate}>
-                  {saving ? '…' : t('scan.activate')}
+                <button className={styles.btnPrimary} onClick={handleDoneClose}>
+                  {t('scan.done')}
                 </button>
               </div>
             </div>

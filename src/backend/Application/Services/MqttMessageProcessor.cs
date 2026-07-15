@@ -16,6 +16,7 @@ public class MqttMessageProcessor(
     IBambuFtpService ftpService,
     IGcodeParserService gcodeParser,
     IBambuCloudTaskService cloudTaskService,
+    IAmsMqttSyncService amsMqttSyncService,
     ILogger<MqttMessageProcessor> logger) : IMqttMessageProcessor
 {
     public async Task ProcessAsync(string payload, Guid printerId)
@@ -62,6 +63,8 @@ public class MqttMessageProcessor(
                 }
             }
         }
+
+        await amsMqttSyncService.SyncFromMqttAsync(printerId, print);
 
         var prev = statusService.GetStatus(printerId);
 
@@ -149,9 +152,10 @@ public class MqttMessageProcessor(
                 job.Status = PrintJobStatus.Running;
                 job.LastUpdatedAt = DateTime.UtcNow;
                 await printJobRepository.UpdateAsync(job);
+                var resumePrinter = await printerRepository.GetByIdAsync(printerId);
                 var resumeSpool = job.SpoolId.HasValue ? await spoolRepository.GetByIdAsync(job.SpoolId.Value) : null;
                 await LogPrintTransitionAsync(printerId, "PrintResumed", "Resumed", "ti-player-play",
-                    bestName ?? job.PrintFileName, BuildSpoolSnapshot(resumeSpool, printJobId: job.Id));
+                    bestName ?? job.PrintFileName, await BuildPrintSnapshotAsync(resumePrinter, resumeSpool, printJobId: job.Id));
             }
             else if (job?.Status == PrintJobStatus.Running)
             {
@@ -203,9 +207,10 @@ public class MqttMessageProcessor(
                     if (prev?.GcodeState != "RUNNING")
                     {
                         logger.LogInformation("Print reconnected after restart — printer: {PrinterId}, job: {JobId}", printerId, job.Id);
+                        var reconnectPrinter = await printerRepository.GetByIdAsync(printerId);
                         var reconnectSpool = job.SpoolId.HasValue ? await spoolRepository.GetByIdAsync(job.SpoolId.Value) : null;
                         await LogPrintTransitionAsync(printerId, "PrintStarted", "Started", "ti-printer",
-                            bestName ?? job.PrintFileName, BuildSpoolSnapshot(reconnectSpool, status.RemainingMinutes, job.Id));
+                            bestName ?? job.PrintFileName, await BuildPrintSnapshotAsync(reconnectPrinter, reconnectSpool, status.RemainingMinutes, job.Id));
                     }
                 }
             }
@@ -214,7 +219,7 @@ public class MqttMessageProcessor(
             if (job == null)
             {
                 await OpenPrintJobAsync(printerId, bestName, mqttTaskId, status.RemainingMinutes);
-                var amsSnapshot = ParseAmsRemain(print);
+                var amsSnapshot = ParseAmsRemain(printerId, print);
                 if (amsSnapshot.Count > 0)
                     statusService.SaveAmsSnapshot(printerId, new AmsSnapshot(amsSnapshot, DateTime.UtcNow));
             }
@@ -231,8 +236,12 @@ public class MqttMessageProcessor(
                 pauseJob.LastUpdatedAt = DateTime.UtcNow;
                 await printJobRepository.UpdateAsync(pauseJob);
             }
+            var pausePrinter = await printerRepository.GetByIdAsync(printerId);
+            Domain.Models.Spool? pauseSpool = null;
+            if (pauseJob?.SpoolId is Guid pauseSpoolId)
+                pauseSpool = await spoolRepository.GetByIdAsync(pauseSpoolId);
             await LogPrintTransitionAsync(printerId, "PrintPaused", "Paused", "ti-player-pause", bestName,
-                BuildSpoolSnapshot(null, status.RemainingMinutes, pauseJob?.Id));
+                await BuildPrintSnapshotAsync(pausePrinter, pauseSpool, status.RemainingMinutes, pauseJob?.Id));
             return;
         }
 
@@ -246,7 +255,7 @@ public class MqttMessageProcessor(
             return;
         }
 
-        var amsRemain = ParseAmsRemain(print);
+        var amsRemain = ParseAmsRemain(printerId, print);
 
         float? grams = null;
         if (state == "FINISH")
@@ -305,26 +314,11 @@ public class MqttMessageProcessor(
         return string.IsNullOrEmpty(gcodeFile) ? null : Path.GetFileName(gcodeFile);
     }
 
-    private static Dictionary<string, int> ParseAmsRemain(JsonElement printEl)
+    private static Dictionary<string, int> ParseAmsRemain(Guid printerId, JsonElement printEl)
     {
-        var result = new Dictionary<string, int>();
-        if (!printEl.TryGetProperty("ams", out var ams)) return result;
-        if (!ams.TryGetProperty("ams", out var amsArray)) return result;
-
-        foreach (var amsUnit in amsArray.EnumerateArray())
-        {
-            var unitId = amsUnit.TryGetProperty("id", out var idEl) ? idEl.GetString() ?? "0" : "0";
-            if (!amsUnit.TryGetProperty("tray", out var trayArray)) continue;
-
-            foreach (var tray in trayArray.EnumerateArray())
-            {
-                var trayId = tray.TryGetProperty("id", out var trayIdEl) ? trayIdEl.GetString() ?? "0" : "0";
-                var remain = tray.TryGetProperty("remain", out var remainEl) ? remainEl.GetInt32() : -1;
-                if (remain >= 0)
-                    result[$"unit_{unitId}_tray_{trayId}"] = remain;
-            }
-        }
-        return result;
+        return AmsMqttTrayParser.TryParse(printerId, printEl, out _, out var remainBySlotKey, out _)
+            ? remainBySlotKey
+            : new Dictionary<string, int>();
     }
 
     private float? ResolveGramsFromAmsRemain(PrintJob job, Dictionary<string, int> currentRemain)
@@ -437,7 +431,8 @@ public class MqttMessageProcessor(
 
         logger.LogInformation("Print started — printer: {PrinterId}, file: {File}, taskId: {TaskId}",
             printerId, fileName ?? "pending", job.TaskId ?? "none");
-        await LogPrintTransitionAsync(printerId, "PrintStarted", "Started", "ti-printer", fileName, BuildSpoolSnapshot(spool, remainingMinutes, jobId));
+        await LogPrintTransitionAsync(printerId, "PrintStarted", "Started", "ti-printer", fileName,
+            await BuildPrintSnapshotAsync(printer, spool, remainingMinutes, jobId));
     }
 
     private async Task LogPrintTransitionAsync(Guid printerId, string eventType, string action, string icon, string? fileName, string? snapshot = null)
@@ -452,19 +447,75 @@ public class MqttMessageProcessor(
         await activityService.LogAsync(eventType, action, "Printer", printerName, printerId, description, icon, snapshot);
     }
 
-    private static string? BuildSpoolSnapshot(Domain.Models.Spool? spool, int estimatedMins = 0, Guid? printJobId = null)
+    private async Task<string?> BuildPrintSnapshotAsync(Domain.Models.Printer? printer, Domain.Models.Spool? activeSpool, int estimatedMins = 0, Guid? printJobId = null)
     {
-        if (spool is null && estimatedMins <= 0 && printJobId is null) return null;
+        if (printer is null && activeSpool is null && estimatedMins <= 0 && printJobId is null) return null;
+
+        var loaded = printer is not null
+            ? await BuildLoadedSpoolsAsync(printer, activeSpool)
+            : new List<object>();
+
         return System.Text.Json.JsonSerializer.Serialize(new
         {
-            brand         = spool?.Brand,
-            material      = spool?.Material,
-            colorHex      = spool?.ColorHex,
-            colorName     = spool?.ColorName,
-            weight        = spool is null ? (int?)null : (int)Math.Round(spool.CurrentWeightG),
+            brand         = activeSpool?.Brand,
+            material      = activeSpool?.Material,
+            colorHex      = activeSpool?.ColorHex,
+            colorName     = activeSpool?.ColorName,
+            weight        = activeSpool is null ? (int?)null : (int)Math.Round(activeSpool.CurrentWeightG),
             estimatedMins = estimatedMins > 0 ? estimatedMins : (int?)null,
             printJobId    = printJobId?.ToString(),
+            hasAms        = printer?.HasAms ?? false,
+            loadedSpools  = loaded.Count > 0 ? loaded : null,
         });
+    }
+
+    private async Task<List<object>> BuildLoadedSpoolsAsync(Domain.Models.Printer printer, Domain.Models.Spool? activeSpool)
+    {
+        var loaded = new List<object>();
+
+        if (printer.HasAms)
+        {
+            var trays = new (int slot, Guid? id)[]
+            {
+                (0, printer.Tray1SpoolId), (1, printer.Tray2SpoolId),
+                (2, printer.Tray3SpoolId), (3, printer.Tray4SpoolId),
+            };
+            foreach (var (slot, id) in trays)
+            {
+                if (!id.HasValue) continue;
+                var s = await spoolRepository.GetByIdAsync(id.Value);
+                if (s is null) continue;
+                loaded.Add(new
+                {
+                    slot,
+                    brand     = s.Brand,
+                    colorName = s.ColorName,
+                    colorHex  = s.ColorHex,
+                    material  = s.Material,
+                    weight    = (int)Math.Round(s.CurrentWeightG),
+                    isActive  = activeSpool?.Id == s.Id,
+                });
+            }
+            return loaded;
+        }
+
+        var spoolId = activeSpool?.Id ?? printer.ExtraSpoolId;
+        if (!spoolId.HasValue) return loaded;
+
+        var spool = activeSpool ?? await spoolRepository.GetByIdAsync(spoolId.Value);
+        if (spool is null) return loaded;
+
+        loaded.Add(new
+        {
+            slot      = 0,
+            brand     = spool.Brand,
+            colorName = spool.ColorName,
+            colorHex  = spool.ColorHex,
+            material  = spool.Material,
+            weight    = (int)Math.Round(spool.CurrentWeightG),
+            isActive  = true,
+        });
+        return loaded;
     }
 
     private async Task ClosePrintJobAsync(PrintJob job, Guid printerId, string gcodeState, float? grams, string? fileName, string? taskId = null)
@@ -515,7 +566,7 @@ public class MqttMessageProcessor(
             await activityService.LogAsync(
                 "PrintCompleted", "Completed", "Printer", printerNameForActivity, printerId,
                 $"{job.PrintFileName ?? "unnamed print"}{gramsText}", "ti-check",
-                BuildSpoolSnapshot(spool, printJobId: job.Id));
+                await BuildPrintSnapshotAsync(printerForActivity, spool, printJobId: job.Id));
         }
         else if (gcodeState is "FAILED" or "CANCELLED")
         {
@@ -525,7 +576,7 @@ public class MqttMessageProcessor(
                 "Printer", printerNameForActivity, printerId,
                 $"{(gcodeState == "FAILED" ? "failed" : "cancelled")}: {job.PrintFileName ?? "unnamed print"}",
                 gcodeState == "FAILED" ? "ti-alert-circle" : "ti-ban",
-                BuildSpoolSnapshot(spool, printJobId: job.Id));
+                await BuildPrintSnapshotAsync(printerForActivity, spool, printJobId: job.Id));
         }
 
         logger.LogInformation("Print job {Id} closed — status: {Status}, grams: {Grams}",

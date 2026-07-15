@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { activitiesApi } from '@/api/activities'
-import ActivityCard from '@/components/ActivityCard'
+import { enrichActivities } from '@/utils/enrichActivities'
+import { ActivityFeed } from '@/components/ActivityFeed'
 import type { Activity } from '@/types/activity'
 import panelStyles from '@/components/NotificationBell/NotificationBell.module.css'
 
@@ -60,15 +61,12 @@ function NotificationsPanel({
           <h2>{t('notifications.title')}</h2>
         </div>
         <div className={panelStyles.list}>
-          {loading && activities.length === 0
-            ? <div className={panelStyles.loading}>{t('common.loading')}</div>
-            : activities.length === 0
-              ? <div className={panelStyles.empty}>{t('notifications.empty')}</div>
-              : activities.map(activity => (
-                  <div key={activity.id} className={panelStyles.listItem}>
-                    <ActivityCard activity={activity} flat />
-                  </div>
-                ))}
+          <ActivityFeed
+            activities={activities}
+            variant="dense"
+            loading={loading && activities.length === 0}
+            emptyMessage={t('notifications.empty')}
+          />
         </div>
         <div className={panelStyles.foot}>
           <Link to="/activity" onClick={onClose}>{t('notifications.viewAll')}</Link>
@@ -87,7 +85,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   const refresh = useCallback(async () => {
     try {
       const data = await activitiesApi.getRecent(20)
-      setActivities(data.activities)
+      const enriched = await enrichActivities(data.activities)
+      setActivities(enriched)
     } catch {
       /* ignore */
     } finally {

@@ -6,6 +6,13 @@ export interface TraySpoolSummary {
   colorHex: string
 }
 
+export interface TrayMqttHint {
+  material: string | null
+  colorName: string | null
+  colorHex: string | null
+  brand: string | null
+}
+
 export interface PrinterResponse {
   id: string
   name: string
@@ -22,6 +29,24 @@ export interface PrinterResponse {
   tray3Spool: TraySpoolSummary | null
   tray4Spool: TraySpoolSummary | null
   extraSpool: TraySpoolSummary | null
+  /** MQTT AMS remain % per tray (-1 = empty, 0–100 = loaded, null = not reported yet) */
+  tray1RemainPct: number | null
+  tray2RemainPct: number | null
+  tray3RemainPct: number | null
+  tray4RemainPct: number | null
+  tray1Occupied: boolean
+  tray2Occupied: boolean
+  tray3Occupied: boolean
+  tray4Occupied: boolean
+  /** MQTT vt_tray occupied (null = not reported yet, manual assign still valid) */
+  extraSpoolOccupied: boolean | null
+  extraSpoolRemainPct: number | null
+  /** MQTT-reported filament on occupied trays (for manual assign matching) */
+  tray1Mqtt: TrayMqttHint | null
+  tray2Mqtt: TrayMqttHint | null
+  tray3Mqtt: TrayMqttHint | null
+  tray4Mqtt: TrayMqttHint | null
+  extraMqtt: TrayMqttHint | null
 }
 
 export interface UpdatePrinterRequest {
@@ -50,6 +75,23 @@ export interface CloudDiscoveredPrinter {
   model: string
   online: boolean
   alreadyAdded: boolean
+}
+
+export interface DiscoveredSpoolSlotPreview {
+  slot: number
+  occupied: boolean
+  remainPct: number | null
+  material: string | null
+  colorHex: string | null
+  colorName: string | null
+  brand: string | null
+  isBambuFilament: boolean
+}
+
+export interface DiscoveredPrinterMqttPreview {
+  hasAms: boolean
+  trays: DiscoveredSpoolSlotPreview[]
+  extraTray: DiscoveredSpoolSlotPreview | null
 }
 
 export interface CloudLoginResult {

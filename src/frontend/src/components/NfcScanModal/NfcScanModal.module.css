@@ -217,6 +217,7 @@
 }
 
 .slotNote { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 6px; align-items: flex-start; line-height: 1.4; }
+.slotNoteWarn { color: #b45309; }
 .slotNoteIcon { width: 13px; height: 13px; flex: none; margin-top: 1px; color: #d97706; }
 
 .singleSlot {

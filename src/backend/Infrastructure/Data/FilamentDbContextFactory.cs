@@ -8,7 +8,7 @@ public class FilamentDbContextFactory : IDesignTimeDbContextFactory<FilamentDbCo
     public FilamentDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<FilamentDbContext>()
-            .UseSqlite("Data Source=spoolhub-dev.db")
+            .UseSqlite("Data Source=spoolhub.db")
             .Options;
 
         return new FilamentDbContext(options);

@@ -13,10 +13,11 @@ public class PrinterControllerTests
     private readonly IPrinterStatusService _statusService = Substitute.For<IPrinterStatusService>();
     private readonly IPrintJobRepository _printJobRepo = Substitute.For<IPrintJobRepository>();
     private readonly ICloudPrinterRegistrationService _cloudService = Substitute.For<ICloudPrinterRegistrationService>();
+    private readonly IPrinterMqttPreviewService _mqttPreviewService = Substitute.For<IPrinterMqttPreviewService>();
     private readonly IAlertService _alertService = Substitute.For<IAlertService>();
     private readonly PrinterController _sut;
 
-    public PrinterControllerTests() => _sut = new PrinterController(_service, _statusService, _printJobRepo, _cloudService, _alertService);
+    public PrinterControllerTests() => _sut = new PrinterController(_service, _statusService, _printJobRepo, _cloudService, _mqttPreviewService, _alertService);
 
     [Fact]
     public async Task GetAllPrinters_ReturnsOkWithPrinters()
@@ -165,5 +166,9 @@ public class PrinterControllerTests
     private static PrinterResponse BuildResponse() => new(
         Guid.NewGuid(), "My Printer", "Bambu Lab", "X1 Carbon",
         "ABC123", "192.168.1.100", null, "mqtt_lan", false, DateTime.UtcNow,
+        null, null, null, null, null,
+        null, null, null, null,
+        false, false, false, false,
+        null, null,
         null, null, null, null, null);
 }

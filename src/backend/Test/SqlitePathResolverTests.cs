@@ -35,7 +35,7 @@ public class SqlitePathResolverTests : IDisposable
     }
 
     [Fact]
-    public void ResolveDatabasePath_InDevelopment_UsesLocalApplicationData()
+    public void ResolveDatabasePath_InDevelopment_UsesContentRoot()
     {
         var contentRoot = CreateTempDir();
         var config = ConfigWith("Data Source=spoolhub.db");
@@ -43,36 +43,7 @@ public class SqlitePathResolverTests : IDisposable
 
         var path = SqlitePathResolver.ResolveDatabasePath(config, env);
 
-        var expected = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SpoolHub",
-            "spoolhub.db");
-        Assert.Equal(expected, path);
-    }
-
-    [Fact]
-    public void ResolveDatabasePath_InDevelopment_MigratesLegacyProjectDatabase()
-    {
-        var contentRoot = CreateTempDir();
-        var legacyDb = Path.Combine(contentRoot, "spoolhub-migrate-test.db");
-        File.WriteAllText(legacyDb, "sqlite-placeholder");
-
-        var config = ConfigWith("Data Source=spoolhub-migrate-test.db");
-        var env = DevelopmentEnv(contentRoot);
-
-        var expectedPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SpoolHub",
-            "spoolhub-migrate-test.db");
-        if (File.Exists(expectedPath))
-            File.Delete(expectedPath);
-
-        var path = SqlitePathResolver.ResolveDatabasePath(config, env);
-        _cleanupDirs.Add(Path.GetDirectoryName(path)!);
-
-        Assert.Equal(expectedPath, path);
-        Assert.True(File.Exists(path));
-        Assert.Equal("sqlite-placeholder", File.ReadAllText(path));
+        Assert.Equal(Path.Combine(contentRoot, "spoolhub.db"), path);
     }
 
     [Fact]

@@ -32,6 +32,10 @@ public class FilamentDbContext(DbContextOptions<FilamentDbContext> options) : Db
             .HasIndex(t => t.TagUid)
             .IsUnique();
 
+        modelBuilder.Entity<Spool>()
+            .HasIndex(s => s.BambuTagUid)
+            .IsUnique();
+
         modelBuilder.Entity<NfcTag>()
             .HasOne(t => t.Spool)
             .WithMany(s => s.NfcTags)

@@ -155,13 +155,16 @@ builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddScoped<ISpoolService, SpoolService>();
 builder.Services.AddScoped<INfcTagService, NfcTagService>();
 builder.Services.AddScoped<INfcScanService, NfcScanService>();
+builder.Services.AddScoped<IAmsMqttSyncService, AmsMqttSyncService>();
 builder.Services.AddScoped<IMqttMessageProcessor, MqttMessageProcessor>();
 builder.Services.AddScoped<IBambuFtpService, BambuFtpService>();
 builder.Services.AddScoped<IGcodeParserService, GcodeParserService>();
 builder.Services.AddScoped<IBambuCloudTaskService, BambuCloudTaskService>();
+builder.Services.AddScoped<IPrinterMqttPreviewService, PrinterMqttPreviewService>();
 builder.Services.AddScoped<IPrinterService, PrinterService>();
 builder.Services.AddSingleton<IPrinterStatusService, PrinterStatusService>();
 builder.Services.AddSingleton<IPrinterStatusPusher, PrinterStatusPusher>();
+builder.Services.AddSingleton<IPrinterRealtimeNotifier, SignalRPrinterRealtimeNotifier>();
 
 // Cloud registration
 builder.Services.AddSingleton<ICloudSessionStore, InMemoryCloudSessionStore>();
