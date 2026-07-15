@@ -63,6 +63,8 @@ public class MqttMessageProcessor(
             }
         }
 
+        await TryUpdatePrinterHasAmsFromMqttAsync(printerId, print);
+
         var prev = statusService.GetStatus(printerId);
 
         var state = print.TryGetProperty("gcode_state", out var stateEl)
@@ -309,6 +311,25 @@ public class MqttMessageProcessor(
 
         if (!isProfileString) return subtaskName;
         return string.IsNullOrEmpty(gcodeFile) ? null : Path.GetFileName(gcodeFile);
+    }
+
+    private async Task TryUpdatePrinterHasAmsFromMqttAsync(Guid printerId, JsonElement printEl)
+    {
+        if (!MqttReportsAms(printEl)) return;
+
+        var printer = await printerRepository.GetByIdAsync(printerId);
+        if (printer is null || printer.HasAms) return;
+
+        printer.HasAms = true;
+        await printerRepository.UpdateAsync(printer);
+        logger.LogInformation("MQTT reported AMS for printer {Id} — set HasAms=true", printerId);
+    }
+
+    private static bool MqttReportsAms(JsonElement printEl)
+    {
+        if (!printEl.TryGetProperty("ams", out var ams)) return false;
+        if (!ams.TryGetProperty("ams", out var amsArray)) return false;
+        return amsArray.ValueKind == JsonValueKind.Array && amsArray.GetArrayLength() > 0;
     }
 
     private static Dictionary<string, int> ParseAmsRemain(JsonElement printEl)

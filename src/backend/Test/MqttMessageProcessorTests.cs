@@ -79,6 +79,48 @@ public class MqttMessageProcessorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_WhenMqttReportsAms_SetsHasAmsTrueOnPrinter()
+    {
+        var printerId = Guid.NewGuid();
+        var printer = BuildPrinter(printerId, hasAms: false);
+        _printerRepo.GetByIdAsync(printerId).Returns(printer);
+        _printJobRepo.GetActiveByPrinterIdAsync(printerId).Returns((PrintJob?)null);
+        _printJobRepo.CreateAsync(Arg.Any<PrintJob>()).Returns(x => x.Arg<PrintJob>());
+
+        await _sut.ProcessAsync(RunningPayload(), printerId);
+
+        await _printerRepo.Received(1).UpdateAsync(Arg.Is<Printer>(p =>
+            p.Id == printerId && p.HasAms));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenMqttReportsAms_AndHasAmsAlreadyTrue_DoesNotUpdatePrinter()
+    {
+        var printerId = Guid.NewGuid();
+        var printer = BuildPrinter(printerId, hasAms: true);
+        _printerRepo.GetByIdAsync(printerId).Returns(printer);
+        _printJobRepo.GetActiveByPrinterIdAsync(printerId).Returns((PrintJob?)null);
+        _printJobRepo.CreateAsync(Arg.Any<PrintJob>()).Returns(x => x.Arg<PrintJob>());
+
+        await _sut.ProcessAsync(RunningPayload(), printerId);
+
+        await _printerRepo.DidNotReceive().UpdateAsync(Arg.Any<Printer>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenMqttHasNoAms_DoesNotSetHasAms()
+    {
+        var printerId = Guid.NewGuid();
+        var printer = BuildPrinter(printerId, hasAms: false);
+        _printerRepo.GetByIdAsync(printerId).Returns(printer);
+
+        var payload = "{\"print\":{\"gcode_state\":\"RUNNING\",\"nozzle_temper\":220,\"bed_temper\":65}}";
+        await _sut.ProcessAsync(payload, printerId);
+
+        await _printerRepo.DidNotReceive().UpdateAsync(Arg.Any<Printer>());
+    }
+
+    [Fact]
     public async Task ProcessAsync_WhenMessageMissingFields_KeepsPreviousValues()
     {
         var printerId = Guid.NewGuid();
