@@ -883,6 +883,8 @@
     "chipPrints": "Impresiones",
     "chipStock": "Existencias",
     "chipInventory": "Inventario",
+    "listTitle": "Todos los eventos",
+    "searchPlaceholder": "Buscar actividad…",
     "colEvent": "Evento",
     "colDetail": "Detalle",
     "colInfo": "Info",
@@ -920,7 +922,8 @@
     "locationLabel": "Ubicación",
     "used": "usado",
     "minsRemains": "restante",
-    "printing": "Imprimiendo"
+    "printing": "Imprimiendo",
+    "loadedWith": "cargado con"
   },
   "recentActivity": {
     "noActivity": "No hay actividad registrada aún",

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { activitiesApi } from '@/api/activities'
+import { enrichActivities } from '@/utils/enrichActivities'
 import type { Activity, ActivityFilters } from '@/types/activity'
 
 const DEFAULT_FILTERS: ActivityFilters = {
@@ -30,8 +31,9 @@ export function useActivityLog(initialPerPage = 20) {
         timePeriod: filters.timePeriod || undefined,
         sortBy:     filters.sortBy     || undefined,
       })
-      .then(r => {
-        setActivities(r.activities)
+      .then(async r => {
+        const enriched = await enrichActivities(r.activities)
+        setActivities(enriched)
         setTotal(r.total)
         setLoading(false)
       })
