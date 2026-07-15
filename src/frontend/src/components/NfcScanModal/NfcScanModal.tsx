@@ -73,10 +73,6 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
       .catch(() => {})
   }, [spool.id])
 
-  useEffect(() => {
-    setShowMismatchConfirm(false)
-  }, [printerId, amsSlot, isLoadedInPrinter])
-
   const extraLocationOptions = useMemo(() => {
     const extras = customLocations.filter(l => !dbLocations.includes(l))
     if (spool.stockLocation && !dbLocations.includes(spool.stockLocation) && !extras.includes(spool.stockLocation)) {
