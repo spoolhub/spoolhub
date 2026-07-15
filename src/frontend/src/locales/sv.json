@@ -883,6 +883,8 @@
     "chipPrints": "Utskrifter",
     "chipStock": "Lager",
     "chipInventory": "Inventarie",
+    "listTitle": "Alla händelser",
+    "searchPlaceholder": "Sök aktivitet…",
     "colEvent": "Händelse",
     "colDetail": "Detalj",
     "colInfo": "Info",
@@ -920,7 +922,8 @@
     "locationLabel": "Plats",
     "used": "använt",
     "minsRemains": "kvar",
-    "printing": "Skriver ut"
+    "printing": "Skriver ut",
+    "loadedWith": "laddad med"
   },
   "recentActivity": {
     "noActivity": "Ingen aktivitet registrerad ännu",

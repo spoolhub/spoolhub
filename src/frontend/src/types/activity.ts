@@ -1,3 +1,13 @@
+export interface LoadedSpoolSnapshot {
+  slot: number
+  brand?: string
+  colorName?: string
+  colorHex?: string
+  material?: string
+  weight?: number
+  isActive?: boolean
+}
+
 export interface ActivitySnapshot {
   material?: string
   colorHex?: string
@@ -10,6 +20,8 @@ export interface ActivitySnapshot {
   printFileName?: string
   gramsUsed?: number
   printerName?: string
+  hasAms?: boolean
+  loadedSpools?: LoadedSpoolSnapshot[]
 }
 
 export interface Activity {

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
+import ActivityPrintLoadDetail from '@/components/ActivityPrintLoadDetail'
 import type { Activity } from '@/types/activity'
 import styles from './ActivityCard.module.css'
 
@@ -88,9 +89,15 @@ export function getIconCfg(eventType: string): IconCfg {
 interface Props {
   activity: Activity
   flat?: boolean
+  /** Single horizontal row — used on Activity Log page */
+  row?: boolean
+  /** Softer ledger styling for the activity log table */
+  ledger?: boolean
+  /** Table row for print-history-style activity log */
+  tableRow?: boolean
 }
 
-export default function ActivityCard({ activity, flat }: Props) {
+export default function ActivityCard({ activity, flat, row, ledger, tableRow }: Props) {
   const { t } = useTranslation()
   const { color, bg, icon } = getIconCfg(activity.eventType)
   const PRINT_EVENTS = new Set(['PrintStarted', 'PrintCompleted', 'PrintPaused', 'PrintResumed', 'PrintFailed', 'PrintCancelled'])
@@ -263,6 +270,157 @@ export default function ActivityCard({ activity, flat }: Props) {
   const isSpoolEvent = !isPrintEvent && !isNfcEvent && !printerSummary && (snap?.colorHex || snap?.material || snap?.brand)
   const hasWeight = isSpoolEvent && snap?.weight != null && snap.weight > 0
 
+  const assignedPrinter = (() => {
+    if (activity.eventType === 'SpoolAssigned') return (activity.description?.match(/^to\s+(.+)/i) ?? [])[1]?.trim() ?? null
+    if (activity.eventType === 'SpoolUnassigned') return (activity.description?.match(/^from\s+(.+)/i) ?? [])[1]?.trim() ?? null
+    return null
+  })()
+
+  const renderSpoolChip = (keyPrefix: string) => (
+    <>
+      {snap?.colorHex && <SpoolIcon key={`${keyPrefix}-icon`} color={snap.colorHex} size={16} />}
+      {snap?.brand && <span className={styles.flatName}>{snap.brand}</span>}
+      {colorName && <span className={styles.flatColorName}>{colorName}</span>}
+      {snap?.material && <span className={styles.flatMat}>{snap.material}</span>}
+    </>
+  )
+
+  if (row || tableRow || ledger) {
+    const fileLabel = activity.eventType === 'PrintStarted' ? printStartedFile : printFileLabel
+
+    const rowDetail = (() => {
+      if (isPrintEvent) {
+        return (
+          <>
+            <span className={styles.flatPrinterName}>{activity.resourceName}</span>
+            <ActivityPrintLoadDetail snap={snap} accentColor={color} accentBg={bg} />
+          </>
+        )
+      }
+      if (isNfcEvent) {
+        if (hasSpoolSnapshotForNfc) return renderSpoolChip('nfc-detail')
+        if (nfcSpoolName) {
+          return (
+            <>
+              <SpoolIcon color="#9ca3af" size={16} />
+              <span className={styles.flatName}>{nfcFallbackParts.text || nfcSpoolName}</span>
+              {nfcFallbackParts.mat && <span className={styles.flatMat}>{nfcFallbackParts.mat}</span>}
+            </>
+          )
+        }
+        return null
+      }
+      if (printerSummary) return <span className={styles.flatDesc}>{printerSummary}</span>
+      return (
+        <>
+          {snap?.brand || snap?.colorHex ? renderSpoolChip('spool-detail') : (
+            activity.resourceName ? <span className={styles.flatName}>{activity.resourceName}</span> : null
+          )}
+          {assignedPrinter && (
+            <>
+              <span className={styles.flatSep}>·</span>
+              <span className={styles.flatDesc}>{assignedPrinter}</span>
+            </>
+          )}
+        </>
+      )
+    })()
+
+    const rowInfo = (() => {
+      if (isPrintEvent) {
+        const showWeightInInfo = activity.eventType === 'PrintStarted'
+          && snap?.weight != null && snap.weight > 0
+          && (snap.hasAms === true || (snap.loadedSpools?.length ?? 0) > 1)
+        return (
+          <>
+            {showWeightInInfo && (
+              <span className={styles.flatWeight}>{snap!.weight}g left</span>
+            )}
+            {printEstimatedMins != null && printEstimatedMins > 0 && (
+              <>
+                {showWeightInInfo && <span className={styles.flatSep}>·</span>}
+                <span className={styles.rowInlineIcon}>{ICONS.clock}</span>
+                <span className={styles.flatEstTime}>{formatMins(printEstimatedMins)}</span>
+              </>
+            )}
+            {isPrintCompleted && printUsedGrams != null && printUsedGrams > 0 && (
+              <>
+                {(printEstimatedMins != null && printEstimatedMins > 0) && <span className={styles.flatSep}>·</span>}
+                <span className={styles.flatUsedBadge}>{printUsedGrams}g</span>
+                <span className={styles.flatUsedLabel}>{t('activityCard.used')}</span>
+              </>
+            )}
+            {fileLabel && (
+              <>
+                {(showWeightInInfo
+                  || (printEstimatedMins != null && printEstimatedMins > 0)
+                  || (isPrintCompleted && printUsedGrams != null && printUsedGrams > 0)) && (
+                  <span className={styles.flatSep}>·</span>
+                )}
+                <span className={styles.rowFile}>{fileLabel}</span>
+              </>
+            )}
+            {!fileLabel && snap?.printJobId && <span className={styles.flatFileSkeleton} />}
+          </>
+        )
+      }
+      if (isNfcEvent) {
+        return (
+          <>
+            <span className={styles.flatWeightLabel}>{t('activityCard.tagUidLabel')}:</span>
+            <span className={styles.flatTagUid}>{activity.resourceName}</span>
+          </>
+        )
+      }
+      if (printerSummary) return null
+      return (
+        <>
+          {hasWeight && (
+            <>
+              <span className={styles.rowInlineIcon}>{ICONS.weight}</span>
+              <span className={styles.flatWeight}>{snap!.weight}g</span>
+            </>
+          )}
+          {isSpoolEvent && snap?.stockLocation && (
+            <>
+              {hasWeight && <span className={styles.flatSep}>·</span>}
+              <span className={styles.rowInlineIcon}>{ICONS.mapPin}</span>
+              <span className={styles.flatSubName}>{snap.stockLocation}</span>
+            </>
+          )}
+        </>
+      )
+    })()
+
+    if (tableRow) {
+      return (
+        <tr className={styles.tableRow}>
+          <td>
+            <div className={styles.tableEvent}>
+              <div className={styles.tableIcon} style={{ background: bg, color }}>{icon}</div>
+              <span className={styles.tableEventLabel}>{actionLabel}</span>
+            </div>
+          </td>
+          <td><div className={styles.tableCell}>{rowDetail}</div></td>
+          <td><div className={styles.tableCell}>{rowInfo}</div></td>
+          <td className={styles.tableTime}>{relativeTime(activity.createdAt, t)}</td>
+        </tr>
+      )
+    }
+
+    const rowClass = ledger ? `${styles.rowGrid} ${styles.rowLedger}` : styles.rowGrid
+
+    return (
+      <div className={rowClass} style={{ '--accent': color } as React.CSSProperties}>
+        <div className={styles.rowIcon} style={{ background: bg, color }}>{icon}</div>
+        <span className={styles.rowEvent}>{actionLabel}</span>
+        <div className={styles.rowCell}>{rowDetail}</div>
+        <div className={styles.rowCell}>{rowInfo}</div>
+        <span className={styles.rowTime}>{relativeTime(activity.createdAt, t)}</span>
+      </div>
+    )
+  }
+
   if (flat) {
     return (
       <div className={styles.flatRow} style={{ '--accent': color } as React.CSSProperties}>
@@ -297,10 +455,7 @@ export default function ActivityCard({ activity, flat }: Props) {
                       : null
                   ) : (
                     <>
-                      {snap?.colorHex && <SpoolIcon color={snap.colorHex} size={18} />}
-                      {snap?.brand && <span className={styles.flatName}>{snap.brand}</span>}
-                      {snap?.colorName && <span className={styles.flatColorName}>{snap.colorName}</span>}
-                      {snap?.material && <span className={styles.flatMat}>{snap.material}</span>}
+                      <ActivityPrintLoadDetail snap={snap} accentColor={color} accentBg={bg} leadingSep={false} />
                       {isPrintCompleted && printUsedGrams != null && printUsedGrams > 0 && (
                         <>
                           <span className={styles.flatSep}>·</span>

@@ -861,7 +861,7 @@
   },
   "activity": {
     "title": "Activity Log",
-    "subtitle": "Stay up to date with recent events",
+    "subtitle": "A clear timeline of everything happening in your workshop",
     "loading": "Loading…",
     "eventsRecorded_one": "{{count}} event recorded",
     "eventsRecorded_other": "{{count}} events recorded",
@@ -905,6 +905,8 @@
     "chipPrints": "Prints",
     "chipStock": "Stock",
     "chipInventory": "Inventory",
+    "listTitle": "All events",
+    "searchPlaceholder": "Search activity…",
     "colEvent": "Event",
     "colDetail": "Detail",
     "colInfo": "Info",
@@ -942,7 +944,8 @@
     "locationLabel": "Location",
     "used": "used",
     "minsRemains": "remains",
-    "printing": "Printing"
+    "printing": "Printing",
+    "loadedWith": "loaded with"
   },
   "recentActivity": {
     "noActivity": "No activity recorded yet",

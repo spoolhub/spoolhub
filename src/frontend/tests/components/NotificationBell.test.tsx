@@ -77,7 +77,7 @@ describe('NotificationBell', () => {
 
   it('shows activity details in the panel', async () => {
     renderBell()
-    await waitFor(() => expect(activitiesApi.getRecent).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByText('1')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: /Notifications/i }))
     expect(screen.getByText('New spool added')).toBeInTheDocument()
     expect(screen.getByText('Bambu')).toBeInTheDocument()
