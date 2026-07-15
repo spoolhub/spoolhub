@@ -24,7 +24,7 @@ export default function SelectSpoolPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    setLoading(true) // eslint-disable-line react-hooks/set-state-in-effect
     Promise.all([
       spoolsApi.getAll(),
       printerId ? printersApi.getById(printerId) : Promise.resolve(null),

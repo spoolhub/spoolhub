@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
@@ -46,10 +46,7 @@ export default function SelectSpoolPanel({
   const trayLabel = trayHint ? selectTrayHintLabel(trayHint, printer.brand, spools, traySpool) : ''
   const addSpoolUrl = buildSelectSpoolAddUrl(printer, amsSlot)
 
-  const filtered = useMemo(
-    () => filterSpoolsForTraySelect(spools, trayHint, ''),
-    [spools, trayHint],
-  )
+  const filtered = filterSpoolsForTraySelect(spools, trayHint, '')
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
 
   const title = amsSlot != null

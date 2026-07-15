@@ -374,6 +374,7 @@ export default function AddSpoolPage() {
       safetySheetUrl: null,
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(s => ({
       ...s,
       step: 'details',

@@ -124,7 +124,7 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     const targets = cloudPrinters.filter(p => p.online && !p.alreadyAdded)
     if (targets.length === 0) return
 
-    setCloudPreviewLoading(Object.fromEntries(targets.map(p => [p.serialNumber, true])))
+    setCloudPreviewLoading(Object.fromEntries(targets.map(p => [p.serialNumber, true]))) // eslint-disable-line react-hooks/set-state-in-effect
     void (async () => {
       await Promise.all(targets.map(async p => {
         try {

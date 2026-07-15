@@ -130,12 +130,15 @@ public static class BambuFilamentProfiles
             var (brand, _) = ParseProfileName(profileName);
             if (!string.IsNullOrWhiteSpace(brand))
                 return brand;
-            return profileName;
+            return null;
         }
+
+        if (isBambuFilament)
+            return "Bambu Lab";
 
         if (!string.IsNullOrWhiteSpace(trayIdName))
             return trayIdName.Trim();
 
-        return isBambuFilament ? "Bambu Lab" : null;
+        return null;
     }
 }

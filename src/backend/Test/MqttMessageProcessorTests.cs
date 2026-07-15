@@ -189,7 +189,7 @@ public class MqttMessageProcessorTests
     {
         var printerId = Guid.NewGuid();
         var spool = BuildSpool();
-        var printer = BuildPrinter(printerId, extraSpoolId: spool.Id);
+        var printer = BuildPrinter(printerId, hasAms: true, tray1SpoolId: spool.Id);
         _printJobRepo.GetActiveByPrinterIdAsync(printerId).Returns((PrintJob?)null);
         _printerRepo.GetByIdAsync(printerId).Returns(printer);
         _spoolRepo.GetByIdAsync(spool.Id).Returns(spool);

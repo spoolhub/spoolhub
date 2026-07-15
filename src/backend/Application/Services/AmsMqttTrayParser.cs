@@ -240,9 +240,12 @@ public static class AmsMqttTrayParser
 
     public static string ParseTrayColorHex(string? trayColor)
     {
-        if (string.IsNullOrWhiteSpace(trayColor) || trayColor.Length < 6)
+        if (string.IsNullOrWhiteSpace(trayColor))
             return "#888888";
-        return "#" + trayColor[..6].ToUpperInvariant();
+        var hex = trayColor.Trim().TrimStart('#');
+        if (hex.Length < 6)
+            return "#888888";
+        return "#" + hex[..6].ToUpperInvariant();
     }
 
     private static bool MergeAmsIntoCache(
