@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   countLoadedAmsTrays,
+  countPendingAmsTrays,
   isExtraTrayClickable,
   isExtraTrayLoaded,
+  isExtraTrayPendingLoad,
   isTrayClickable,
   isTrayEmptyMqtt,
   isTrayLoaded,
+  isTrayPendingLoad,
   trayRemainPercent,
 } from '@/utils/printerAms'
 import type { SpoolResponse } from '@/types/spool'
@@ -56,6 +59,15 @@ describe('printerAms', () => {
   it('disables clicks on MQTT-empty trays', () => {
     expect(isTrayClickable(false, null)).toBe(false)
     expect(isTrayClickable(true, null)).toBe(true)
+  })
+
+  it('detects pending load and allows viewing assigned spool', () => {
+    const assigned = { id: 's1' }
+    expect(isTrayPendingLoad(false, assigned)).toBe(true)
+    expect(isTrayClickable(false, assigned)).toBe(true)
+    expect(isTrayLoaded(false, assigned)).toBe(false)
+    expect(isExtraTrayPendingLoad(false, assigned)).toBe(true)
+    expect(countPendingAmsTrays([false, true], [assigned, null])).toBe(1)
   })
 
   it('computes remain percent from spool weight', () => {

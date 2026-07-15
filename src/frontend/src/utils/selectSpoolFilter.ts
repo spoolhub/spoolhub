@@ -87,6 +87,12 @@ export function spoolMatchesTrayForSelect(spool: SpoolResponse, hint: TrayMqttHi
   return true
 }
 
+/** True when the printer reported tray filament and this spool does not match. */
+export function spoolMismatchesTrayReport(spool: SpoolResponse, hint: TrayMqttHint | null): boolean {
+  if (!hint?.material) return false
+  return !spoolMatchesTrayForSelect(spool, hint)
+}
+
 export function trayContextForSlot(printer: PrinterResponse, amsSlot: number | null) {
   const trayHint = trayMqttHintForSlot(printer, amsSlot)
   const traySpool = amsSlot === 1 ? printer.tray1Spool

@@ -5,7 +5,7 @@ import { printersApi } from '@/api/printers'
 import { printJobsApi } from '@/api/printJobs'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getPrinterStatusClass, getPrinterStatusLabel } from '@/utils/printerStatus'
-import { countLoadedAmsTrays, isExtraTrayClickable, isExtraTrayEmptyMqtt, isExtraTrayLoaded, isTrayClickable, isTrayEmptyMqtt, isTrayLoaded } from '@/utils/printerAms'
+import { countLoadedAmsTrays, isExtraTrayClickable, isExtraTrayEmptyMqtt, isExtraTrayLoaded, isExtraTrayPendingLoad, isTrayClickable, isTrayEmptyMqtt, isTrayLoaded, isTrayPendingLoad } from '@/utils/printerAms'
 import { SpoolIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/BrandCard'
 import SelectSpoolPanel from '@/components/SelectSpoolPanel'
@@ -90,14 +90,12 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
     : null
 
   const trayOccupied = [printer.tray1Occupied, printer.tray2Occupied, printer.tray3Occupied, printer.tray4Occupied]
-  const traySpoolIds = [printer.tray1Spool?.id, printer.tray2Spool?.id, printer.tray3Spool?.id, printer.tray4Spool?.id]
-  const amsSlots: (SpoolResponse | null)[] = printer.hasAms
-    ? traySpoolIds.map(sid => sid ? (spools.find(s => s.id === sid) ?? null) : null)
+  const traySummaries = printer.hasAms
+    ? [printer.tray1Spool, printer.tray2Spool, printer.tray3Spool, printer.tray4Spool]
     : []
-  const singleSpool = !printer.hasAms
-    ? (printer.extraSpool ? (spools.find(s => s.id === printer.extraSpool!.id) ?? null) : null)
-    : null
-  const loadedCount = countLoadedAmsTrays(trayOccupied, amsSlots)
+  const findSpool = (id: string | undefined) => id ? (spools.find(s => s.id === id) ?? null) : null
+  const singleSpool = !printer.hasAms ? findSpool(printer.extraSpool?.id) : null
+  const loadedCount = countLoadedAmsTrays(trayOccupied, traySummaries)
 
   const openSpool = (s: SpoolResponse) => (e: MouseEvent) => {
     if (onSpoolClick) { e.preventDefault(); e.stopPropagation(); onSpoolClick(s) }
@@ -250,17 +248,21 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                 </div>
                 {printer.hasAms ? (
                   <div className={styles.ams}>
-                    {amsSlots.map((slot, i) => {
-                      const loaded = isTrayLoaded(trayOccupied[i], slot)
-                      const empty = isTrayEmptyMqtt(trayOccupied[i])
-                      const clickable = isTrayClickable(trayOccupied[i], slot)
+                    {traySummaries.map((summary, i) => {
+                      const spool = findSpool(summary?.id)
+                      const loaded = isTrayLoaded(trayOccupied[i], summary)
+                      const pending = isTrayPendingLoad(trayOccupied[i], summary)
+                      const empty = isTrayEmptyMqtt(trayOccupied[i]) && !pending
+                      const clickable = isTrayClickable(trayOccupied[i], summary)
                       return (
                       <div key={i}>
-                        {slot ? (
-                          <Link to={`/spools/${slot.id}`} className={styles.tray} onClick={openSpool(slot)}>
+                        {summary ? (
+                          <Link to={`/spools/${summary.id}`} className={`${styles.tray}${pending ? ` ${styles.trayPending}` : ''}`} onClick={spool ? openSpool(spool) : undefined}>
                             <span className={styles.slotn}>{i + 1}</span>
-                            <div className={styles.ti}><SpoolIcon color={slot.colorHex} size={20} /></div>
-                            <span className={styles.tn}>{slot.colorName}</span>
+                            <div className={styles.ti}><SpoolIcon color={summary.colorHex} size={20} /></div>
+                            <span className={styles.tn}>
+                              {pending ? t('printerCard.reserved') : summary.colorName}
+                            </span>
                           </Link>
                         ) : empty ? (
                           <div className={`${styles.tray} ${styles.empty} ${styles.trayDisabled}`}>
@@ -289,13 +291,18 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
                   <div>
                     {(() => {
                       const loaded = isExtraTrayLoaded(printer.extraSpoolOccupied, singleSpool)
-                      const empty = isExtraTrayEmptyMqtt(printer.extraSpoolOccupied)
-                      const clickable = isExtraTrayClickable(printer.extraSpoolOccupied, singleSpool)
-                      if (singleSpool) {
+                      const pending = isExtraTrayPendingLoad(printer.extraSpoolOccupied, printer.extraSpool)
+                      const empty = isExtraTrayEmptyMqtt(printer.extraSpoolOccupied) && !pending
+                      const clickable = isExtraTrayClickable(printer.extraSpoolOccupied, printer.extraSpool)
+                      if (printer.extraSpool) {
                         return (
-                          <Link to={`/spools/${singleSpool.id}`} className={`${styles.tray} ${styles.single}`} onClick={openSpool(singleSpool)}>
-                            <div className={styles.ti}><SpoolIcon color={singleSpool.colorHex} size={24} /></div>
-                            <span className={styles.tn}>{singleSpool.colorName} &middot; {singleSpool.material}</span>
+                          <Link to={`/spools/${printer.extraSpool.id}`} className={`${styles.tray} ${styles.single}${pending ? ` ${styles.trayPending}` : ''}`} onClick={singleSpool ? openSpool(singleSpool) : undefined}>
+                            <div className={styles.ti}><SpoolIcon color={printer.extraSpool.colorHex} size={24} /></div>
+                            <span className={styles.tn}>
+                              {pending
+                                ? t('printerCard.reserved')
+                                : `${printer.extraSpool.colorName} · ${printer.extraSpool.material}`}
+                            </span>
                           </Link>
                         )
                       }

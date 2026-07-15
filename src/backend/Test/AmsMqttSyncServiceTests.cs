@@ -144,6 +144,28 @@ public class AmsMqttSyncServiceTests
     }
 
     [Fact]
+    public async Task SyncFromMqtt_EmptyTrayWithPendingAssignment_KeepsSpoolLink()
+    {
+        var printerId = Guid.NewGuid();
+        var linked = Guid.NewGuid();
+        var printer = BuildPrinter(printerId);
+        printer.Tray2SpoolId = linked;
+        printer.Tray2Occupied = false;
+        _printerRepo.GetByIdAsync(printerId).Returns(printer);
+        _spoolRepo.GetByBambuTagUidAsync("D53E550500000100").Returns((Spool?)null);
+        _spoolRepo.CreateAsync(Arg.Any<Spool>()).Returns(x => x.Arg<Spool>());
+        _spoolRepo.SetActiveAsync(Arg.Any<Guid>(), true, true).Returns(Task.CompletedTask);
+
+        using var doc = JsonDocument.Parse(OnlyTray0OccupiedPayload());
+        await _sut.SyncFromMqttAsync(printerId, doc.RootElement.GetProperty("print"));
+
+        await _printerRepo.Received(1).UpdateAsync(Arg.Is<Printer>(p =>
+            p.Tray1Occupied &&
+            !p.Tray2Occupied &&
+            p.Tray2SpoolId == linked));
+    }
+
+    [Fact]
     public async Task SyncFromMqtt_NoUidOccupied_DoesNotCreateSpool()
     {
         var printerId = Guid.NewGuid();

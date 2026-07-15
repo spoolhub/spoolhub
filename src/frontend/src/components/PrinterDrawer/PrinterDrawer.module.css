@@ -160,6 +160,8 @@
 .tray.single .tn { font-size: 12px }
 .tray.empty { border-style: dashed; background: transparent }
 .tray.trayDisabled { pointer-events: none; cursor: default; opacity: 0.55 }
+.tray.trayPending { border-style: dashed; border-color: oklch(0.75 0.14 75); }
+.tray.trayPending .tn { color: oklch(0.55 0.12 75); }
 .tray.empty .tn { color: var(--faint) }
 .trayBtn { cursor: pointer; font: inherit; width: 100%; box-sizing: border-box; color: inherit }
 .trayBtn:hover { background: var(--surface-alt); border-color: var(--accent-soft) }

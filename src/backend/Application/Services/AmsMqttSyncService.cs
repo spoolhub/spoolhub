@@ -41,12 +41,14 @@ public class AmsMqttSyncService(
             {
                 foreach (var tray in trays)
                 {
+                    var wasOccupied = GetOccupied(printer, tray.TrayIndex);
                     if (ApplyTrayState(printer, tray, hasExplicitTrayExistBits))
                         changed = true;
 
                     if (!tray.Occupied)
                     {
-                        if (hasExplicitTrayExistBits && ClearTraySlot(printer, tray.TrayIndex))
+                        // Keep scan-assigned spools until the tray was physically loaded and then emptied.
+                        if (hasExplicitTrayExistBits && wasOccupied && ClearTraySpoolAssignment(printer, tray.TrayIndex))
                             changed = true;
                         continue;
                     }
@@ -64,12 +66,13 @@ public class AmsMqttSyncService(
         if (!printer.HasAms
             && AmsMqttTrayParser.TryParseVtTray(printerId, printEl, out var vtTray, out var hasExplicitVtOccupied))
         {
+            var wasExtraOccupied = printer.ExtraSpoolOccupied == true;
             if (ApplyExtraState(printer, vtTray, hasExplicitVtOccupied))
                 changed = true;
 
             if (!vtTray.Occupied)
             {
-                if (hasExplicitVtOccupied && ClearExtraSlot(printer))
+                if (hasExplicitVtOccupied && wasExtraOccupied && ClearExtraSpoolAssignment(printer))
                     changed = true;
             }
             else if (AmsMqttTrayParser.IsValidBambuTagUid(vtTray.TagUid))
@@ -391,21 +394,19 @@ public class AmsMqttSyncService(
         return true;
     }
 
-    private static bool ClearTraySlot(Printer printer, int trayIndex)
+    private static bool ClearTraySpoolAssignment(Printer printer, int trayIndex)
     {
         var slot = trayIndex + 1;
-        var changed = ClearTrayMqttHint(printer, trayIndex);
         if (GetTraySpoolId(printer, slot) is null)
-            return changed;
+            return false;
         SetTraySpoolId(printer, slot, null);
         return true;
     }
 
-    private static bool ClearExtraSlot(Printer printer)
+    private static bool ClearExtraSpoolAssignment(Printer printer)
     {
-        var changed = ClearExtraMqttHint(printer);
         if (printer.ExtraSpoolId is null)
-            return changed;
+            return false;
         printer.ExtraSpoolId = null;
         return true;
     }

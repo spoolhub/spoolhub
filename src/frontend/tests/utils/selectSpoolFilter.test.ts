@@ -5,6 +5,7 @@ import {
   filterMaterial,
   filterSpoolsForTraySelect,
   spoolMatchesTrayForSelect,
+  spoolMismatchesTrayReport,
   trayContextForSlot,
 } from '@/utils/selectSpoolFilter'
 import type { PrinterResponse } from '@/types/printer'
@@ -90,6 +91,14 @@ describe('selectSpoolFilter', () => {
     expect(spoolMatchesTrayForSelect(baseSpool(), hint)).toBe(true)
     expect(spoolMatchesTrayForSelect(baseSpool({ brand: 'Polymaker' }), hint)).toBe(false)
     expect(spoolMatchesTrayForSelect(baseSpool({ material: 'ABS' }), hint)).toBe(false)
+  })
+
+  it('detects tray report mismatch for assign confirmation', () => {
+    const hint = basePrinter.tray1Mqtt!
+    expect(spoolMismatchesTrayReport(baseSpool(), hint)).toBe(false)
+    expect(spoolMismatchesTrayReport(baseSpool({ material: 'ABS' }), hint)).toBe(true)
+    expect(spoolMismatchesTrayReport(baseSpool(), null)).toBe(false)
+    expect(spoolMismatchesTrayReport(baseSpool(), { material: null, colorName: null, colorHex: null, brand: null })).toBe(false)
   })
 
   it('excludes active spools from tray select list', () => {

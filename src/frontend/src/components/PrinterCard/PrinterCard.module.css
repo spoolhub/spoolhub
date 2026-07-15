@@ -283,6 +283,8 @@
   opacity: 0.55;
 }
 .tray.trayDisabled:hover { border-color: var(--border); box-shadow: none; }
+.tray.trayPending { border-style: dashed; border-color: oklch(0.75 0.14 75); }
+.tray.trayPending .tn { color: oklch(0.55 0.12 75); }
 .tray.empty .tn { color: var(--faint); }
 
 /* Non-AMS: single extra spool */
@@ -373,6 +375,11 @@
   flex-shrink: 0;
 }
 .iconChip svg { display: block; }
+.iconChipPending {
+  border-style: dashed;
+  border-color: oklch(0.75 0.14 75);
+  background: oklch(0.97 0.02 85);
+}
 .spoolEmptyLabel {
   font-size: 11px;
   color: var(--faint);
