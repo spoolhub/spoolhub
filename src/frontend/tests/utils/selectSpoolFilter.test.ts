@@ -108,7 +108,7 @@ describe('selectSpoolFilter', () => {
   })
 
   it('builds add-spool URL from tray MQTT hint', () => {
-    const url = buildSelectSpoolAddUrl(basePrinter, 1, [])
+    const url = buildSelectSpoolAddUrl(basePrinter, 1)
     expect(url).toContain('/spools/add/manual?')
     expect(url).toContain('printerId=p1')
     expect(url).toContain('amsSlot=1')

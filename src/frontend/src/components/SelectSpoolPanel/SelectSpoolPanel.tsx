@@ -44,7 +44,7 @@ export default function SelectSpoolPanel({
 
   const { trayHint, traySpool } = trayContextForSlot(printer, amsSlot)
   const trayLabel = trayHint ? selectTrayHintLabel(trayHint, printer.brand, spools, traySpool) : ''
-  const addSpoolUrl = buildSelectSpoolAddUrl(printer, amsSlot, spools)
+  const addSpoolUrl = buildSelectSpoolAddUrl(printer, amsSlot)
 
   const filtered = useMemo(
     () => filterSpoolsForTraySelect(spools, trayHint, ''),

@@ -106,7 +106,6 @@ export function trayContextForSlot(printer: PrinterResponse, amsSlot: number | n
 export function buildSelectSpoolAddUrl(
   printer: PrinterResponse,
   amsSlot: number | null,
-  spools: SpoolResponse[],
 ) {
   const { trayHint, remainPct } = trayContextForSlot(printer, amsSlot)
   if (!trayHint?.material) return null
