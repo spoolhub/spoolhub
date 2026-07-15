@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { spoolsApi } from '@/api/spools'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
@@ -323,6 +323,79 @@ export default function AddSpoolPage() {
       }
     }).catch(toPick)
   }, [tagUidParam])
+
+  // Prefill from printer tray assign flow (MQTT-reported material/color)
+  const trayPrefillDone = useRef(false)
+  useEffect(() => {
+    if (!isManual || trayPrefillDone.current) return
+    const material = searchParams.get('material')
+    if (!material) return
+
+    const colorName = searchParams.get('colorName') ?? ''
+    const colorHex = searchParams.get('colorHex') ?? '#888888'
+    const brand = searchParams.get('brand') ?? ''
+    const printerId = searchParams.get('printerId') ?? ''
+    const amsSlotRaw = searchParams.get('amsSlot')
+    const amsSlot = amsSlotRaw ? Number(amsSlotRaw) : null
+    const remainPctRaw = searchParams.get('remainPct')
+    const remainPct = remainPctRaw ? Number(remainPctRaw) : null
+    const place: PlaceType = searchParams.get('place') === 'printer' && printerId ? 'printer' : 'stock'
+
+    trayPrefillDone.current = true
+
+    const catalogMatch = filaments.find(f =>
+      f.material.toLowerCase() === material.toLowerCase()
+      && (!colorName
+        || (f.colorName ?? '').toLowerCase().includes(colorName.toLowerCase())
+        || colorName.toLowerCase().includes((f.colorName ?? '').toLowerCase()))
+      && (!brand || f.brand.toLowerCase() === brand.toLowerCase())
+    )
+
+    const def = getMaterialDefaults(material)
+    const init = '1000'
+    const cur = remainPct != null && remainPct >= 0
+      ? String(Math.max(0, Math.round(1000 * remainPct / 100)))
+      : init
+
+    const filament: FilamentProfile = catalogMatch ?? {
+      brand: brand || 'Bambu Lab',
+      filamentName: `${material} ${colorName}`.trim(),
+      material,
+      colorHex,
+      colorName: colorName || material,
+      density: 1.24,
+      extruderMin: def?.extruderMin ?? 200,
+      extruderMax: def?.extruderMax ?? 220,
+      bedMin: def?.bedMin ?? 50,
+      bedMax: def?.bedMax ?? 60,
+      diameterTolerance: 1.75,
+      discontinued: false,
+      dataSheetUrl: null,
+      safetySheetUrl: null,
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState(s => ({
+      ...s,
+      step: 'details',
+      mode: 'manual',
+      brand: filament.brand,
+      material: filament.material,
+      colorName: filament.colorName ?? colorName,
+      filament,
+      cur,
+      init,
+      place,
+      printer: printerId || s.printer,
+      slot: amsSlot ?? (printerId ? s.slot : null),
+      nozMin: String(def?.extruderMin ?? 200),
+      nozMax: String(def?.extruderMax ?? 220),
+      bedMin: String(def?.bedMin ?? 50),
+      bedMax: String(def?.bedMax ?? 60),
+      dia: String(filament.diameterTolerance ?? 1.75),
+      density: String(filament.density ?? 1.24),
+    }))
+  }, [isManual, searchParams, filaments])
 
   const handleSubmit = useCallback(async () => {
     const f = state.filament

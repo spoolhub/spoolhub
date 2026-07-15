@@ -95,14 +95,14 @@ public static class SeedData
         // ═══════════════════════════════════════════════════════════════
         var s1 = MakeSpool("Polymaker", "PLA", "White", "#F5F5F5", 1000, 620, 200, 100, true, false, now, -30, -2, null, "Half-used, printing brackets", "Shelf A1", 22.99m, 1.24f, 1.75f, 200, 230, 55, 65);
         var s2 = MakeSpool("Polymaker", "PLA", "Matte Black", "#1A1A1A", 1000, 1000, 200, 100, false, false, now, -20, null, null, "Sealed, spare", "Shelf A2", 22.99m, 1.24f, 1.75f, 195, 220, 55, 65);
-        var s3 = MakeSpool("Bambu Lab", "PLA", "Red", "#E80000", 1000, 350, 250, 100, true, false, now, -25, -12, null, "Low — running out soon", "Drybox 1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60);
-        var s4 = MakeSpool("Bambu Lab", "PLA", "Blue", "#0055FF", 1000, 890, 250, 100, true, false, now, -15, -6, null, "", "Shelf A1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60);
+        var s3 = MakeSpool("Bambu Lab", "PLA", "Red", "#E80000", 1000, 350, 250, 100, true, false, now, -25, -12, null, "Low — running out soon", "Drybox 1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60, bambuTagUid: "D53E550500000103");
+        var s4 = MakeSpool("Bambu Lab", "PLA", "Blue", "#0055FF", 1000, 890, 250, 100, true, false, now, -15, -6, null, "", "Shelf A1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60, bambuTagUid: "D53E550500000104");
         var s5 = MakeSpool("eSUN", "PETG", "Clear Natural", "#D4E0E8", 1000, 150, 230, 150, true, false, now, -20, -24, null, "Almost empty — below threshold", "Drawer B1", 20.99m, 1.27f, 1.75f, 230, 260, 70, 85);
         var s6 = MakeSpool("Overture", "TPU", "Black", "#222222", 500, 480, 180, 50, true, false, now, -10, -72, null, "New — one small print done", "Drybox 1", 28.99m, 1.21f, 1.75f, 220, 250, 40, 60);
         var s7 = MakeSpool("Polymaker", "PLA", "Matte Black", "#1A1A1A", 1000, 0, 200, 100, false, true, now, -45, -120, null, "Empty, archived", "Shelf A1", 22.99m, 1.24f, 1.75f, 195, 220, 55, 65);
         s7.ArchivedAt = now.AddDays(-5);
 
-        var s8 = MakeSpool("Bambu Lab", "PLA", "Gray", "#808080", 1000, 780, 250, 100, true, false, now, -12, -4, null, "", "Shelf A1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60);
+        var s8 = MakeSpool("Bambu Lab", "PLA", "Gray", "#808080", 1000, 780, 250, 100, true, false, now, -12, -4, null, "", "Shelf A1", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60, bambuTagUid: "D53E550500000108");
         var s9 = MakeSpool("Bambu Lab", "PLA", "Orange", "#FF6600", 1000, 1000, 250, 100, false, false, now, -7, null, null, "Sealed, spare", "Shelf B2", 24.99m, 1.24f, 1.75f, 190, 220, 55, 60);
         var s10 = MakeSpool("Polymaker", "PLA", "Green", "#4CAF50", 1000, 520, 200, 100, true, false, now, -18, -8, null, "", "Drawer B1", 23.99m, 1.24f, 1.75f, 200, 230, 55, 65);
         var s11 = MakeSpool("eSUN", "PETG", "Black", "#222222", 1000, 910, 230, 150, true, false, now, -14, -24, null, "", "Shelf B2", 20.99m, 1.24f, 1.75f, 230, 260, 70, 85);
@@ -153,8 +153,12 @@ public static class SeedData
         // ═══════════════════════════════════════════════════════════════
         // 5 Printers
         // ═══════════════════════════════════════════════════════════════
-        var prP1S = MakePrinter("P1S Workshop", "Bambu Lab", "P1S", "BMP1S0000001", true, "mqtt_lan", "192.168.1.100", 8883, "00000000", s1.Id, s4.Id, null, null, null, now, -30);
-        var prX1C = MakePrinter("X1C Office", "Bambu Lab", "X1 Carbon", "BMX1C0000001", true, "mqtt_lan", "192.168.1.102", 8883, "11111111", s8.Id, s13.Id, null, null, null, now, -25);
+        var prP1S = MakePrinter("P1S Workshop", "Bambu Lab", "P1S", "BMP1S0000001", true, "mqtt_lan", "192.168.1.100", 8883, "00000000", s1.Id, s4.Id, null, null, null, now, -30,
+            tray1Occupied: true, tray1RemainPct: 62,
+            tray2Occupied: true, tray2RemainPct: 89);
+        var prX1C = MakePrinter("X1C Office", "Bambu Lab", "X1 Carbon", "BMX1C0000001", true, "mqtt_lan", "192.168.1.102", 8883, "11111111", s8.Id, s13.Id, null, null, null, now, -25,
+            tray1Occupied: true, tray1RemainPct: 78,
+            tray2Occupied: true, tray2RemainPct: 22);
         var prEnder3 = MakePrinter("Ender-3 Garage", "Creality", "Ender 3 V2", "CE3000000001", false, "marlin_serial", "192.168.1.101", null, null, null, null, null, null, s6.Id, now, -20);
         var prKobra = MakePrinter("Kobra 2 Pro", "Anycubic", "Kobra 2 Pro", "AK2000000001", false, "marlin_serial", "192.168.1.103", null, null, null, null, null, null, s20.Id, now, -14);
         var prMini = MakePrinter("Mini Lab", "Prusa", "Mini+", "PM2200000001", false, "marlin_serial", "192.168.1.104", null, null, null, null, null, null, s10.Id, now, -7);
@@ -357,7 +361,7 @@ public static class SeedData
         float initW, float currW, float spoolW, float lowStock,
         bool active, bool archived, DateTime now, int createdAtDays, int? lastScannedHoursAgo, int? lastScannedMinutesAgo,
         string? notes, string? loc, decimal? price, float? density, float? diaTol,
-        int? eMin, int? eMax, int? bMin, int? bMax)
+        int? eMin, int? eMax, int? bMin, int? bMax, string? bambuTagUid = null)
     {
         DateTime? lastScanned = null;
         if (lastScannedHoursAgo.HasValue && lastScannedMinutesAgo.HasValue)
@@ -375,6 +379,7 @@ public static class SeedData
             Notes = notes, StockLocation = loc, Price = price,
             Density = density, DiameterTolerance = diaTol,
             ExtruderMin = eMin, ExtruderMax = eMax, BedMin = bMin, BedMax = bMax,
+            BambuTagUid = bambuTagUid,
         };
     }
 
@@ -383,13 +388,28 @@ public static class SeedData
 
     private static Printer MakePrinter(string name, string brand, string model, string? serial,
         bool hasAms, string proto, string ip, int? port, string? accessCode,
-        Guid? t1, Guid? t2, Guid? t3, Guid? t4, Guid? extra, DateTime now, int createdAtDays)
+        Guid? t1, Guid? t2, Guid? t3, Guid? t4, Guid? extra, DateTime now, int createdAtDays,
+        bool tray1Occupied = false, int? tray1RemainPct = null,
+        bool tray2Occupied = false, int? tray2RemainPct = null,
+        bool tray3Occupied = false, int? tray3RemainPct = null,
+        bool tray4Occupied = false, int? tray4RemainPct = null,
+        bool? extraSpoolOccupied = null, int? extraSpoolRemainPct = null)
         => new()
         {
             Id = Guid.NewGuid(), Name = name, Brand = brand, Model = model, SerialNumber = serial,
             HasAms = hasAms, Protocol = proto, IpAddress = ip, Port = port, AccessCode = accessCode,
             Tray1SpoolId = t1, Tray2SpoolId = t2, Tray3SpoolId = t3, Tray4SpoolId = t4,
             ExtraSpoolId = extra, CreatedAt = now.AddDays(createdAtDays),
+            Tray1Occupied = hasAms && tray1Occupied,
+            Tray2Occupied = hasAms && tray2Occupied,
+            Tray3Occupied = hasAms && tray3Occupied,
+            Tray4Occupied = hasAms && tray4Occupied,
+            Tray1RemainPct = hasAms ? tray1RemainPct : null,
+            Tray2RemainPct = hasAms ? tray2RemainPct : null,
+            Tray3RemainPct = hasAms ? tray3RemainPct : null,
+            Tray4RemainPct = hasAms ? tray4RemainPct : null,
+            ExtraSpoolOccupied = !hasAms ? extraSpoolOccupied : null,
+            ExtraSpoolRemainPct = !hasAms ? extraSpoolRemainPct : null,
         };
 
     private static PrintJobFilament MakePjFilament(Guid jobId, Guid? spoolId, string? colorName, string? colorHex, string? material, float grams, int slot)

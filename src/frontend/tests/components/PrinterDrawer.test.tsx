@@ -6,7 +6,11 @@ import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 import type { PrintJobResponse } from '@/types/printJob'
 
 vi.mock('@/api/printers', () => ({
-  printersApi: { remove: vi.fn() },
+  printersApi: {
+    remove: vi.fn(),
+    assignTraySpool: vi.fn(),
+    assignExtraSpool: vi.fn(),
+  },
 }))
 
 vi.mock('@/api/printJobs', () => ({
@@ -32,6 +36,55 @@ const basePrinter: PrinterResponse = {
   tray3Spool: null,
   tray4Spool: null,
   extraSpool: null,
+  tray1RemainPct: null,
+  tray2RemainPct: null,
+  tray3RemainPct: null,
+  tray4RemainPct: null,
+  tray1Occupied: false,
+  tray2Occupied: false,
+  tray3Occupied: false,
+  tray4Occupied: false,
+  extraSpoolOccupied: null,
+  extraSpoolRemainPct: null,
+  tray1Mqtt: null, tray2Mqtt: null, tray3Mqtt: null, tray4Mqtt: null, extraMqtt: null,
+}
+
+import type { SpoolResponse } from '@/types/spool'
+
+const inactiveSpool: SpoolResponse = {
+  id: 's1',
+  brand: 'eSUN 3D',
+  material: 'PLA',
+  colorName: 'White',
+  colorHex: '#FFFFFF',
+  initialWeightG: 1000,
+  currentWeightG: 1000,
+  spoolWeightG: 250,
+  lowStockThresholdG: 120,
+  isActive: false,
+  isArchived: false,
+  createdAt: '2024-01-01',
+  lastScannedAt: null,
+  notes: null,
+  density: null,
+  diameterTolerance: null,
+  extruderMin: null,
+  extruderMax: null,
+  bedMin: null,
+  bedMax: null,
+  hasNfcTag: false,
+  nfcTagUid: null,
+  printerId: null,
+  printerName: null,
+  amsSlot: null,
+  price: null,
+  stockLocation: null,
+}
+
+const printerLoadedSlot1: PrinterResponse = {
+  ...basePrinter,
+  tray1Occupied: true,
+  tray1Mqtt: { material: 'PLA+', colorName: 'White', colorHex: '#FFFFFF', brand: 'eSUN' },
 }
 
 function renderDrawer(overrides: Partial<Parameters<typeof PrinterDrawer>[0]> = {}) {
@@ -115,5 +168,21 @@ describe('PrinterDrawer', () => {
     await waitFor(() => expect(printersApi.remove).toHaveBeenCalledWith('p1'))
     expect(onDisconnected).toHaveBeenCalledWith('p1')
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('opens shared select panel and assigns spool to loaded tray', async () => {
+    vi.mocked(printersApi.assignTraySpool).mockResolvedValue(printerLoadedSlot1)
+    const onTrayAssigned = vi.fn()
+    renderDrawer({
+      printer: printerLoadedSlot1,
+      spools: [inactiveSpool],
+      onTrayAssigned,
+    })
+    fireEvent.click(screen.getByText('Loaded'))
+    expect(screen.getByText('Select a Spool — Slot 1')).toBeInTheDocument()
+    expect(screen.getByText('White')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('White'))
+    await waitFor(() => expect(printersApi.assignTraySpool).toHaveBeenCalledWith('p1', 1, 's1'))
+    expect(onTrayAssigned).toHaveBeenCalled()
   })
 })

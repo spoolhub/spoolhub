@@ -1,9 +1,11 @@
 import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getPrinterImage } from '@/utils/printerImages'
-import { getPrinterStatusClass, getPrinterStatusLabel } from '@/utils/printerStatus'
+import { getPrinterStatusClass, getPrinterStatusLabel, isMqttPrinter, isPrinterOnline } from '@/utils/printerStatus'
+import { countLoadedAmsTrays, countPendingAmsTrays, isExtraTrayClickable, isExtraTrayEmptyMqtt, isExtraTrayLoaded, isExtraTrayPendingLoad, isTrayClickable, isTrayEmptyMqtt, isTrayLoaded, isTrayPendingLoad, trayRemainPercent } from '@/utils/printerAms'
 import { SpoolIcon } from '@/components/icons'
-import type { PrinterResponse, PrinterStatus } from '@/types/printer'
+import type { PrinterResponse, PrinterStatus, TraySpoolSummary } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './PrinterCard.module.css'
 
@@ -45,6 +47,7 @@ function BrandFavicon({ brand }: { brand: string }) {
 }
 
 export default function PrinterCard({ printer, spools, status, onSpoolClick, onOpenDetail }: { printer: PrinterResponse; spools: SpoolResponse[]; status?: PrinterStatus | null; onSpoolClick?: (spool: SpoolResponse) => void; onOpenDetail?: (printer: PrinterResponse) => void }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const imgSrc = getPrinterImage(printer.brand, printer.model)
 
@@ -52,29 +55,33 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick, onO
     if (onSpoolClick) { e.preventDefault(); e.stopPropagation(); onSpoolClick(s) }
   }
 
-  const stLabel = getPrinterStatusLabel(status)
-  const stClass = getPrinterStatusClass(status)
+  const stLabel = getPrinterStatusLabel(status, printer.protocol)
+  const stClass = getPrinterStatusClass(status, printer.protocol)
+  const showConnDot = isMqttPrinter(printer.protocol)
+  const connOnline = isPrinterOnline(status ?? null, printer.protocol)
   const isRunning = status?.gcodeState?.toUpperCase() === 'RUNNING'
   const isPaused = status?.gcodeState?.toUpperCase() === 'PAUSE'
   const progressPct = status?.progressPercent ?? 0
 
-  // Resolve tray spools
-  const traySpoolIds = [printer.tray1Spool?.id, printer.tray2Spool?.id, printer.tray3Spool?.id, printer.tray4Spool?.id]
-  const amsSlots: (SpoolResponse | null)[] = printer.hasAms
-    ? traySpoolIds.map(sid => sid ? (spools.find(s => s.id === sid) ?? null) : null)
+  const trayOccupied = [printer.tray1Occupied, printer.tray2Occupied, printer.tray3Occupied, printer.tray4Occupied]
+  const traySummaries: (TraySpoolSummary | null)[] = printer.hasAms
+    ? [printer.tray1Spool, printer.tray2Spool, printer.tray3Spool, printer.tray4Spool]
     : []
 
-  const singleSpool = !printer.hasAms
-    ? (printer.extraSpool ? (spools.find(s => s.id === printer.extraSpool!.id) ?? null) : null)
-    : null
-  const loadedCount = amsSlots.filter(Boolean).length
+  const findSpool = (summary: TraySpoolSummary | null) =>
+    summary ? (spools.find(s => s.id === summary.id) ?? null) : null
+
+  const loadedCount = countLoadedAmsTrays(trayOccupied, traySummaries)
+  const reservedCount = countPendingAmsTrays(trayOccupied, traySummaries)
+
+  const singleSpool = !printer.hasAms ? findSpool(printer.extraSpool) : null
+  const extraReserved = isExtraTrayPendingLoad(printer.extraSpoolOccupied, printer.extraSpool)
 
   let body: React.ReactNode
 
   if (printer.hasAms) {
     body = (
       <>
-        {/* Compact: AMS tag + count + chevron */}
         <button
           type="button"
           className={styles.spoolToggle}
@@ -83,47 +90,87 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick, onO
         >
           <div className={styles.spoolInfo}>
             <span className={styles.amstag}>AMS</span>
-            <span className={styles.spoolCount}>{loadedCount} of 4 loaded</span>
+            <span className={styles.spoolCount}>
+              {reservedCount > 0
+                ? t('printerCard.amsLoadedWithReserved', { loaded: loadedCount, reserved: reservedCount })
+                : t('printerCard.amsLoaded', { count: loadedCount })}
+            </span>
             <div className={styles.iconRow}>
-              {amsSlots.map((slot, i) => (
-                <span key={i} className={styles.iconChip}>
-                  {slot ? <Link to={`/spools/${slot.id}`} onClick={openSpool(slot)}><SpoolIcon color={slot.colorHex} size={18} /></Link> : <span className={styles.emptyDot}>{PLUS}</span>}
-                </span>
-              ))}
+              {traySummaries.map((summary, i) => {
+                const pending = isTrayPendingLoad(trayOccupied[i], summary)
+                const loaded = isTrayLoaded(trayOccupied[i], summary)
+                const spool = findSpool(summary)
+                const chipClass = `${styles.iconChip}${pending ? ` ${styles.iconChipPending}` : ''}`
+                return (
+                  <span key={i} className={chipClass}>
+                    {summary && (pending || loaded)
+                      ? (
+                        <Link to={`/spools/${summary.id}`} onClick={spool ? openSpool(spool) : undefined}>
+                          <SpoolIcon color={summary.colorHex} size={18} />
+                        </Link>
+                      )
+                      : loaded
+                        ? <span className={styles.loadedDot} />
+                        : <span className={styles.emptyDot}>{PLUS}</span>}
+                  </span>
+                )
+              })}
             </div>
           </div>
           <Chevron open={expanded} />
         </button>
 
-        {/* Expanded tray grid */}
         {expanded && (
           <div className={styles.ams}>
-            {amsSlots.map((slot, i) => {
+            {traySummaries.map((summary, i) => {
               const selectTo = `/spools/select?printerId=${printer.id}&amsSlot=${i + 1}`
+              const spool = findSpool(summary)
+              const pending = isTrayPendingLoad(trayOccupied[i], summary)
+              const loaded = isTrayLoaded(trayOccupied[i], summary)
+              const empty = isTrayEmptyMqtt(trayOccupied[i]) && !pending
+              const clickable = isTrayClickable(trayOccupied[i], summary)
+              const pct = trayRemainPercent(spool)
+              const barCol = pct != null && pct > 30 ? 'var(--accent)' : pct != null && pct > 10 ? 'oklch(0.65 0.17 30)' : '#ef4444'
+              const trayClass = `${styles.tray}${loaded || pending ? '' : ` ${styles.empty}`}${empty ? ` ${styles.trayDisabled}` : ''}${pending ? ` ${styles.trayPending}` : ''}`
+
+              const inner = (
+                <>
+                  <span className={styles.slotn}>{i + 1}</span>
+                  <div className={styles.ti}>
+                    {summary ? <SpoolIcon color={summary.colorHex} size={24} /> : loaded ? <span className={styles.loadedDot} /> : PLUS}
+                  </div>
+                  <span className={styles.tn}>
+                    {pending
+                      ? t('printerCard.reserved')
+                      : summary
+                        ? summary.colorName
+                        : loaded
+                          ? t('printerDetail.loaded')
+                          : t('printerDetail.empty')}
+                  </span>
+                  {spool && pct != null && !pending && (
+                    <span className={styles.trayBar}>
+                      <span className={styles.spoolBar}>
+                        <span className={styles.spoolBarFill} style={{ width: `${pct}%`, backgroundColor: barCol }} />
+                      </span>
+                      <span className={styles.spoolBarPct}>{pct}%</span>
+                    </span>
+                  )}
+                </>
+              )
+
+              if (!clickable) {
+                return <div key={i} className={trayClass}>{inner}</div>
+              }
+
               return (
                 <Link
                   key={i}
-                  to={slot ? `/spools/${slot.id}` : selectTo}
-                  className={slot ? styles.tray : `${styles.tray} ${styles.empty}`}
-                  onClick={slot ? openSpool(slot) : undefined}
+                  to={summary ? `/spools/${summary.id}` : selectTo}
+                  className={trayClass}
+                  onClick={spool ? openSpool(spool) : undefined}
                 >
-                  <span className={styles.slotn}>{i + 1}</span>
-                  <div className={styles.ti}>
-                    {slot ? <SpoolIcon color={slot.colorHex} size={24} /> : PLUS}
-                  </div>
-                  <span className={styles.tn}>{slot ? slot.colorName : 'Empty'}</span>
-                  {slot && (() => {
-                    const pct = slot.initialWeightG > 0 ? Math.round((slot.currentWeightG / slot.initialWeightG) * 100) : 0
-                    const col = pct > 30 ? 'var(--accent)' : pct > 10 ? 'oklch(0.65 0.17 30)' : '#ef4444'
-                    return (
-                      <span className={styles.trayBar}>
-                        <span className={styles.spoolBar}>
-                          <span className={styles.spoolBarFill} style={{ width: `${pct}%`, backgroundColor: col }} />
-                        </span>
-                        <span className={styles.spoolBarPct}>{pct}%</span>
-                      </span>
-                    )
-                  })()}
+                  {inner}
                 </Link>
               )
             })}
@@ -132,49 +179,84 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick, onO
       </>
     )
   } else {
-    // EXTRA: same expand/collapse pattern as AMS
-    const extraCount = singleSpool ? 1 : 0
-    const pct = singleSpool?.initialWeightG ? Math.round((singleSpool.currentWeightG / singleSpool.initialWeightG) * 100) : 0
-    const barColor = pct > 30 ? 'var(--accent)' : pct > 10 ? 'oklch(0.65 0.17 30)' : '#ef4444'
+    const extraLoaded = isExtraTrayLoaded(printer.extraSpoolOccupied, printer.extraSpool)
+    const extraEmpty = isExtraTrayEmptyMqtt(printer.extraSpoolOccupied) && !extraReserved
+    const extraClickable = isExtraTrayClickable(printer.extraSpoolOccupied, printer.extraSpool)
+    const loadedCount = extraLoaded ? 1 : 0
+    const pct = trayRemainPercent(singleSpool)
+    const barColor = pct != null && pct > 30 ? 'var(--accent)' : pct != null && pct > 10 ? 'oklch(0.65 0.17 30)' : '#ef4444'
     const selectTo = `/spools/select?printerId=${printer.id}`
+    const trayClass = `${styles.tray}${extraLoaded || extraReserved ? '' : ` ${styles.empty}`}${extraEmpty ? ` ${styles.trayDisabled}` : ''}${extraReserved ? ` ${styles.trayPending}` : ''} ${styles.single}`
+
+    const inner = (
+      <>
+        <div className={styles.ti}>
+          {(singleSpool ?? printer.extraSpool)
+            ? <SpoolIcon color={(singleSpool ?? printer.extraSpool)!.colorHex} size={28} />
+            : extraLoaded ? <span className={styles.loadedDot} /> : PLUS}
+        </div>
+        <span className={styles.tn}>
+          {extraReserved && printer.extraSpool
+            ? t('printerCard.reserved')
+            : singleSpool
+              ? `${singleSpool.colorName} · ${singleSpool.material}`
+              : extraEmpty
+                ? t('printerDetail.empty')
+                : extraLoaded
+                  ? t('printerDetail.loaded')
+                  : t('printerCard.noSpoolLoaded')}
+        </span>
+        {singleSpool && pct != null && (
+          <span className={styles.trayBar}>
+            <span className={styles.spoolBar}>
+              <span className={styles.spoolBarFill} style={{ width: `${pct}%`, backgroundColor: barColor }} />
+            </span>
+            <span className={styles.spoolBarPct}>{pct}%</span>
+          </span>
+        )}
+      </>
+    )
+
     body = (
       <>
-        {/* Compact: EXTRA tag + count + icon + chevron */}
         <button type="button" className={styles.spoolToggle} onClick={() => setExpanded(e => !e)} aria-expanded={expanded}>
           <div className={styles.spoolInfo}>
             <span className={styles.amstag}>EXTRA</span>
-            <span className={styles.spoolCount}>{extraCount} assigned</span>
+            <span className={styles.spoolCount}>
+              {extraReserved
+                ? t('printerCard.oneReserved')
+                : loadedCount > 0
+                  ? t('printerCard.extraLoaded')
+                  : t('printerCard.noneAssigned')}
+            </span>
             <div className={styles.iconRow}>
-              {singleSpool
-                ? <span className={styles.iconChip}><SpoolIcon color={singleSpool.colorHex} size={18} /></span>
-                : <span className={styles.emptyDot}>{PLUS}</span>}
+              {printer.extraSpool && (extraLoaded || extraReserved)
+                ? (
+                  <span className={`${styles.iconChip}${extraReserved ? ` ${styles.iconChipPending}` : ''}`}>
+                    <SpoolIcon color={printer.extraSpool.colorHex} size={18} />
+                  </span>
+                )
+                : extraLoaded
+                  ? <span className={styles.iconChip}><span className={styles.loadedDot} /></span>
+                  : <span className={styles.emptyDot}>{PLUS}</span>}
             </div>
           </div>
           <Chevron open={expanded} />
         </button>
 
-        {/* Expanded tray */}
         {expanded && (
           <div className={styles.ams}>
-            {singleSpool
+            {extraClickable
               ? (
-                <Link to={`/spools/${singleSpool.id}`} className={`${styles.tray} ${styles.single}`} onClick={openSpool(singleSpool)}>
-                  <div className={styles.ti}><SpoolIcon color={singleSpool.colorHex} size={28} /></div>
-                  <span className={styles.tn}>{singleSpool.colorName} &middot; {singleSpool.material}</span>
-                  <span className={styles.trayBar}>
-                    <span className={styles.spoolBar}>
-                      <span className={styles.spoolBarFill} style={{ width: `${pct}%`, backgroundColor: barColor }} />
-                    </span>
-                    <span className={styles.spoolBarPct}>{pct}%</span>
-                  </span>
+                <Link
+                  to={(singleSpool ?? printer.extraSpool) ? `/spools/${(singleSpool ?? printer.extraSpool)!.id}` : selectTo}
+                  className={trayClass}
+                  onClick={singleSpool ? openSpool(singleSpool) : undefined}
+                >
+                  {inner}
                 </Link>
               )
-              : (
-                <Link to={selectTo} className={`${styles.tray} ${styles.empty} ${styles.single}`}>
-                  <div className={styles.ti}>{PLUS}</div>
-                  <span className={styles.tn}>No spool &mdash; assign one</span>
-                </Link>
-              )}
+              : <div className={trayClass}>{inner}</div>}
           </div>
         )}
       </>
@@ -185,6 +267,13 @@ export default function PrinterCard({ printer, spools, status, onSpoolClick, onO
     <div className={styles.card} onClick={() => onOpenDetail?.(printer)}>
       <div className={styles.phead}>
         <div className={styles.pphoto}>
+          {showConnDot && (
+            <span
+              className={`${styles.connDot} ${connOnline ? styles.connOnline : styles.connOffline}`}
+              title={connOnline ? 'Online' : 'Offline'}
+              aria-hidden
+            />
+          )}
           {imgSrc && <img className={styles.pimg} src={imgSrc} alt={printer.model} onError={e => { e.currentTarget.remove() }} />}
         </div>
         <div className={styles.pinfo}>

@@ -17,5 +17,20 @@ public record PrinterResponse(
     TraySpoolSummary? Tray2Spool,
     TraySpoolSummary? Tray3Spool,
     TraySpoolSummary? Tray4Spool,
-    TraySpoolSummary? ExtraSpool
+    TraySpoolSummary? ExtraSpool,
+    int? Tray1RemainPct,
+    int? Tray2RemainPct,
+    int? Tray3RemainPct,
+    int? Tray4RemainPct,
+    bool Tray1Occupied,
+    bool Tray2Occupied,
+    bool Tray3Occupied,
+    bool Tray4Occupied,
+    bool? ExtraSpoolOccupied,
+    int? ExtraSpoolRemainPct,
+    TrayMqttHint? Tray1Mqtt,
+    TrayMqttHint? Tray2Mqtt,
+    TrayMqttHint? Tray3Mqtt,
+    TrayMqttHint? Tray4Mqtt,
+    TrayMqttHint? ExtraMqtt
 );

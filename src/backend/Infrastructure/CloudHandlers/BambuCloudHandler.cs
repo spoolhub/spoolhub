@@ -158,6 +158,10 @@ public class BambuCloudHandler(
                 created.Id, created.Name, created.Brand, created.Model,
                 created.SerialNumber, created.IpAddress, created.Port, created.Protocol,
                 created.HasAms, created.CreatedAt,
+                null,                 null, null, null, null,
+                null, null, null, null,
+                false, false, false, false,
+                null, null,
                 null, null, null, null, null));
         }
 

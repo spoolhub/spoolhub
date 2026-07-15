@@ -21,11 +21,22 @@ const basePrinter: PrinterResponse = {
   tray3Spool: null,
   tray4Spool: null,
   extraSpool: null,
+  tray1RemainPct: null,
+  tray2RemainPct: null,
+  tray3RemainPct: null,
+  tray4RemainPct: null,
+  tray1Occupied: false,
+  tray2Occupied: false,
+  tray3Occupied: false,
+  tray4Occupied: false,
+  extraSpoolOccupied: null,
+  extraSpoolRemainPct: null,
+  tray1Mqtt: null, tray2Mqtt: null, tray3Mqtt: null, tray4Mqtt: null, extraMqtt: null,
 }
 
 // Tray summary matching activeSpool
 const spoolSummary = { id: 'spool-1', brand: 'Bambu Lab', material: 'PLA', colorName: 'Jade White', colorHex: '#FFFFFF' }
-const printerWithSpool = { ...basePrinter, tray1Spool: spoolSummary }
+const printerWithSpool = { ...basePrinter, tray1Occupied: true, tray1Spool: spoolSummary }
 const printerNonAmsWithSpool = { ...basePrinter, hasAms: false, extraSpool: spoolSummary }
 
 const activeSpool: SpoolResponse = {
@@ -87,14 +98,75 @@ describe('PrinterCard', () => {
     expect(screen.queryByText('AMS')).not.toBeInTheDocument()
   })
 
-  it('shows correct AMS loaded count', () => {
-    render_(printerWithSpool, [activeSpool])
-    expect(screen.getByText('1 of 4 loaded')).toBeInTheDocument()
+  it('shows reserved spool on card when assigned but MQTT empty', () => {
+    const reserved = { id: 'spool-2', brand: 'eSUN', material: 'PLA', colorName: 'Red', colorHex: '#FF0000' }
+    render_({
+      ...basePrinter,
+      tray1Occupied: false,
+      tray2Occupied: false,
+      tray3Occupied: false,
+      tray4Occupied: false,
+      tray2Spool: reserved,
+    }, [])
+    expect(screen.getByText('0/4 loaded · 1 reserved')).toBeInTheDocument()
+    clickAccordion('0/4 loaded · 1 reserved')
+    expect(screen.getByText('Reserved')).toBeInTheDocument()
+    const reservedLink = screen.getAllByRole('link').find(l => l.getAttribute('href') === '/spools/spool-2')
+    expect(reservedLink).toBeTruthy()
   })
 
-  it('shows 0 of 4 loaded when no active spools', () => {
+  it('shows loaded count from MQTT tray occupied', () => {
+    render_({
+      ...basePrinter,
+      tray1Occupied: true,
+      tray2Occupied: false,
+      tray3Occupied: false,
+      tray4Occupied: false,
+    }, [])
+    expect(screen.getByText('1/4 loaded')).toBeInTheDocument()
+  })
+
+  it('MQTT empty tray is not a link', () => {
+    render_({
+      ...basePrinter,
+      tray1Occupied: false,
+      tray2Occupied: false,
+      tray3Occupied: false,
+      tray4Occupied: false,
+    }, [])
+    clickAccordion('0/4 loaded')
+    const assignLinks = screen.queryAllByRole('link').filter(l => l.getAttribute('href')?.includes('amsSlot'))
+    expect(assignLinks).toHaveLength(0)
+    expect(screen.getAllByText('Empty').length).toBe(4)
+  })
+
+  it('occupied tray without spool links to assign', () => {
+    render_({
+      ...basePrinter,
+      tray1Occupied: true,
+      tray2Occupied: false,
+      tray3Occupied: false,
+      tray4Occupied: false,
+    }, [])
+    clickAccordion('1/4 loaded')
+    const links = screen.getAllByRole('link')
+    expect(links.some(l => l.getAttribute('href') === '/spools/select?printerId=printer-1&amsSlot=1')).toBe(true)
+  })
+
+  it('shows spool weight % when spool is linked', () => {
+    render_(printerWithSpool, [activeSpool])
+    clickAccordion('1/4 loaded')
+    expect(screen.getByText('75%')).toBeInTheDocument()
+  })
+
+  it('shows correct AMS loaded count', () => {
+    render_(printerWithSpool, [activeSpool])
+    expect(screen.getByText('1/4 loaded')).toBeInTheDocument()
+  })
+
+  it('shows 0/4 loaded when no active spools', () => {
     render_(basePrinter, [])
-    expect(screen.getByText('0 of 4 loaded')).toBeInTheDocument()
+    expect(screen.getByText('0/4 loaded')).toBeInTheDocument()
   })
 
   it('AMS accordion is collapsed by default (spool names not visible)', () => {
@@ -104,28 +176,28 @@ describe('PrinterCard', () => {
 
   it('AMS accordion expands on click and shows spool row', () => {
     render_(printerWithSpool, [activeSpool])
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     expect(screen.getByText('Jade White')).toBeInTheDocument()
   })
 
   it('expanded AMS shows 4 empty slots when no spools', () => {
     render_(basePrinter, [])
-    clickAccordion('0 of 4 loaded')
+    clickAccordion('0/4 loaded')
     expect(screen.getAllByText('Empty').length).toBe(4)
   })
 
   it('expanded AMS spool row links to spool detail page', () => {
     render_(printerWithSpool, [activeSpool])
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     const links = screen.getAllByRole('link')
     expect(links.some(l => l.getAttribute('href') === '/spools/spool-1')).toBe(true)
   })
 
   it('AMS accordion collapses again on second click', () => {
     render_(printerWithSpool, [activeSpool])
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     expect(screen.getByText('Jade White')).toBeInTheDocument()
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     expect(screen.queryByText('Jade White')).not.toBeInTheDocument()
   })
 
@@ -136,14 +208,14 @@ describe('PrinterCard', () => {
     expect(screen.getByText('EXTRA')).toBeInTheDocument()
   })
 
-  it('non-AMS shows "0 assigned" when no spool assigned', () => {
+  it('non-AMS shows none assigned when no spool assigned', () => {
     render_({ ...basePrinter, hasAms: false }, [])
-    expect(screen.getByText('0 assigned')).toBeInTheDocument()
+    expect(screen.getByText('none assigned')).toBeInTheDocument()
   })
 
-  it('non-AMS shows "1 assigned" when spool assigned to this printer', () => {
+  it('non-AMS shows "1 loaded" when spool assigned to this printer', () => {
     render_(printerNonAmsWithSpool, [activeSpool])
-    expect(screen.getByText('1 assigned')).toBeInTheDocument()
+    expect(screen.getByText('1 loaded')).toBeInTheDocument()
   })
 
   it('non-AMS spool accordion is collapsed by default', () => {
@@ -153,19 +225,34 @@ describe('PrinterCard', () => {
 
   it('non-AMS accordion expands on click and shows spool row', () => {
     render_(printerNonAmsWithSpool, [activeSpool])
-    clickAccordion('1 assigned')
+    clickAccordion('1 loaded')
     expect(screen.getByText(/Jade White/)).toBeInTheDocument()
   })
 
-  it('non-AMS accordion shows empty state when expanded and empty', () => {
+  it('non-AMS accordion shows assign state when expanded and empty', () => {
     render_({ ...basePrinter, hasAms: false }, [])
-    clickAccordion('0 assigned')
-    expect(screen.getByText(/No spool/)).toBeInTheDocument()
+    clickAccordion('none assigned')
+    expect(screen.getByText('No spool loaded')).toBeInTheDocument()
+  })
+
+  it('non-AMS MQTT empty extra is not a link', () => {
+    render_({ ...basePrinter, hasAms: false, extraSpoolOccupied: false }, [])
+    clickAccordion('none assigned')
+    const assignLinks = screen.queryAllByRole('link').filter(l => l.getAttribute('href')?.includes('spools/select'))
+    expect(assignLinks).toHaveLength(0)
+    expect(screen.getByText('Empty')).toBeInTheDocument()
+  })
+
+  it('non-AMS MQTT occupied without spool links to assign', () => {
+    render_({ ...basePrinter, hasAms: false, extraSpoolOccupied: true }, [])
+    clickAccordion('1 loaded')
+    const links = screen.getAllByRole('link')
+    expect(links.some(l => l.getAttribute('href') === '/spools/select?printerId=printer-1')).toBe(true)
   })
 
   it('non-AMS expanded spool row links to spool detail page', () => {
     render_(printerNonAmsWithSpool, [activeSpool])
-    clickAccordion('1 assigned')
+    clickAccordion('1 loaded')
     const links = screen.getAllByRole('link')
     expect(links.some(l => l.getAttribute('href') === '/spools/spool-1')).toBe(true)
   })
@@ -173,7 +260,7 @@ describe('PrinterCard', () => {
   it('non-AMS spools assigned to a different printer are not shown', () => {
     const otherSpool = { ...activeSpool, id: 'spool-2', printerId: 'printer-99' }
     render_({ ...basePrinter, hasAms: false }, [otherSpool])
-    expect(screen.getByText('0 assigned')).toBeInTheDocument()
+    expect(screen.getByText('none assigned')).toBeInTheDocument()
   })
 
   it('clicking printer name calls onOpenDetail with the printer', () => {
@@ -193,14 +280,14 @@ describe('PrinterCard', () => {
   it('clicking the AMS accordion does not call onOpenDetail', () => {
     const onOpenDetail = vi.fn()
     render(<PrinterCard printer={printerWithSpool} spools={[activeSpool]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     expect(onOpenDetail).not.toHaveBeenCalled()
   })
 
   it('clicking an expanded AMS spool link does not call onOpenDetail', () => {
     const onOpenDetail = vi.fn()
     render(<PrinterCard printer={printerWithSpool} spools={[activeSpool]} onOpenDetail={onOpenDetail} />, { wrapper: MemoryRouter })
-    clickAccordion('1 of 4 loaded')
+    clickAccordion('1/4 loaded')
     fireEvent.click(screen.getByText('Jade White'))
     expect(onOpenDetail).not.toHaveBeenCalled()
   })

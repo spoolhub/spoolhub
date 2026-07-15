@@ -16,6 +16,7 @@ public class MqttMessageProcessor(
     IBambuFtpService ftpService,
     IGcodeParserService gcodeParser,
     IBambuCloudTaskService cloudTaskService,
+    IAmsMqttSyncService amsMqttSyncService,
     ILogger<MqttMessageProcessor> logger) : IMqttMessageProcessor
 {
     public async Task ProcessAsync(string payload, Guid printerId)
@@ -62,6 +63,8 @@ public class MqttMessageProcessor(
                 }
             }
         }
+
+        await amsMqttSyncService.SyncFromMqttAsync(printerId, print);
 
         var prev = statusService.GetStatus(printerId);
 
@@ -216,7 +219,7 @@ public class MqttMessageProcessor(
             if (job == null)
             {
                 await OpenPrintJobAsync(printerId, bestName, mqttTaskId, status.RemainingMinutes);
-                var amsSnapshot = ParseAmsRemain(print);
+                var amsSnapshot = ParseAmsRemain(printerId, print);
                 if (amsSnapshot.Count > 0)
                     statusService.SaveAmsSnapshot(printerId, new AmsSnapshot(amsSnapshot, DateTime.UtcNow));
             }
@@ -252,7 +255,7 @@ public class MqttMessageProcessor(
             return;
         }
 
-        var amsRemain = ParseAmsRemain(print);
+        var amsRemain = ParseAmsRemain(printerId, print);
 
         float? grams = null;
         if (state == "FINISH")
@@ -311,26 +314,11 @@ public class MqttMessageProcessor(
         return string.IsNullOrEmpty(gcodeFile) ? null : Path.GetFileName(gcodeFile);
     }
 
-    private static Dictionary<string, int> ParseAmsRemain(JsonElement printEl)
+    private static Dictionary<string, int> ParseAmsRemain(Guid printerId, JsonElement printEl)
     {
-        var result = new Dictionary<string, int>();
-        if (!printEl.TryGetProperty("ams", out var ams)) return result;
-        if (!ams.TryGetProperty("ams", out var amsArray)) return result;
-
-        foreach (var amsUnit in amsArray.EnumerateArray())
-        {
-            var unitId = amsUnit.TryGetProperty("id", out var idEl) ? idEl.GetString() ?? "0" : "0";
-            if (!amsUnit.TryGetProperty("tray", out var trayArray)) continue;
-
-            foreach (var tray in trayArray.EnumerateArray())
-            {
-                var trayId = tray.TryGetProperty("id", out var trayIdEl) ? trayIdEl.GetString() ?? "0" : "0";
-                var remain = tray.TryGetProperty("remain", out var remainEl) ? remainEl.GetInt32() : -1;
-                if (remain >= 0)
-                    result[$"unit_{unitId}_tray_{trayId}"] = remain;
-            }
-        }
-        return result;
+        return AmsMqttTrayParser.TryParse(printerId, printEl, out _, out var remainBySlotKey, out _)
+            ? remainBySlotKey
+            : new Dictionary<string, int>();
     }
 
     private float? ResolveGramsFromAmsRemain(PrintJob job, Dictionary<string, int> currentRemain)

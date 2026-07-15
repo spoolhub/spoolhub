@@ -227,8 +227,20 @@
 }
 .btn:hover { background: var(--surface-alt) }
 .btn svg { width: 16px; height: 16px }
-.btnPrimary { background: var(--accent); border-color: transparent; color: #fff }
-.btnPrimary:hover { filter: brightness(1.06) }
+.btn.btnPrimary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.btnPrimary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .btnWide { width: 100%; justify-content: center }
 
 /* ── OTP ── */
@@ -263,7 +275,7 @@
 .otpResend:hover { text-decoration: underline }
 
 /* ── Cloud printer list ── */
-.cloudList { display: flex; flex-direction: column; gap: 8px }
+.cloudList { display: flex; flex-direction: column; gap: 10px }
 .cloudPrinter {
   display: flex; align-items: center; gap: 12px;
   padding: 14px; border: 1px solid var(--border);

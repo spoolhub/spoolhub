@@ -8,6 +8,11 @@ const basePrinter: PrinterResponse = {
   id: 'p1', name: 'My X1C', brand: 'Bambu Lab', model: 'X1 Carbon',
   serialNumber: null, ipAddress: '192.168.1.50', port: null,
   protocol: 'mqtt_lan', hasAms: false, createdAt: '2026-01-01T00:00:00Z',
+  tray1Spool: null, tray2Spool: null, tray3Spool: null, tray4Spool: null, extraSpool: null,
+  tray1RemainPct: null, tray2RemainPct: null, tray3RemainPct: null, tray4RemainPct: null,
+  tray1Occupied: false, tray2Occupied: false, tray3Occupied: false, tray4Occupied: false,
+  extraSpoolOccupied: null, extraSpoolRemainPct: null,
+  tray1Mqtt: null, tray2Mqtt: null, tray3Mqtt: null, tray4Mqtt: null, extraMqtt: null,
 }
 
 const baseFilament: FilamentProfile = {

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isAxiosError } from 'axios'
 import { printersApi } from '@/api/printers'
-import type { PrinterResponse, LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
+import DiscoveredPrinterCard from '@/components/DiscoveredPrinterCard'
+import type { PrinterResponse, LanDiscoveredPrinter, CloudDiscoveredPrinter, DiscoveredPrinterMqttPreview } from '@/types/printer'
 import styles from './AddPrinterModal.module.css'
 
 interface Props {
@@ -97,6 +98,8 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
   const [otpDigits, setOtpDigits]           = useState<string[]>(Array(6).fill(''))
   const otpRefs                             = useRef<(HTMLInputElement | null)[]>([])
   const [cloudPrinters, setCloudPrinters]   = useState<CloudDiscoveredPrinter[]>([])
+  const [cloudPreviews, setCloudPreviews]   = useState<Record<string, DiscoveredPrinterMqttPreview | null>>({})
+  const [cloudPreviewLoading, setCloudPreviewLoading] = useState<Record<string, boolean>>({})
   const [addingSerial, setAddingSerial]     = useState<string | null>(null)
   const [connectMsg, setConnectMsg]         = useState('')
   const [submitting, setSubmitting]         = useState(false)
@@ -114,6 +117,35 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
     const id = setInterval(() => setCountdown(s => Math.max(0, s - 1)), 1000)
     return () => clearInterval(id)
   }, [step])
+
+  useEffect(() => {
+    if (step !== 'cloud_select') return
+    let cancelled = false
+    const targets = cloudPrinters.filter(p => p.online && !p.alreadyAdded)
+    if (targets.length === 0) return
+
+    setCloudPreviewLoading(Object.fromEntries(targets.map(p => [p.serialNumber, true]))) // eslint-disable-line react-hooks/set-state-in-effect
+    void (async () => {
+      await Promise.all(targets.map(async p => {
+        try {
+          const preview = await printersApi.previewCloud(p.serialNumber)
+          if (!cancelled) {
+            setCloudPreviews(prev => ({ ...prev, [p.serialNumber]: preview }))
+          }
+        } catch {
+          if (!cancelled) {
+            setCloudPreviews(prev => ({ ...prev, [p.serialNumber]: null }))
+          }
+        } finally {
+          if (!cancelled) {
+            setCloudPreviewLoading(prev => ({ ...prev, [p.serialNumber]: false }))
+          }
+        }
+      }))
+    })()
+
+    return () => { cancelled = true }
+  }, [step, cloudPrinters])
 
   /* ---- Navigation ---- */
   function goBack() {
@@ -583,29 +615,40 @@ export default function AddPrinterModal({ onClose, onAdded }: Props) {
         <div className={styles.cloudList}>
           {cloudPrinters.map(p => {
             const isAdding = addingSerial === p.serialNumber
+            const preview = cloudPreviews[p.serialNumber]
+            const previewLoading = !!cloudPreviewLoading[p.serialNumber]
+
             if (p.alreadyAdded) {
               return (
-                <div key={p.serialNumber} className={styles.cloudPrinter} style={{ cursor: 'default', opacity: 0.6 }}>
-                  <div className={styles.choiceIcon} style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--surface)', color: 'var(--faint)' }}>{CLOUD_ICON}</div>
-                  <div className={styles.cloudPrinterInfo}>
-                    <div className={styles.cloudPrinterName} style={{ color: 'var(--muted)' }}>{p.name}</div>
-                    <div className={styles.cloudPrinterModel}>{p.model}</div>
-                    <div className={styles.cloudPrinterSerial}>{p.serialNumber.slice(-6)}</div>
-                  </div>
-                  <span className={styles.badgeAdded}>Added</span>
-                </div>
+                <DiscoveredPrinterCard
+                  key={p.serialNumber}
+                  name={p.name}
+                  model={p.model}
+                  serialSuffix={p.serialNumber.slice(-6)}
+                  online={p.online}
+                  alreadyAdded
+                  preview={preview}
+                  previewLoading={previewLoading}
+                  trailing={<span className={styles.badgeAdded}>Added</span>}
+                />
               )
             }
+
             return (
-              <button key={p.serialNumber} className={styles.cloudPrinter} onClick={() => handleCloudSelect(p.serialNumber)} disabled={addingSerial !== null}>
-                <div className={styles.choiceIcon} style={{ width: 38, height: 38, borderRadius: 9 }}>{isAdding ? <div className={styles.lanSpin} style={{ width: 22, height: 22, borderWidth: 2 }} /> : CLOUD_ICON}</div>
-                <div className={styles.cloudPrinterInfo}>
-                  <div className={styles.cloudPrinterName}>{p.name}</div>
-                  <div className={styles.cloudPrinterModel}>{p.model}</div>
-                  <div className={styles.cloudPrinterSerial}>{p.serialNumber.slice(-6)}</div>
-                </div>
-                <span className={p.online ? styles.badgeOnline : styles.badgeOffline}>{p.online ? 'Online' : 'Offline'}</span>
-              </button>
+              <DiscoveredPrinterCard
+                key={p.serialNumber}
+                name={p.name}
+                model={p.model}
+                serialSuffix={p.serialNumber.slice(-6)}
+                online={p.online}
+                preview={preview}
+                previewLoading={previewLoading}
+                onClick={() => handleCloudSelect(p.serialNumber)}
+                disabled={addingSerial !== null}
+                trailing={isAdding
+                  ? <div className={styles.lanSpin} style={{ width: 22, height: 22, borderWidth: 2, flex: 'none' }} />
+                  : undefined}
+              />
             )
           })}
           {error && <div className={styles.error}>{error}</div>}

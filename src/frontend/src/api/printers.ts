@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { PrinterResponse, PrinterStatus, RegisterLanPrinterRequest, UpdatePrinterRequest, CloudLoginResult, LanDiscoveredPrinter, CloudDiscoveredPrinter } from '@/types/printer'
+import type { PrinterResponse, PrinterStatus, RegisterLanPrinterRequest, UpdatePrinterRequest, CloudLoginResult, LanDiscoveredPrinter, CloudDiscoveredPrinter, DiscoveredPrinterMqttPreview } from '@/types/printer'
 
 export const printersApi = {
   getAll: () =>
@@ -9,7 +9,11 @@ export const printersApi = {
     apiClient.get<PrinterResponse>(`/api/printers/${id}`).then(r => r.data),
 
   getStatus: (id: string) =>
-    apiClient.get<PrinterStatus | null>(`/api/printers/${id}/status`).then(r => r.data),
+    apiClient
+      .get<PrinterStatus | null>(`/api/printers/${id}/status`, {
+        validateStatus: status => status === 200 || status === 204,
+      })
+      .then(r => (r.status === 204 ? null : r.data)),
 
   discoverLan: () =>
     apiClient.get<LanDiscoveredPrinter[]>('/api/printers/discover/lan').then(r => r.data),
@@ -43,4 +47,18 @@ export const printersApi = {
 
   assignExtraSpool: (id: string, spoolId: string | null) =>
     apiClient.put<PrinterResponse>(`/api/printers/${id}/extra-spool`, { spoolId }).then(r => r.data),
+
+  previewCloud: (serialNumber: string) =>
+    apiClient
+      .post<DiscoveredPrinterMqttPreview | null>('/api/printers/cloud/preview', { serialNumber }, {
+        validateStatus: status => status === 200 || status === 204,
+      })
+      .then(r => (r.status === 204 ? null : r.data)),
+
+  previewLan: (serialNumber: string, ipAddress: string, accessCode: string) =>
+    apiClient
+      .post<DiscoveredPrinterMqttPreview | null>('/api/printers/discover/lan/preview', {
+        serialNumber, ipAddress, accessCode,
+      }, { validateStatus: status => status === 200 || status === 204 })
+      .then(r => (r.status === 204 ? null : r.data)),
 }

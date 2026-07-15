@@ -13,6 +13,7 @@ public class PrinterController(
     IPrinterStatusService printerStatusService,
     IPrintJobRepository printJobRepository,
     ICloudPrinterRegistrationService cloudRegistrationService,
+    IPrinterMqttPreviewService mqttPreviewService,
     IAlertService alertService) : ControllerBase
 {
     [HttpGet]
@@ -95,6 +96,29 @@ public class PrinterController(
     {
         var saved = await cloudRegistrationService.SelectAsync(request.Serials, ct);
         return Ok(saved);
+    }
+
+    [HttpPost("cloud/preview")]
+    public async Task<IActionResult> PreviewCloudPrinter([FromBody] CloudPrinterPreviewRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.SerialNumber))
+            return BadRequest(new { error = "SerialNumber is required" });
+
+        var preview = await mqttPreviewService.PreviewCloudAsync(request.SerialNumber, ct);
+        return preview is null ? NoContent() : Ok(preview);
+    }
+
+    [HttpPost("discover/lan/preview")]
+    public async Task<IActionResult> PreviewLanPrinter([FromBody] LanPrinterPreviewRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.SerialNumber)
+            || string.IsNullOrWhiteSpace(request.IpAddress)
+            || string.IsNullOrWhiteSpace(request.AccessCode))
+            return BadRequest(new { error = "SerialNumber, IpAddress, and AccessCode are required" });
+
+        var preview = await mqttPreviewService.PreviewLanAsync(
+            request.SerialNumber, request.IpAddress, request.AccessCode, ct);
+        return preview is null ? NoContent() : Ok(preview);
     }
 
     [HttpPut("{id:guid}")]
