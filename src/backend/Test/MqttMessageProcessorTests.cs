@@ -20,10 +20,15 @@ public class MqttMessageProcessorTests
     private readonly IBambuCloudTaskService _cloudTaskService = Substitute.For<IBambuCloudTaskService>();
     private readonly MqttMessageProcessor _sut;
 
-    public MqttMessageProcessorTests() =>
+    public MqttMessageProcessorTests()
+    {
+        var printerNotifier = Substitute.For<IPrinterRealtimeNotifier>();
+        var amsSync = new AmsMqttSyncService(_printerRepo, _spoolRepo, printerNotifier, NullLogger<AmsMqttSyncService>.Instance);
         _sut = new MqttMessageProcessor(
             _spoolRepo, _printJobRepo, _printerRepo, _statusService, _statusPusher,
-            _activity, _ftpService, _gcodeParser, _cloudTaskService, NullLogger<MqttMessageProcessor>.Instance);
+            _activity, _ftpService, _gcodeParser, _cloudTaskService, amsSync,
+            NullLogger<MqttMessageProcessor>.Instance);
+    }
 
     // ── status update tests ──────────────────────────────────────────────────
 
@@ -79,7 +84,7 @@ public class MqttMessageProcessorTests
     }
 
     [Fact]
-    public async Task ProcessAsync_WhenMqttReportsAms_SetsHasAmsTrueOnPrinter()
+    public async Task ProcessAsync_WhenMqttReportsAms_SetsHasAmsTrueAndTrayRemainOnPrinter()
     {
         var printerId = Guid.NewGuid();
         var printer = BuildPrinter(printerId, hasAms: false);
@@ -90,21 +95,25 @@ public class MqttMessageProcessorTests
         await _sut.ProcessAsync(RunningPayload(), printerId);
 
         await _printerRepo.Received(1).UpdateAsync(Arg.Is<Printer>(p =>
-            p.Id == printerId && p.HasAms));
+            p.Id == printerId && p.HasAms &&
+            p.Tray1Occupied &&
+            p.Tray1RemainPct == 80));
     }
 
     [Fact]
-    public async Task ProcessAsync_WhenMqttReportsAms_AndHasAmsAlreadyTrue_DoesNotUpdatePrinter()
+    public async Task ProcessAsync_WhenMqttReportsAms_AndHasAmsAlreadyTrue_UpdatesTrayRemainOnly()
     {
         var printerId = Guid.NewGuid();
         var printer = BuildPrinter(printerId, hasAms: true);
+        printer.Tray1RemainPct = 90;
         _printerRepo.GetByIdAsync(printerId).Returns(printer);
         _printJobRepo.GetActiveByPrinterIdAsync(printerId).Returns((PrintJob?)null);
         _printJobRepo.CreateAsync(Arg.Any<PrintJob>()).Returns(x => x.Arg<PrintJob>());
 
         await _sut.ProcessAsync(RunningPayload(), printerId);
 
-        await _printerRepo.DidNotReceive().UpdateAsync(Arg.Any<Printer>());
+        await _printerRepo.Received(1).UpdateAsync(Arg.Is<Printer>(p =>
+            p.Id == printerId && p.HasAms && p.Tray1RemainPct == 80));
     }
 
     [Fact]
@@ -517,7 +526,7 @@ public class MqttMessageProcessorTests
     };
 
     private static string RunningPayload() =>
-        "{\"print\":{\"gcode_state\":\"RUNNING\",\"mc_percent\":42,\"mc_remaining_time\":60,\"nozzle_temper\":220,\"bed_temper\":65,\"ams\":{\"ams\":[{\"id\":\"0\",\"tray\":[{\"id\":\"0\",\"remain\":80},{\"id\":\"1\",\"remain\":-1},{\"id\":\"2\",\"remain\":-1},{\"id\":\"3\",\"remain\":-1}]}]}}}";
+        "{\"print\":{\"gcode_state\":\"RUNNING\",\"mc_percent\":42,\"mc_remaining_time\":60,\"nozzle_temper\":220,\"bed_temper\":65,\"ams\":{\"tray_exist_bits\":\"1\",\"ams\":[{\"id\":\"0\",\"tray\":[{\"id\":\"0\",\"remain\":80,\"tag_uid\":\"0000000000000000\"},{\"id\":\"1\",\"remain\":-1},{\"id\":\"2\",\"remain\":-1},{\"id\":\"3\",\"remain\":-1}]}]}}}";
 
     private static string FinishPayload() =>
         "{\"print\":{\"gcode_state\":\"FINISH\",\"subtask_name\":\"test.gcode\",\"nozzle_temper\":25,\"bed_temper\":25,\"ams\":{\"ams\":[{\"id\":\"0\",\"tray\":[{\"id\":\"0\",\"remain\":65},{\"id\":\"1\",\"remain\":-1},{\"id\":\"2\",\"remain\":-1},{\"id\":\"3\",\"remain\":-1}]}]}}}";

@@ -39,6 +39,13 @@ public class SpoolRepository(FilamentDbContext db) : ISpoolRepository
             .FirstOrDefaultAsync(s => s.IsActive);
     }
 
+    public async Task<Spool?> GetByBambuTagUidAsync(string bambuTagUid)
+    {
+        return await db.Spools
+            .Include(s => s.NfcTags)
+            .FirstOrDefaultAsync(s => s.BambuTagUid == bambuTagUid && !s.IsArchived);
+    }
+
     public async Task<Spool> CreateAsync(Spool spool)
     {
         db.Spools.Add(spool);

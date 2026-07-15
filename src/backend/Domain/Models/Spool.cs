@@ -17,6 +17,7 @@ public class Spool
     public DateTime CreatedAt { get; set; }
     public DateTime? LastScannedAt { get; set; }
     public string? Notes { get; set; }
+    public string? BambuTagUid { get; set; }
     public string? StockLocation { get; set; }
     public decimal? Price { get; set; }
     public float? Density { get; set; }

@@ -75,6 +75,12 @@
 .pdbody::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px }
 .pdbody::-webkit-scrollbar-track { background: transparent }
 
+.pdbodyPicker {
+  overflow: hidden;
+  padding: 12px 14px 16px;
+  gap: 10px;
+}
+
 .pdbrandrow {
   display: flex; align-items: center; gap: 6px;
   color: var(--muted);
@@ -98,6 +104,9 @@
 .pstatus.printing i { background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150/.2) }
 .pstatus.idle { background: var(--surface); border: 1px solid var(--border); color: var(--muted) }
 .pstatus.idle i { background: var(--faint) }
+.pstatus.online { background: oklch(0.6 0.13 150/.14); color: oklch(0.48 0.12 150) }
+[data-theme="dark"] .pstatus.online { color: oklch(0.74 0.13 150) }
+.pstatus.online i { background: oklch(0.6 0.13 150); box-shadow: 0 0 0 3px oklch(0.6 0.13 150/.2) }
 .pstatus.offline { background: oklch(0.62 0.16 25/.12); color: oklch(0.52 0.15 25) }
 [data-theme="dark"] .pstatus.offline { color: oklch(0.74 0.15 25) }
 .pstatus.offline i { background: oklch(0.62 0.16 25) }
@@ -150,27 +159,10 @@
 .tray .tn { font-size: 8px; font-weight: 600; color: var(--muted); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100% }
 .tray.single .tn { font-size: 12px }
 .tray.empty { border-style: dashed; background: transparent }
+.tray.trayDisabled { pointer-events: none; cursor: default; opacity: 0.55 }
 .tray.empty .tn { color: var(--faint) }
 .trayBtn { cursor: pointer; font: inherit; width: 100%; box-sizing: border-box; color: inherit }
 .trayBtn:hover { background: var(--surface-alt); border-color: var(--accent-soft) }
-
-/* Spool selection drawer (full-height list replacing body content) */
-.pickerDrawer { display: flex; flex-direction: column; flex: 1 }
-.pickerLoading { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
-.pickerEmpty { text-align: center; padding: 40px 0; font-size: 13px; color: var(--faint) }
-.pickerList { display: flex; flex-direction: column; gap: 6px; flex: 1 }
-.pickerItem {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 12px;
-  border: 1px solid var(--border); border-radius: var(--r-sm);
-  background: var(--surface-alt); font: inherit; color: var(--text-primary);
-  cursor: pointer; text-align: left; box-sizing: border-box;
-  transition: .15s var(--ease);
-}
-.pickerItem:hover { border-color: var(--accent-soft); background: var(--accent-soft) }
-.pickerItemInfo { flex: 1; min-width: 0 }
-.pickerItemName { font-weight: 600; font-size: 13px }
-.pickerItemMeta { font-size: 11px; color: var(--faint); margin-top: 2px }
 
 /* Temperatures */
 .pdtemps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }

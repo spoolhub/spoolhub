@@ -269,6 +269,7 @@
     "labelNozzle": "Munstycke",
     "labelBed": "Bädd",
     "empty": "Tom",
+    "loaded": "Laddad",
     "noSpoolLoaded": "Ingen spole laddad",
     "noJobs": "Inga utskriftsjobb registrerade.",
     "spoolLoaded": "{{count}} laddad",

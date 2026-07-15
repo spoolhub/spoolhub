@@ -9,6 +9,7 @@ public class PrinterService(
     IPrinterRepository printerRepository,
     ISpoolRepository spoolRepository,
     IActivityService activityService,
+    IPrinterRealtimeNotifier printerNotifier,
     ILogger<PrinterService> logger) : IPrinterService
 {
     public async Task<IEnumerable<PrinterResponse>> GetAllAsync()
@@ -129,6 +130,7 @@ public class PrinterService(
                 "SpoolUnassigned", "Unassigned", "Spool", $"{removed.Brand} {removed.ColorName}", oldSpoolId,
                 $"from {printer.Name} (Tray {slot})", "ti-printer-off", TraySpoolSnapshot(removed));
 
+        await printerNotifier.NotifyPrinterUpdatedAsync(printerId, spoolId.HasValue || oldSpoolId.HasValue);
         return ToResponse(updated, spools);
     }
 
@@ -159,6 +161,7 @@ public class PrinterService(
                 "SpoolUnassigned", "Unassigned", "Spool", $"{removed.Brand} {removed.ColorName}", oldSpoolId,
                 $"from {printer.Name}", "ti-printer-off", TraySpoolSnapshot(removed));
 
+        await printerNotifier.NotifyPrinterUpdatedAsync(printerId, spoolId.HasValue || oldSpoolId.HasValue);
         return ToResponse(updated, spools);
     }
 
@@ -197,6 +200,23 @@ public class PrinterService(
             p.HasAms, p.CreatedAt,
             Tray(p.Tray1SpoolId), Tray(p.Tray2SpoolId),
             Tray(p.Tray3SpoolId), Tray(p.Tray4SpoolId),
-            Tray(p.ExtraSpoolId));
+            Tray(p.ExtraSpoolId),
+            p.Tray1RemainPct, p.Tray2RemainPct, p.Tray3RemainPct, p.Tray4RemainPct,
+            p.Tray1Occupied, p.Tray2Occupied, p.Tray3Occupied, p.Tray4Occupied,
+            p.ExtraSpoolOccupied, p.ExtraSpoolRemainPct,
+            TrayMqtt(p.Tray1MqttMaterial, p.Tray1MqttColorName, p.Tray1MqttColorHex, p.Tray1MqttBrand),
+            TrayMqtt(p.Tray2MqttMaterial, p.Tray2MqttColorName, p.Tray2MqttColorHex, p.Tray2MqttBrand),
+            TrayMqtt(p.Tray3MqttMaterial, p.Tray3MqttColorName, p.Tray3MqttColorHex, p.Tray3MqttBrand),
+            TrayMqtt(p.Tray4MqttMaterial, p.Tray4MqttColorName, p.Tray4MqttColorHex, p.Tray4MqttBrand),
+            TrayMqtt(p.ExtraMqttMaterial, p.ExtraMqttColorName, p.ExtraMqttColorHex, p.ExtraMqttBrand));
+    }
+
+    private static TrayMqttHint? TrayMqtt(string? material, string? colorName, string? colorHex, string? brand)
+    {
+        if (string.IsNullOrWhiteSpace(material)
+            && string.IsNullOrWhiteSpace(colorName)
+            && string.IsNullOrWhiteSpace(colorHex))
+            return null;
+        return new TrayMqttHint(material, colorName, colorHex, brand);
     }
 }

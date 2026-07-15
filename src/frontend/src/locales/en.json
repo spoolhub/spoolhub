@@ -273,6 +273,7 @@
     "labelNozzle": "Nozzle",
     "labelBed": "Bed",
     "empty": "Empty",
+    "loaded": "Loaded",
     "selectSpool": "Select spool",
     "noSpoolsAvailable": "No spools available",
     "noSpoolLoaded": "No spool loaded",
@@ -579,6 +580,11 @@
     "registerError": "Failed to register printer. Check the details and try again.",
     "connectingLan": "Connecting to printer over LAN…",
     "connectingCloud": "Adding your printer…",
+    "trayEmpty": "Tray {{slot}}: Empty",
+    "trayLoaded": "Tray {{slot}}: {{filament}}{{remain}}",
+    "extraTrayEmpty": "Extra spool: Empty",
+    "extraTrayLoaded": "Extra spool: {{filament}}{{remain}}",
+    "trayRemain": " ({{pct}}% left)",
     "connectedTitle": "Printer connected",
     "connectedDesc": "Your printer is now linked to SpoolHub.",
     "done": "Done"
@@ -977,7 +983,16 @@
     "back": "Back",
     "assignError": "Failed to assign spool. Please try again.",
     "noMatch": "No spools match your search.",
-    "noAvailable": "No available spools."
+    "noAvailable": "No available spools.",
+    "printerReports": "Printer reports: {{filament}}",
+    "materialOnlyNote": "No color reported for this slot — showing all {{material}} spools in your library.",
+    "brandMaterialNote": "No color reported — showing all {{brand}} {{material}} spools. PLA+ includes PLA.",
+    "matchingReportedColor": "Showing {{filament}} spools that match the reported color.",
+    "noMatchTray": "No {{filament}} spools in your library.",
+    "addThisSpool": "Add {{filament}} spool",
+    "matchingSpools": "Matching spools",
+    "availableSpools": "Available spools",
+    "spoolCount": "spools"
   },
   "spoolProfile": {
     "pageTitle": "Spool Profiles",

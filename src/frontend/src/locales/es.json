@@ -269,6 +269,7 @@
     "labelNozzle": "Boquilla",
     "labelBed": "Cama",
     "empty": "Vacío",
+    "loaded": "Cargado",
     "noSpoolLoaded": "Sin carrete cargado",
     "noJobs": "Sin trabajos de impresión registrados.",
     "spoolLoaded": "{{count}} cargado",

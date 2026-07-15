@@ -168,7 +168,7 @@ public class ConnectionService : IHostedService
                     }
                 }
 
-                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload.ToArray());
+                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 _logger.LogInformation("MQTT [{Name}] {Bytes} bytes:\n{Payload}",
                     printer.Name, payload.Length, payload);
                 using var msgScope = _scopeFactory.CreateScope();

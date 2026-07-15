@@ -38,13 +38,16 @@ describe('printersApi', () => {
 
   describe('getStatus', () => {
     it('calls GET /api/printers/:id/status', async () => {
-      mockApiClient.get.mockResolvedValue({ data: null })
+      mockApiClient.get.mockResolvedValue({ status: 200, data: { gcodeState: 'IDLE' } })
       await printersApi.getStatus('abc-123')
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/printers/abc-123/status')
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        '/api/printers/abc-123/status',
+        expect.objectContaining({ validateStatus: expect.any(Function) }),
+      )
     })
 
-    it('returns null when printer is idle', async () => {
-      mockApiClient.get.mockResolvedValue({ data: null })
+    it('returns null when printer has no live status', async () => {
+      mockApiClient.get.mockResolvedValue({ status: 204, data: null })
       expect(await printersApi.getStatus('abc')).toBeNull()
     })
   })

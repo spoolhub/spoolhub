@@ -1,0 +1,65 @@
+@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.5 } }
+
+.root { display: flex; flex-direction: column; gap: var(--gap); min-height: 0; flex: 1; }
+.rootPage { gap: var(--gap); }
+
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; flex-shrink: 0;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--muted);
+  cursor: pointer; transition: .15s var(--ease);
+}
+.backBtn:hover { border-color: var(--accent); color: var(--text-primary) }
+.backBtn svg { width: 18px; height: 18px }
+
+.h { flex: 1; min-width: 0; }
+.h h1 {
+  margin: 0; font-family: var(--font-display);
+  font-size: 25px; font-weight: 700; letter-spacing: -.03em;
+  color: var(--text-primary);
+}
+[data-dir="b"] .h h1 { font-weight: 600; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+
+.drawerSub { color: var(--muted); font-size: 13px; margin: 0; line-height: 1.4; flex-shrink: 0; }
+
+.error { font-size: 13.5px; color: #ef4444; margin: 0; }
+
+.spoolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--gap); padding: var(--card-pad);
+}
+.spoolGridDrawer { grid-template-columns: 1fr; padding: 0; gap: 10px; }
+
+.emptyActions {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 16px; padding: 48px 24px; flex: 1;
+}
+.emptyText { color: var(--faint); font-size: 14px; margin: 0; text-align: center; }
+
+.addCta {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 42px; padding: 0 17px;
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  background: var(--accent); color: #fff;
+  font: inherit; font-weight: 600; font-size: 13.5px;
+  text-decoration: none; transition: filter .15s var(--ease);
+}
+.addCta:hover { filter: brightness(1.06) }
+
+.pagination { padding: 14px var(--card-pad); border-top: 1px solid var(--border-2); flex-shrink: 0; }
+
+.skeleton {
+  height: 180px; border-radius: var(--r-sm);
+  background: var(--track); animation: pulse 1.5s ease-in-out infinite;
+}
+.skeletonDrawer { height: 140px; }
+
+.cardDisabled { pointer-events: none; opacity: 0.55; }

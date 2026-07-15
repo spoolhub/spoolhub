@@ -32,6 +32,22 @@ const basePrinter: PrinterResponse = {
   protocol: 'mqtt_lan',
   hasAms: true,
   createdAt: '2026-01-01T00:00:00Z',
+  tray1Spool: null,
+  tray2Spool: null,
+  tray3Spool: null,
+  tray4Spool: null,
+  extraSpool: null,
+  tray1RemainPct: null,
+  tray2RemainPct: null,
+  tray3RemainPct: null,
+  tray4RemainPct: null,
+  tray1Occupied: false,
+  tray2Occupied: false,
+  tray3Occupied: false,
+  tray4Occupied: false,
+  extraSpoolOccupied: null,
+  extraSpoolRemainPct: null,
+  tray1Mqtt: null, tray2Mqtt: null, tray3Mqtt: null, tray4Mqtt: null, extraMqtt: null,
 }
 
 const emptySpools: SpoolResponse[] = []

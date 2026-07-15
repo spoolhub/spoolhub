@@ -7,6 +7,7 @@ public interface ISpoolRepository
     Task<IEnumerable<Spool>> GetAllAsync();
     Task<Spool?> GetByIdAsync(Guid id);
     Task<IEnumerable<Spool>> GetByIdsAsync(IEnumerable<Guid> ids);
+    Task<Spool?> GetByBambuTagUidAsync(string bambuTagUid);
     Task<Spool?> GetActiveAsync();
     Task<Spool> CreateAsync(Spool spool);
     Task<Spool> UpdateAsync(Spool spool);

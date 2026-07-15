@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Dashboard.module.css'
 import { useTranslation } from 'react-i18next'
-import { useConnection } from '@/context/ConnectionContext'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import { settingsApi } from '@/api/settings'
 import { useNfcHub } from '@/hooks/useNfcHub'
+import { usePrinterCardsData } from '@/hooks/usePrinterCardsData'
 import { MetricCard } from '@/components/MetricCard/MetricCard'
 import NotificationBell from '@/components/NotificationBell'
 
@@ -17,106 +17,44 @@ import PrinterDrawer from '@/components/PrinterDrawer'
 import { printJobsApi } from '@/api/printJobs'
 import LowStockSpools from '@/components/LowStockSpools'
 import type { SpoolResponse } from '@/types/spool'
-import type { PrinterResponse, PrinterStatus } from '@/types/printer'
 
 export default function Dashboard() {
   const { t } = useTranslation()
-  const { refreshKey } = useConnection()
-  const [spools, setSpools] = useState<SpoolResponse[]>([])
+  const {
+    printers,
+    spools,
+    statuses,
+    loading,
+    setPrinters,
+    setSpools,
+    applyPrinters,
+  } = usePrinterCardsData({ spoolsPollMs: 60_000 })
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [detailPrinterId, setDetailPrinterId] = useState<string | null>(null)
-  const [printers, setPrinters] = useState<PrinterResponse[]>([])
-  const [statuses, setStatuses] = useState<Map<string, PrinterStatus>>(new Map())
-  const [loading, setLoading] = useState(true)
   const [weeklyUsedKg, setWeeklyUsedKg] = useState<number | null>(null)
   const [activityLimit] = useState(5)
   const [currency, setCurrency] = useState('USD')
 
-  const fetchGen = useRef(0)
-  const printersRef = useRef<PrinterResponse[]>([])
-
-  const refreshSpools = useCallback((e?: Event) => {
-    const deletedId = (e as CustomEvent | undefined)?.detail?.deletedId as string | undefined
-    if (deletedId) {
-      fetchGen.current++
-      setSpools(prev => prev.filter(s => s.id !== deletedId))
-      return
-    }
-    const gen = ++fetchGen.current
-    spoolsApi.getAll().then(s => { if (gen === fetchGen.current) setSpools(s) }).catch(() => {})
-  }, [])
-
   useEffect(() => {
-    let cancelled = false
-    const gen = ++fetchGen.current
-    void Promise.resolve().then(() => { if (!cancelled) setLoading(true) })
-    Promise.all([
-      spoolsApi.getAll(),
-      printersApi.getAll().catch(() => [] as PrinterResponse[]),
-      settingsApi.getApp().catch(() => ({ currency: 'USD' })),
-    ]).then(([s, p, app]) => {
-      if (cancelled || gen !== fetchGen.current) return
-      setSpools(s)
-      setCurrency((app as { currency: string }).currency)
-      printersRef.current = p
-      setPrinters(p)
-      setLoading(false)
-      // fetch printer statuses after page is already shown
-      const stMap = new Map<string, PrinterStatus>()
-      Promise.allSettled(p.map(pr => printersApi.getStatus(pr.id).then(st => { if (st) stMap.set(pr.id, st) }))).then(() => {
-        if (!cancelled) setStatuses(stMap)
-      }).catch(() => {})
-    }).catch(() => { if (!cancelled) setLoading(false) })
-
-    printJobsApi.getWeeklyUsage(7).then(u => { if (!cancelled) setWeeklyUsedKg(u.totalGrams / 1000) }).catch(() => {})
-
-    const dataTimer = setInterval(() => {
-      if (cancelled) return
-      const pollGen = ++fetchGen.current
-      spoolsApi.getAll().then(s => {
-        if (cancelled || pollGen !== fetchGen.current) return
-        setSpools(s)
-      }).catch(() => {})
-    }, 60_000)
-
-    const statusTimer = setInterval(() => {
-      if (cancelled || printersRef.current.length === 0) return
-      Promise.allSettled(
-        printersRef.current.map(pr => printersApi.getStatus(pr.id).then(st => ({ id: pr.id, st })))
-      ).then(results => {
-        if (cancelled) return
-        setStatuses(prev => {
-          const merged = new Map(prev)
-          results.forEach(r => { if (r.status === 'fulfilled' && r.value.st) merged.set(r.value.id, r.value.st) })
-          return merged
-        })
-      }).catch(() => {})
-    }, 3_000)
-
-    window.addEventListener('spools-updated', refreshSpools)
-    return () => {
-      cancelled = true
-      clearInterval(dataTimer)
-      clearInterval(statusTimer)
-      window.removeEventListener('spools-updated', refreshSpools)
-    }
-  }, [refreshSpools, refreshKey])
+    settingsApi.getApp().catch(() => ({ currency: 'USD' }))
+      .then(app => setCurrency((app as { currency: string }).currency))
+    printJobsApi.getWeeklyUsage(7).then(u => setWeeklyUsedKg(u.totalGrams / 1000)).catch(() => {})
+  }, [])
 
   const handleTrayAssigned = useCallback(() => {
-    printersApi.getAll().then(p => {
-      printersRef.current = p
-      setPrinters(p)
-    }).catch(() => {})
-  }, [])
+    printersApi.getAll().then(applyPrinters).catch(() => {})
+  }, [applyPrinters])
 
   const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
-    fetchGen.current++
     setSpools(prev => {
       const mapped = prev.map(s => s.id === updated.id ? updated : s)
-      if (!mapped.some(s => s.id === updated.id)) { refreshSpools(); return prev }
+      if (!mapped.some(s => s.id === updated.id)) {
+        spoolsApi.getAll().then(setSpools).catch(() => {})
+        return prev
+      }
       return mapped
     })
-  }, [refreshSpools])
+  }, [setSpools])
   useNfcHub(() => {}, handleSpoolUpdated)
 
   const lowStockCount = spools.filter(s => s.currentWeightG < s.lowStockThresholdG).length

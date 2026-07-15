@@ -1,102 +1,50 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useConnection } from '@/context/ConnectionContext'
+import { usePrinterCardsData } from '@/hooks/usePrinterCardsData'
+import { useNfcHub } from '@/hooks/useNfcHub'
 import { printersApi } from '@/api/printers'
-import { spoolsApi } from '@/api/spools'
 import PrinterCard from '@/components/PrinterCard'
 import { getPrinterStatusClass } from '@/utils/printerStatus'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import PrinterDrawer from '@/components/PrinterDrawer'
 import AddPrinterModal from './AddPrinterModal'
 import NotificationBell from '@/components/NotificationBell'
-import type { PrinterResponse, PrinterStatus } from '@/types/printer'
+import type { PrinterResponse } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './PrintersPage.module.css'
 
-async function fetchStatuses(printers: PrinterResponse[]): Promise<Map<string, PrinterStatus>> {
-  const results = await Promise.allSettled(
-    printers.map(p => printersApi.getStatus(p.id).then(st => ({ id: p.id, st })))
-  )
-  const map = new Map<string, PrinterStatus>()
-  results.forEach(r => {
-    if (r.status === 'fulfilled' && r.value.st) map.set(r.value.id, r.value.st)
-  })
-  return map
-}
-
 export default function PrintersPage() {
   const { t } = useTranslation()
-  const { refreshKey } = useConnection()
-  const [printers, setPrinters]   = useState<PrinterResponse[]>([])
-  const [spools, setSpools]       = useState<SpoolResponse[]>([])
-  const [statuses, setStatuses]   = useState<Map<string, PrinterStatus>>(new Map())
-  const [loading, setLoading]     = useState(true)
+  const {
+    printers,
+    spools,
+    statuses,
+    loading,
+    setPrinters,
+    setSpools,
+    refreshPrinterData,
+    applyPrinters,
+  } = usePrinterCardsData({ dataPollMs: 30_000 })
   const [query, setQuery]         = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedSpool, setSelectedSpool] = useState<SpoolResponse | null>(null)
   const [selectedPrinterId, setSelectedPrinterId] = useState<string | null>(null)
-  const printersRef               = useRef<PrinterResponse[]>([])
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true) // eslint-disable-line react-hooks/set-state-in-effect
-
-    Promise.all([printersApi.getAll(), spoolsApi.getAll()])
-      .then(async ([p, s]) => {
-        const st = await fetchStatuses(p)
-        if (!cancelled) { printersRef.current = p; setPrinters(p); setSpools(s); setStatuses(st); setLoading(false) }
-      })
-      .catch(() => { /* keep loading=true — skeleton stays while offline */ })
-
-    const dataTimer = setInterval(() => {
-      Promise.all([printersApi.getAll(), spoolsApi.getAll()])
-        .then(([p, s]) => {
-          if (!cancelled) { printersRef.current = p; setPrinters(p); setSpools(s) }
-        })
-        .catch(() => {})
-    }, 30_000)
-
-    const statusTimer = setInterval(() => {
-      if (printersRef.current.length === 0) return
-      fetchStatuses(printersRef.current).then(st => {
-        if (!cancelled) setStatuses(prev => {
-          const merged = new Map(prev)
-          st.forEach((v, k) => merged.set(k, v))
-          return merged
-        })
-      }).catch(() => {})
-    }, 3_000)
-
-    return () => { cancelled = true; clearInterval(dataTimer); clearInterval(statusTimer) }
-  }, [refreshKey])
-
-  // Printer cards look up live spool data (color, weight) from `spools` — refresh
-  // immediately when a spool changes elsewhere instead of waiting for the next poll.
-  useEffect(() => {
-    function handleSpoolsUpdated(e: Event) {
-      const deletedId = (e as CustomEvent).detail?.deletedId as string | undefined
-      if (deletedId) {
-        setSpools(prev => prev.filter(s => s.id !== deletedId))
-        return
-      }
-      spoolsApi.getAll().then(setSpools).catch(() => {})
-    }
-    window.addEventListener('spools-updated', handleSpoolsUpdated)
-    return () => window.removeEventListener('spools-updated', handleSpoolsUpdated)
-  }, [])
+  const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
+    setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
+    setSelectedSpool(prev => prev && prev.id === updated.id ? updated : prev)
+    printersApi.getAll().then(applyPrinters).catch(() => {})
+  }, [setSpools, applyPrinters])
+  useNfcHub(() => {}, handleSpoolUpdated)
 
   const handleAddPrinter = useCallback(() => setShowAddModal(true), [])
   const handleAddPrinterClose = useCallback(() => setShowAddModal(false), [])
 
   const handlePrinterAdded = useCallback(() => {
     setShowAddModal(false)
-    // Trigger a re-fetch by toggling the refresh key
-    printersApi.getAll().then(p => {
-      printersRef.current = p
-      setPrinters(p)
-    }).catch(() => {})
-  }, [])
+    refreshPrinterData()
+  }, [refreshPrinterData])
 
   const handleSpoolClick = useCallback((spool: SpoolResponse) => {
     setSelectedPrinterId(null)
@@ -116,36 +64,17 @@ export default function PrintersPage() {
   }, [])
 
   const handlePrinterDisconnected = useCallback((id: string) => {
-      setPrinters(prev => prev.filter(p => p.id !== id))
-    }, [])
+    setPrinters(prev => prev.filter(p => p.id !== id))
+  }, [setPrinters])
 
-    const handleTrayAssigned = useCallback(() => {
-      printersApi.getAll().then(p => {
-        printersRef.current = p
-        setPrinters(p)
-      }).catch(() => {})
-    }, [])
-
-  const handleSpoolUpdated = useCallback((updated: SpoolResponse) => {
-    setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
-    setSelectedSpool(prev => prev && prev.id === updated.id ? updated : prev)
-    // Assigning/unassigning a printer changes tray data on the printer side too
-    printersApi.getAll().then(p => {
-      printersRef.current = p
-      setPrinters(p)
-    }).catch(() => {})
-  }, [])
+  const handleTrayAssigned = useCallback(() => {
+    refreshPrinterData()
+  }, [refreshPrinterData])
 
   const handleSpoolDeleted = useCallback((id: string, wasActive: boolean) => {
     setSpools(prev => prev.filter(s => s.id !== id))
-    // If the deleted spool was assigned to a printer, we need to refresh printers too
-    if (wasActive) {
-      printersApi.getAll().then(p => {
-        printersRef.current = p
-        setPrinters(p)
-      }).catch(() => {})
-    }
-  }, [])
+    if (wasActive) refreshPrinterData()
+  }, [setSpools, refreshPrinterData])
 
   const filtered = useMemo(() => {
     return printers.filter(p => {
@@ -155,7 +84,11 @@ export default function PrintersPage() {
       }
       if (activeFilter === 'ams') return p.hasAms
       if (activeFilter === 'all') return true
-      return getPrinterStatusClass(statuses.get(p.id)) === activeFilter
+      if (activeFilter === 'idle') {
+        const cls = getPrinterStatusClass(statuses.get(p.id), p.protocol)
+        return cls === 'idle' || cls === 'online'
+      }
+      return getPrinterStatusClass(statuses.get(p.id), p.protocol) === activeFilter
     })
   }, [printers, query, activeFilter, statuses])
 
@@ -182,7 +115,7 @@ export default function PrintersPage() {
         <div className={styles.chips}>
           <button className={`${styles.chip} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All</button>
           <button className={`${styles.chip} ${activeFilter === 'printing' ? styles.on : ''}`} onClick={() => setActiveFilter('printing')}>Printing</button>
-          <button className={`${styles.chip} ${activeFilter === 'idle' ? styles.on : ''}`} onClick={() => setActiveFilter('idle')}>Idle</button>
+          <button className={`${styles.chip} ${activeFilter === 'idle' ? styles.on : ''}`} onClick={() => setActiveFilter('idle')}>Online</button>
           <button className={`${styles.chip} ${activeFilter === 'offline' ? styles.on : ''}`} onClick={() => setActiveFilter('offline')}>Offline</button>
           <button className={`${styles.chip} ${activeFilter === 'ams' ? styles.on : ''}`} onClick={() => setActiveFilter('ams')}>AMS</button>
         </div>

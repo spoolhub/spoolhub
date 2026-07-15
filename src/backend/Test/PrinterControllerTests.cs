@@ -165,5 +165,8 @@ public class PrinterControllerTests
     private static PrinterResponse BuildResponse() => new(
         Guid.NewGuid(), "My Printer", "Bambu Lab", "X1 Carbon",
         "ABC123", "192.168.1.100", null, "mqtt_lan", false, DateTime.UtcNow,
-        null, null, null, null, null);
+        null,         null, null, null, null,
+        null, null, null, null,
+        false, false, false, false,
+        null, null);
 }
