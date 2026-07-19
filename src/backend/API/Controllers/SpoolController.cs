@@ -54,7 +54,7 @@ public class SpoolController(ISpoolService spoolService, IPrintJobRepository pri
     [HttpPatch("{id:guid}/assign-printer")]
     public async Task<IActionResult> AssignPrinter(Guid id, [FromBody] AssignPrinterRequest request)
     {
-        var spool = await spoolService.AssignPrinterAsync(id, request.PrinterId, request.AmsSlot);
+        var spool = await spoolService.AssignPrinterAsync(id, request.PrinterId, request.AmsSlot, request.DisplacedStockLocation);
         if (spool is null) return NotFound();
         if (spool.PrinterName is not null)
             await alertService.NotifySpoolAssignedAsync(spool.Brand, spool.Material, spool.ColorName, spool.ColorHex, spool.PrinterName);

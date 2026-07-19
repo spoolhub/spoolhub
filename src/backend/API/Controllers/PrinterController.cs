@@ -133,14 +133,14 @@ public class PrinterController(
     {
         if (slot < 1 || slot > 4)
             return BadRequest(new { error = "Slot must be between 1 and 4" });
-        var printer = await printerService.AssignTraySpoolAsync(id, slot, request.SpoolId);
+        var printer = await printerService.AssignTraySpoolAsync(id, slot, request.SpoolId, request.DisplacedStockLocation);
         return printer is null ? NotFound() : Ok(printer);
     }
 
     [HttpPut("{id:guid}/extra-spool")]
     public async Task<IActionResult> AssignExtraSpool(Guid id, [FromBody] AssignTraySpoolRequest request)
     {
-        var printer = await printerService.AssignExtraSpoolAsync(id, request.SpoolId);
+        var printer = await printerService.AssignExtraSpoolAsync(id, request.SpoolId, request.DisplacedStockLocation);
         return printer is null ? NotFound() : Ok(printer);
     }
 

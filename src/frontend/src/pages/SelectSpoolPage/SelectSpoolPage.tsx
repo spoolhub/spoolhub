@@ -4,8 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import SelectSpoolPanel from '@/components/SelectSpoolPanel'
+import AmsConflictModal from '@/components/AmsConflictModal/AmsConflictModal'
+import { getPrinterImage } from '@/utils/printerImages'
+import { getSlotOccupant } from '@/utils/slotOccupant'
 import type { SpoolResponse } from '@/types/spool'
-import type { PrinterResponse } from '@/types/printer'
+import type { TraySpoolSummary } from '@/types/printer'
 import styles from './SelectSpoolPage.module.css'
 
 export default function SelectSpoolPage() {
@@ -17,10 +20,12 @@ export default function SelectSpoolPage() {
   const amsSlot = amsSlotParam ? Number(amsSlotParam) : null
 
   const [spools, setSpools] = useState<SpoolResponse[]>([])
-  const [printer, setPrinter] = useState<PrinterResponse | null>(null)
+  const [printer, setPrinter] = useState<Awaited<ReturnType<typeof printersApi.getById>> | null>(null)
   const [loading, setLoading] = useState(true)
   const [assigning, setAssigning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pendingSpool, setPendingSpool] = useState<SpoolResponse | null>(null)
+  const [pendingOccupant, setPendingOccupant] = useState<TraySpoolSummary | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -39,22 +44,33 @@ export default function SelectSpoolPage() {
     return () => { cancelled = true }
   }, [printerId])
 
-  const handleSelect = useCallback(async (spool: SpoolResponse) => {
-    if (!printerId || !printer || assigning) return
+  const performAssign = useCallback(async (spool: SpoolResponse, displacedStockLocation?: string) => {
+    if (!printerId || !printer) return
     setAssigning(true)
     setError(null)
     try {
       if (amsSlot != null) {
-        await printersApi.assignTraySpool(printerId, amsSlot, spool.id)
+        await printersApi.assignTraySpool(printerId, amsSlot, spool.id, displacedStockLocation)
       } else {
-        await printersApi.assignExtraSpool(printerId, spool.id)
+        await printersApi.assignExtraSpool(printerId, spool.id, displacedStockLocation)
       }
       navigate(-1)
     } catch {
       setError(t('selectSpool.assignError'))
       setAssigning(false)
     }
-  }, [printerId, printer, amsSlot, assigning, navigate, t])
+  }, [printerId, printer, amsSlot, navigate, t])
+
+  const handleSelect = useCallback(async (spool: SpoolResponse) => {
+    if (!printerId || !printer || assigning) return
+    const occupant = getSlotOccupant(printer, amsSlot, spool.id)
+    if (occupant) {
+      setPendingSpool(spool)
+      setPendingOccupant(occupant)
+      return
+    }
+    await performAssign(spool)
+  }, [printerId, printer, amsSlot, assigning, performAssign])
 
   if (!printer && !loading) {
     return (
@@ -80,6 +96,25 @@ export default function SelectSpoolPage() {
         />
       )}
       <div style={{ height: 70 }} />
+      {pendingSpool && pendingOccupant && printer && (
+        <AmsConflictModal
+          printerImgSrc={getPrinterImage(printer.brand, printer.model)}
+          printerBrand={printer.brand}
+          printerModel={printer.model}
+          traySlot={amsSlot ?? undefined}
+          occupantSpool={pendingOccupant}
+          onCancel={() => {
+            setPendingSpool(null)
+            setPendingOccupant(null)
+          }}
+          onConfirm={(loc) => {
+            const spool = pendingSpool
+            setPendingSpool(null)
+            setPendingOccupant(null)
+            void performAssign(spool, loc)
+          }}
+        />
+      )}
     </div>
   )
 }

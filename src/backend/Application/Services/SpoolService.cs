@@ -177,7 +177,7 @@ public class SpoolService(
         return response;
     }
 
-    public async Task<SpoolResponse?> AssignPrinterAsync(Guid id, Guid? printerId, int? amsSlot)
+    public async Task<SpoolResponse?> AssignPrinterAsync(Guid id, Guid? printerId, int? amsSlot, string? displacedStockLocation = null)
     {
         var spool = await spoolRepository.GetByIdAsync(id);
         if (spool is null) return null;
@@ -200,10 +200,16 @@ public class SpoolService(
                 : await printerRepository.GetByIdAsync(printerId.Value);
             if (printer is null) return null;
 
-            // Deactivate any spool already in the target tray
+            // Unassign any spool already in the target tray / extra slot, then place this one
             var prevSpoolId = amsSlot.HasValue ? GetTraySpoolId(printer, amsSlot.Value) : printer.ExtraSpoolId;
             if (prevSpoolId.HasValue && prevSpoolId != id)
-                await spoolRepository.SetActiveAsync(prevSpoolId.Value, false);
+            {
+                ClearSpoolFromPrinter(printer, prevSpoolId.Value);
+                await spoolRepository.SetActiveAsync(prevSpoolId.Value, false, stockLocation: displacedStockLocation);
+                var prevSpool = await spoolRepository.GetByIdAsync(prevSpoolId.Value);
+                if (prevSpool is not null)
+                    await notifier.SpoolUpdatedAsync(ToResponse(prevSpool));
+            }
 
             if (amsSlot.HasValue)
                 SetTraySpoolId(printer, amsSlot.Value, id);
@@ -263,6 +269,14 @@ public class SpoolService(
     {
         var spool = await spoolRepository.GetByIdAsync(id);
         if (spool is null) return false;
+
+        // Unassign from any printer tray / extra slot before removing the spool row
+        var printer = await printerRepository.GetBySpoolIdAsync(id);
+        if (printer is not null)
+        {
+            ClearSpoolFromPrinter(printer, id);
+            await printerRepository.UpdateAsync(printer);
+        }
 
         var name = SpoolName(spool);
         var snap = SpoolSnapshot(spool);

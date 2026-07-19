@@ -7,6 +7,7 @@ const mockApiClient = vi.hoisted(() => ({
   post: vi.fn(),
   put: vi.fn(),
   delete: vi.fn(),
+  patch: vi.fn(),
 }))
 
 vi.mock('@/api/client', () => ({ apiClient: mockApiClient }))
@@ -91,6 +92,46 @@ describe('printersApi', () => {
       mockApiClient.post.mockResolvedValue({ data: [] })
       await printersApi.verifyCloud({ code: 123456 })
       expect(mockApiClient.post).toHaveBeenCalledWith('/api/printers/cloud/verify', { code: 123456 })
+    })
+  })
+
+  describe('assignTraySpool', () => {
+    it('calls PUT trays endpoint with spoolId', async () => {
+      mockApiClient.put.mockResolvedValue({ data: {} })
+      await printersApi.assignTraySpool('p1', 2, 's1')
+      expect(mockApiClient.put).toHaveBeenCalledWith('/api/printers/p1/trays/2', {
+        spoolId: 's1',
+        displacedStockLocation: null,
+      })
+    })
+
+    it('includes displacedStockLocation when provided', async () => {
+      mockApiClient.put.mockResolvedValue({ data: {} })
+      await printersApi.assignTraySpool('p1', 4, 's2', 'Shelf A')
+      expect(mockApiClient.put).toHaveBeenCalledWith('/api/printers/p1/trays/4', {
+        spoolId: 's2',
+        displacedStockLocation: 'Shelf A',
+      })
+    })
+  })
+
+  describe('assignExtraSpool', () => {
+    it('calls PUT extra-spool with spoolId', async () => {
+      mockApiClient.put.mockResolvedValue({ data: {} })
+      await printersApi.assignExtraSpool('p1', 's1')
+      expect(mockApiClient.put).toHaveBeenCalledWith('/api/printers/p1/extra-spool', {
+        spoolId: 's1',
+        displacedStockLocation: null,
+      })
+    })
+
+    it('includes displacedStockLocation when provided', async () => {
+      mockApiClient.put.mockResolvedValue({ data: {} })
+      await printersApi.assignExtraSpool('p1', 's2', 'Drawer 2')
+      expect(mockApiClient.put).toHaveBeenCalledWith('/api/printers/p1/extra-spool', {
+        spoolId: 's2',
+        displacedStockLocation: 'Drawer 2',
+      })
     })
   })
 })

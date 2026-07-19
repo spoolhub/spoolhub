@@ -11,7 +11,7 @@ import NfcIcon from '@/components/icons/NfcIcon'
 import MaterialTag from '@/components/MaterialTag'
 import { BrandLogo } from '@/components/BrandCard'
 import { getPrinterImage } from '@/utils/printerImages'
-import { getCurrencySymbol } from '@/utils/currency'
+import { getCurrencySymbol, formatCurrency } from '@/utils/currency'
 import AmsConflictModal from '@/components/AmsConflictModal/AmsConflictModal'
 import PrintHistoryList from '@/components/PrintHistory/PrintHistoryList'
 import SpoolEditor from '@/components/SpoolEditor/SpoolEditor'
@@ -79,7 +79,7 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   const [allSpools, setAllSpools] = useState<SpoolResponse[]>([])
   const [conflictSpool, setConflictSpool] = useState<SpoolResponse | null>(null)
-  const [spoolToEvict, setSpoolToEvict] = useState<SpoolResponse | null>(null)
+  const [displacedStockLocation, setDisplacedStockLocation] = useState<string | null>(null)
   const [deactivateConfirm, setDeactivateConfirm] = useState(false)
   const [printerError, setPrinterError] = useState(false)
   const [printerShakeKey, setPrinterShakeKey] = useState(0)
@@ -151,7 +151,7 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
     setStockLocationError(false)
     setDeactivateConfirm(false)
     setConflictSpool(null)
-    setSpoolToEvict(null)
+    setDisplacedStockLocation(null)
   }
 
   function handleBusyTrayClick(slot: number) {
@@ -164,10 +164,6 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
   async function doSave(stockLocationOverride?: string) {
     setSaving(true)
     try {
-      if (spoolToEvict) {
-        await spoolsApi.deactivate(spoolToEvict.id)
-      }
-
       const { isActive: newIsActive, ...otherFields } = form
       const deactivating = newIsActive === false && spool.isActive
       let updated: SpoolResponse = spool
@@ -210,13 +206,17 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
 
       // Assign printer if changed and not deactivating (backend clears it on deactivate)
       if (!deactivating && (selectedPrinterId !== spool.printerId || selectedAmsSlot !== spool.amsSlot)) {
-        updated = await spoolsApi.assignPrinter(spool.id, { printerId: selectedPrinterId, amsSlot: selectedAmsSlot })
+        updated = await spoolsApi.assignPrinter(spool.id, {
+          printerId: selectedPrinterId,
+          amsSlot: selectedAmsSlot,
+          displacedStockLocation: displacedStockLocation || undefined,
+        })
       }
 
       onUpdate(updated)
       setEditing(false)
       setConflictSpool(null)
-      setSpoolToEvict(null)
+      setDisplacedStockLocation(null)
       window.dispatchEvent(new CustomEvent('spools-updated'))
       navigate(-1)
     } finally {
@@ -234,6 +234,23 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
       setStockLocationError(true)
       setStockLocationShakeKey(k => k + 1)
       return
+    }
+    if (form.isActive && selectedPrinterId && !displacedStockLocation) {
+      const targetPrinter = printers.find(p => p.id === selectedPrinterId)
+      if (targetPrinter) {
+        const slot = targetPrinter.hasAms ? selectedAmsSlot : null
+        if (!targetPrinter.hasAms || slot != null) {
+          const occupant = allSpools.find(s => {
+            if (s.id === spool.id || s.printerId !== selectedPrinterId) return false
+            if (slot == null) return s.amsSlot == null
+            return s.amsSlot === slot
+          })
+          if (occupant) {
+            setConflictSpool(occupant)
+            return
+          }
+        }
+      }
     }
     await doSave()
   }
@@ -282,7 +299,7 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
               </div>
               <div className={styles.viewHeaderBadges}>
                 <MaterialTag material={spool.material} />
-                {spool.isActive && <span className={styles.viewStatusBadge}>{t('spoolDetail.statusActive')}</span>}
+                {spool.printerId && <span className={styles.viewStatusBadge}>{t('spoolDetail.statusActive')}</span>}
                 {spool.isArchived && <span className={styles.viewStatusBadge}>{t('spoolDetail.statusArchived')}</span>}
                 {spool.hasNfcTag && (
                   <span className={styles.viewNfcBadge}>
@@ -309,7 +326,7 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
               <div className={`p-5 border-b ${styles.priceBorder}`}>
                 <SectionTitle>{t('spoolForm.sectionPrice')}</SectionTitle>
                 {spool.price != null
-                  ? <p className={`text-sm font-semibold ${styles.priceValue}`}>{getCurrencySymbol(currency)}{spool.price.toFixed(2)}</p>
+                  ? <p className={`text-sm font-semibold ${styles.priceValue}`}>{formatCurrency(spool.price, currency)}</p>
                   : <p className={`text-sm italic ${styles.secondary}`}>{t('spoolDetail.noPrice')}</p>
                 }
               </div>
@@ -572,8 +589,8 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
           if (conflictSpool.amsSlot == null) setSelectedPrinterId(null)
           setConflictSpool(null)
         }}
-        onConfirm={() => {
-          setSpoolToEvict(conflictSpool)
+        onConfirm={(loc) => {
+          setDisplacedStockLocation(loc)
           if (conflictSpool.amsSlot != null) setSelectedAmsSlot(conflictSpool.amsSlot)
           setConflictSpool(null)
         }}

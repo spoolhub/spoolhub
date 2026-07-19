@@ -9,7 +9,9 @@ import { countLoadedAmsTrays, isExtraTrayClickable, isExtraTrayEmptyMqtt, isExtr
 import { SpoolIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/BrandCard'
 import SelectSpoolPanel from '@/components/SelectSpoolPanel'
-import type { PrinterResponse, PrinterStatus } from '@/types/printer'
+import AmsConflictModal from '@/components/AmsConflictModal/AmsConflictModal'
+import { getSlotOccupant } from '@/utils/slotOccupant'
+import type { PrinterResponse, PrinterStatus, TraySpoolSummary } from '@/types/printer'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrintJobResponse } from '@/types/printJob'
 import styles from './PrinterDrawer.module.css'
@@ -70,6 +72,8 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
   const [assigningExtra, setAssigningExtra] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
+  const [pendingSpool, setPendingSpool] = useState<SpoolResponse | null>(null)
+  const [pendingOccupant, setPendingOccupant] = useState<TraySpoolSummary | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -113,16 +117,16 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
     setAssigningSlot(null)
   }
 
-  const handleSelectSpool = async (spool: SpoolResponse) => {
+  const performAssign = async (spool: SpoolResponse, displacedStockLocation?: string) => {
     if (assigning) return
     setAssigning(true)
     setAssignError(null)
     try {
       if (assigningSlot !== null) {
-        await printersApi.assignTraySpool(printer.id, assigningSlot + 1, spool.id)
+        await printersApi.assignTraySpool(printer.id, assigningSlot + 1, spool.id, displacedStockLocation)
         setAssigningSlot(null)
       } else {
-        await printersApi.assignExtraSpool(printer.id, spool.id)
+        await printersApi.assignExtraSpool(printer.id, spool.id, displacedStockLocation)
         setAssigningExtra(false)
       }
       onTrayAssigned?.()
@@ -131,6 +135,18 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
     } finally {
       setAssigning(false)
     }
+  }
+
+  const handleSelectSpool = async (spool: SpoolResponse) => {
+    if (assigning) return
+    const slot = assigningSlot !== null ? assigningSlot + 1 : null
+    const occupant = getSlotOccupant(printer, slot, spool.id)
+    if (occupant) {
+      setPendingSpool(spool)
+      setPendingOccupant(occupant)
+      return
+    }
+    await performAssign(spool)
   }
 
   const showPicker = assigningSlot !== null || assigningExtra
@@ -386,6 +402,25 @@ export default function PrinterDrawer({ printer, spools, status, onClose, onSpoo
         </div>
         )}
       </aside>
+      {pendingSpool && pendingOccupant && (
+        <AmsConflictModal
+          printerImgSrc={imgSrc}
+          printerBrand={printer.brand}
+          printerModel={printer.model}
+          traySlot={assigningSlot !== null ? assigningSlot + 1 : undefined}
+          occupantSpool={pendingOccupant}
+          onCancel={() => {
+            setPendingSpool(null)
+            setPendingOccupant(null)
+          }}
+          onConfirm={(loc) => {
+            const spool = pendingSpool
+            setPendingSpool(null)
+            setPendingOccupant(null)
+            void performAssign(spool, loc)
+          }}
+        />
+      )}
     </>
   )
 }
