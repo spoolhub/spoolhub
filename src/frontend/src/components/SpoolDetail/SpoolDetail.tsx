@@ -11,7 +11,7 @@ import NfcIcon from '@/components/icons/NfcIcon'
 import MaterialTag from '@/components/MaterialTag'
 import { BrandLogo } from '@/components/BrandCard'
 import { getPrinterImage } from '@/utils/printerImages'
-import { getCurrencySymbol, formatCurrency } from '@/utils/currency'
+import { formatCurrency } from '@/utils/currency'
 import AmsConflictModal from '@/components/AmsConflictModal/AmsConflictModal'
 import PrintHistoryList from '@/components/PrintHistory/PrintHistoryList'
 import SpoolEditor from '@/components/SpoolEditor/SpoolEditor'
@@ -521,10 +521,10 @@ export default function SpoolDetail({ spool, jobs, onUpdate, onDelete }: SpoolDe
             setSelectedPrinterId(v)
             if (v) setPrinterError(false)
             if (!v) setSelectedAmsSlot(null)
-            setSpoolToEvict(null)
+            setConflictSpool(null)
           }}
           amsSlot={selectedAmsSlot}
-          onAmsSlotChange={slot => { setSelectedAmsSlot(slot); if (!slot) setSpoolToEvict(null) }}
+          onAmsSlotChange={slot => { setSelectedAmsSlot(slot); if (!slot) setConflictSpool(null) }}
           occupiedSlots={trayOccupants}
           currentSpoolColor={spool.colorHex}
           printerError={printerError}

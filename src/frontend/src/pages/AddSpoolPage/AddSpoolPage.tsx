@@ -1071,7 +1071,7 @@ export default function AddSpoolPage() {
               </button>
               <button
                 className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={handleSubmit}
+                onClick={() => void handleSubmit()}
                 disabled={saving || !placementValid}
                 title={placementValid ? undefined
                   : selectedPrinter?.hasAms ? 'Choose an AMS slot first'
