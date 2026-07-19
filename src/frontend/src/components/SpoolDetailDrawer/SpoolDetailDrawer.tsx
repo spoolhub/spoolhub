@@ -104,13 +104,13 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
     return getSlotOccupant(editPrinter, slot, spool.id)
   }, [editMode, editForm.isLoadedInPrinter, editForm.amsSlot, editPrinter, spool.id])
 
-  useEffect(() => {
+  function resetDisplaceUi() {
     setShowMismatchConfirm(false)
     setDisplacedStockLocation('')
     setDisplacedLocationError(false)
     setShowAddDisplacedLocation(false)
     setNewDisplacedLocation('')
-  }, [editForm.isLoadedInPrinter, editForm.printerId, editForm.amsSlot])
+  }
 
   useEffect(() => {
     locationsApi.getAll()
@@ -524,12 +524,12 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           <div className={styles.placementSection}>
             <div className={styles.fsec}>Placement</div>
             <div className={styles.placementToggle}>
-              <button className={!f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setEditForm(p => ({ ...p, isLoadedInPrinter: false, printerId: null, amsSlot: null }))}>In stock</button>
-              <button className={f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setEditForm(p => ({ ...p, isLoadedInPrinter: true, amsSlot: null }))}>Loaded in printer</button>
+              <button className={!f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, isLoadedInPrinter: false, printerId: null, amsSlot: null })) }}>In stock</button>
+              <button className={f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, isLoadedInPrinter: true, amsSlot: null })) }}>Loaded in printer</button>
             </div>
             {f.isLoadedInPrinter && (<>
               <div className={styles.ff}><label>Printer</label>
-                <select value={f.printerId ?? ''} onChange={e => setEditForm(p => ({ ...p, printerId: e.target.value || null }))}>
+                <select value={f.printerId ?? ''} onChange={e => { resetDisplaceUi(); setEditForm(p => ({ ...p, printerId: e.target.value || null, amsSlot: null })) }}>
                   <option value="">Select printer</option>
                   {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
                 </select>
@@ -569,7 +569,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                                 type="button"
                                 title={isOtherOccupant ? `${occupant!.colorName} — ${occupant!.brand} ${occupant!.material}` : undefined}
                                 className={`${styles.slotTile}${isSel && !isAssigningToEmptySlot ? ' ' + styles.slotTileSel : ''}${!occupant && !isSel ? ' ' + styles.slotTileEmpty : ''}${isOtherOccupant && !isSel ? ' ' + styles.slotTileBusy : ''}${isEmptyReported ? ' ' + styles.slotTileEmptyReport : ''}${isSel && trayMismatch ? ' ' + styles.slotTileMismatch : ''}${isSel && isAssigningToEmptySlot ? ' ' + styles.slotTileReserve : ''}`}
-                                onClick={() => setEditForm(p => ({ ...p, amsSlot: isSel ? null : slot }))}
+                                onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, amsSlot: isSel ? null : slot })) }}
                               >
                                 {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
                                 <span className={styles.slotNum}>{slot}</span>

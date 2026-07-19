@@ -136,13 +136,13 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
     return getSlotOccupant(selectedPrinter, slot, spool.id)
   }, [isLoadedInPrinter, selectedPrinter, amsSlot, spool.id])
 
-  useEffect(() => {
+  function resetDisplaceUi() {
     setShowMismatchConfirm(false)
     setDisplacedStockLocation('')
     setDisplacedLocationError(false)
     setShowAddDisplacedLocation(false)
     setNewDisplacedLocation('')
-  }, [isLoadedInPrinter, printerId, amsSlot])
+  }
 
   async function executeAssign() {
     setSaving(true)
@@ -430,14 +430,22 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                 <button
                   type="button"
                   className={!isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
-                  onClick={() => { setIsLoadedInPrinter(false); setPrinterId(null); setAmsSlot(null) }}
+                  onClick={() => {
+                    resetDisplaceUi()
+                    setIsLoadedInPrinter(false)
+                    setPrinterId(null)
+                    setAmsSlot(null)
+                  }}
                 >
                   {t('scan.inStock')}
                 </button>
                 <button
                   type="button"
                   className={isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
-                  onClick={() => setIsLoadedInPrinter(true)}
+                  onClick={() => {
+                    resetDisplaceUi()
+                    setIsLoadedInPrinter(true)
+                  }}
                 >
                   {t('scan.loadedInPrinter')}
                 </button>
@@ -448,7 +456,11 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                   <label>{t('spoolForm.assignedPrinter')}</label>
                   <select
                     value={printerId ?? ''}
-                    onChange={e => { setPrinterId(e.target.value || null); setAmsSlot(null) }}
+                    onChange={e => {
+                      resetDisplaceUi()
+                      setPrinterId(e.target.value || null)
+                      setAmsSlot(null)
+                    }}
                   >
                     <option value="">{t('spoolForm.noPrinter')}</option>
                     {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
@@ -489,7 +501,10 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                                     type="button"
                                     title={isOtherOccupant ? `${occupant!.colorName} — ${occupant!.brand} ${occupant!.material}` : undefined}
                                     className={`${styles.slotTile}${isSel && !isAssigningToEmptySlot ? ` ${styles.slotTileSel}` : ''}${!occupant && !isSel ? ` ${styles.slotTileEmpty}` : ''}${isOtherOccupant && !isSel ? ` ${styles.slotTileBusy}` : ''}${isEmptyReported ? ` ${styles.slotTileEmptyReport}` : ''}${isSel && trayMismatch ? ` ${styles.slotTileMismatch}` : ''}${isSel && isAssigningToEmptySlot ? ` ${styles.slotTileReserve}` : ''}`}
-                                    onClick={() => setAmsSlot(isSel ? null : slot)}
+                                    onClick={() => {
+                                      resetDisplaceUi()
+                                      setAmsSlot(isSel ? null : slot)
+                                    }}
                                   >
                                     {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
                                     <span className={styles.slotNum}>{slot}</span>

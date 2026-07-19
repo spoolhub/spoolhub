@@ -547,10 +547,10 @@ export default function AddSpoolPage() {
     }
   }, [state, saving, placementValid, navigate, linkedTagUids, curWeight, initWeight, selectedPrinter, displacedStockLocation])
 
-  useEffect(() => {
+  function clearDisplace() {
     setPendingDisplace(null)
     setDisplacedStockLocation(null)
-  }, [state.printer, state.slot, state.place])
+  }
 
   const backFromPick = useCallback(() => {
     if (state.mode === 'nfc') {
@@ -935,9 +935,9 @@ export default function AddSpoolPage() {
             <div className={styles.sectionLabel}>Placement</div>
             <div className={styles.segGroup}>
               <button className={state.place === 'stock' ? styles.on : ''} data-t="stock"
-                onClick={() => setState(s => ({ ...s, place: 'stock' }))}>In stock</button>
+                onClick={() => { clearDisplace(); setState(s => ({ ...s, place: 'stock' })) }}>In stock</button>
               <button className={state.place === 'printer' ? styles.on : ''} data-t="printer"
-                onClick={() => setState(s => ({ ...s, place: 'printer' }))}>Loaded in printer</button>
+                onClick={() => { clearDisplace(); setState(s => ({ ...s, place: 'printer' })) }}>Loaded in printer</button>
             </div>
 
             {state.place === 'stock' && (
@@ -1004,7 +1004,7 @@ export default function AddSpoolPage() {
               <>
                 <div className={styles.field}>
                   <label>Printer</label>
-                  <select value={state.printer} onChange={e => setState(s => ({ ...s, printer: e.target.value, slot: null }))}>
+                  <select value={state.printer} onChange={e => { clearDisplace(); setState(s => ({ ...s, printer: e.target.value, slot: null })) }}>
                     <option value="">Select printer…</option>
                     {printers.map(p => (
                       <option key={p.id} value={p.id}>{p.name || p.model || p.id}</option>
@@ -1040,7 +1040,7 @@ export default function AddSpoolPage() {
                                     }
                                     return (
                                       <div key={i} className={`${styles.slotTile} ${styles.empty}${sel ? ` ${styles['on']}` : ''}`}
-                                        onClick={() => setState(s => ({ ...s, slot: n }))}>
+                                        onClick={() => { clearDisplace(); setState(s => ({ ...s, slot: n })) }}>
                                         {sel && <span className={styles.slotHere}>Goes here</span>}
                                         <span className={styles.slotNum}>{n}</span>
                                         <div className={styles.slotIcon} dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />
