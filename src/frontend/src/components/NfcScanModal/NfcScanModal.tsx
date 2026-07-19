@@ -9,6 +9,7 @@ import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
 import { isTrayEmptyMqtt } from '@/utils/printerAms'
+import { getSlotOccupant } from '@/utils/slotOccupant'
 import {
   selectTrayHintLabel,
   spoolMismatchesTrayReport,
@@ -65,6 +66,11 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   const [saving, setSaving] = useState(false)
   const [assignedWaitingLoad, setAssignedWaitingLoad] = useState(false)
   const [showMismatchConfirm, setShowMismatchConfirm] = useState(false)
+  const [displacedStockLocation, setDisplacedStockLocation] = useState('')
+  const [displacedLocationError, setDisplacedLocationError] = useState(false)
+  const [displacedLocationShakeKey, setDisplacedLocationShakeKey] = useState(0)
+  const [showAddDisplacedLocation, setShowAddDisplacedLocation] = useState(false)
+  const [newDisplacedLocation, setNewDisplacedLocation] = useState('')
 
   useEffect(() => {
     printersApi.getAll().then(setPrinters).catch(() => {})
@@ -123,13 +129,34 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
     }
   }, [isLoadedInPrinter, selectedPrinter, amsSlot, spool])
 
+  const displacedOccupant = useMemo(() => {
+    if (!isLoadedInPrinter || !selectedPrinter) return null
+    const slot = selectedPrinter.hasAms ? amsSlot : null
+    if (selectedPrinter.hasAms && slot == null) return null
+    return getSlotOccupant(selectedPrinter, slot, spool.id)
+  }, [isLoadedInPrinter, selectedPrinter, amsSlot, spool.id])
+
+  function resetDisplaceUi() {
+    setShowMismatchConfirm(false)
+    setDisplacedStockLocation('')
+    setDisplacedLocationError(false)
+    setShowAddDisplacedLocation(false)
+    setNewDisplacedLocation('')
+  }
+
   async function executeAssign() {
     setSaving(true)
     try {
       await spoolsApi.activate(spool.id)
       if (isLoadedInPrinter && printerId) {
-        await spoolsApi.assignPrinter(spool.id, { printerId, amsSlot })
+        await spoolsApi.assignPrinter(spool.id, {
+          printerId,
+          amsSlot: selectedPrinter?.hasAms ? (amsSlot ?? 1) : null,
+          displacedStockLocation: displacedStockLocation.trim() || undefined,
+        })
         setShowMismatchConfirm(false)
+        setDisplacedStockLocation('')
+        setDisplacedLocationError(false)
         setAssignedWaitingLoad(isAssigningToEmptySlot)
         setStep('done')
       } else {
@@ -144,11 +171,98 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
   }
 
   async function handleActivate() {
-    if (trayMismatch) {
+    if (displacedOccupant && !displacedStockLocation.trim()) {
+      setDisplacedLocationError(true)
+      setDisplacedLocationShakeKey(k => k + 1)
+      return
+    }
+    if (trayMismatch && !showMismatchConfirm) {
       setShowMismatchConfirm(true)
       return
     }
     await executeAssign()
+  }
+
+  function renderOccupantAlert(alertMessage: string) {
+    if (!displacedOccupant) return null
+    return (
+      <div className={styles.occupantAlert} role="alert">
+        <div className={styles.occupantAlertHead}>
+          <InfoCircleIcon className={styles.slotNoteIcon} />
+          <span>{alertMessage}</span>
+        </div>
+        <div className={styles.occupantPreview}>
+          <SpoolIcon color={displacedOccupant.colorHex} size={36} />
+          <div>
+            <p className={styles.occupantLabel}>{t('spoolForm.currentlyLoaded')}</p>
+            <p className={styles.occupantName}>{displacedOccupant.colorName}</p>
+            <p className={styles.occupantMeta}>{displacedOccupant.brand} · {displacedOccupant.material}</p>
+          </div>
+        </div>
+        <div
+          key={displacedLocationShakeKey}
+          className={`${styles.ff}${displacedLocationError ? ` ${styles.locationFieldError} ${styles.shake}` : ''}`}
+          style={{ margin: 0 }}
+          onAnimationEnd={() => setDisplacedLocationError(false)}
+        >
+          <label>{t('amsConflict.storeWhere')}</label>
+          <select
+            className={displacedLocationError ? styles.locationErrorSelect : undefined}
+            value={showAddDisplacedLocation ? '__add_new' : displacedStockLocation}
+            onChange={e => {
+              if (e.target.value === '__add_new') {
+                setShowAddDisplacedLocation(true)
+                setDisplacedLocationError(false)
+              } else {
+                setShowAddDisplacedLocation(false)
+                setDisplacedStockLocation(e.target.value)
+                setDisplacedLocationError(false)
+              }
+            }}
+          >
+            <option value="">{t('amsConflict.selectLocation')}</option>
+            {dbLocations.map(l => <option key={l} value={l}>{l}</option>)}
+            {customLocations.filter(l => !dbLocations.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
+            <option value="__add_new">{t('amsConflict.addNewLocation')}</option>
+          </select>
+          {showAddDisplacedLocation && (
+            <div className={styles.addWrap}>
+              <input
+                type="text"
+                placeholder={t('amsConflict.enterNewLocation')}
+                value={newDisplacedLocation}
+                onChange={e => setNewDisplacedLocation(e.target.value)}
+                autoFocus
+              />
+              <button type="button" className={styles.btnCancel} onClick={() => { setShowAddDisplacedLocation(false); setNewDisplacedLocation('') }}>×</button>
+            </div>
+          )}
+          {showAddDisplacedLocation && (
+            <button
+              type="button"
+              className={styles.btnAdd}
+              disabled={!newDisplacedLocation.trim()}
+              onClick={() => {
+                const loc = newDisplacedLocation.trim()
+                if (!loc) return
+                if (!customLocations.includes(loc) && !dbLocations.includes(loc)) {
+                  setCustomLocations(prev => [...prev, loc])
+                }
+                setDisplacedStockLocation(loc)
+                setDisplacedLocationError(false)
+                setShowAddDisplacedLocation(false)
+                setNewDisplacedLocation('')
+              }}
+            >
+              {t('common.add')} &quot;{newDisplacedLocation.trim()}&quot;
+            </button>
+          )}
+          {displacedLocationError && (
+            <p className={styles.occupantHint}>{t('amsConflict.locationRequired')}</p>
+          )}
+        </div>
+      </div>
+    )
   }
 
   function handleDoneClose() {
@@ -316,14 +430,22 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                 <button
                   type="button"
                   className={!isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
-                  onClick={() => { setIsLoadedInPrinter(false); setPrinterId(null); setAmsSlot(null) }}
+                  onClick={() => {
+                    resetDisplaceUi()
+                    setIsLoadedInPrinter(false)
+                    setPrinterId(null)
+                    setAmsSlot(null)
+                  }}
                 >
                   {t('scan.inStock')}
                 </button>
                 <button
                   type="button"
                   className={isLoadedInPrinter ? `${styles.placementBtn} ${styles.placementBtnOn}` : styles.placementBtn}
-                  onClick={() => setIsLoadedInPrinter(true)}
+                  onClick={() => {
+                    resetDisplaceUi()
+                    setIsLoadedInPrinter(true)
+                  }}
                 >
                   {t('scan.loadedInPrinter')}
                 </button>
@@ -334,7 +456,11 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                   <label>{t('spoolForm.assignedPrinter')}</label>
                   <select
                     value={printerId ?? ''}
-                    onChange={e => { setPrinterId(e.target.value || null); setAmsSlot(null) }}
+                    onChange={e => {
+                      resetDisplaceUi()
+                      setPrinterId(e.target.value || null)
+                      setAmsSlot(null)
+                    }}
                   >
                     <option value="">{t('spoolForm.noPrinter')}</option>
                     {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
@@ -358,16 +484,27 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                             <p className={styles.slotLabel}>{t('spoolForm.chooseAmsSlot')}</p>
                             <div className={styles.slotPick}>
                               {[1, 2, 3, 4].map(slot => {
-                                const occupant = traySlotMap[slot]
+                                const rawOccupant = traySlotMap[slot]
+                                const isVacating = !!rawOccupant && rawOccupant.id === spool.id
+                                  && amsSlot != null && amsSlot !== slot
+                                const occupant = isVacating ? null : rawOccupant
                                 const isSel = amsSlot === slot
+                                const isOtherOccupant = !!occupant && occupant.id !== spool.id
+                                const isEmptyReported = !isSel && !occupant && isTrayEmptyMqtt(trayOccupiedMap[slot])
                                 const colorHex = isSel ? spool.colorHex : occupant?.colorHex
-                                const name = isSel ? spool.colorName : occupant?.colorName ?? t('spoolForm.slotEmpty')
+                                const name = isSel
+                                  ? spool.colorName
+                                  : (occupant?.colorName ?? t('spoolForm.slotEmpty'))
                                 return (
                                   <button
                                     key={slot}
                                     type="button"
-                                    className={`${styles.slotTile}${isSel ? ` ${styles.slotTileSel}` : ''}${!occupant && !isSel ? ` ${styles.slotTileEmpty}` : ''}`}
-                                    onClick={() => setAmsSlot(isSel ? null : slot)}
+                                    title={isOtherOccupant ? `${occupant!.colorName} — ${occupant!.brand} ${occupant!.material}` : undefined}
+                                    className={`${styles.slotTile}${isSel && !isAssigningToEmptySlot ? ` ${styles.slotTileSel}` : ''}${!occupant && !isSel ? ` ${styles.slotTileEmpty}` : ''}${isOtherOccupant && !isSel ? ` ${styles.slotTileBusy}` : ''}${isEmptyReported ? ` ${styles.slotTileEmptyReport}` : ''}${isSel && trayMismatch ? ` ${styles.slotTileMismatch}` : ''}${isSel && isAssigningToEmptySlot ? ` ${styles.slotTileReserve}` : ''}`}
+                                    onClick={() => {
+                                      resetDisplaceUi()
+                                      setAmsSlot(isSel ? null : slot)
+                                    }}
                                   >
                                     {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
                                     <span className={styles.slotNum}>{slot}</span>
@@ -379,10 +516,11 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                                 )
                               })}
                             </div>
-                            {amsSlot != null && traySlotMap[amsSlot] && (
+                            {renderOccupantAlert(t('spoolForm.slotOccupiedAlert'))}
+                            {amsSlot != null && traySlotMap[amsSlot]?.id === spool.id && (
                               <div className={styles.slotNote}>
                                 <InfoCircleIcon className={styles.slotNoteIcon} />
-                                {amsSlot === spool.amsSlot ? 'Already assigned to this slot' : t('spoolForm.slotOccupied')}
+                                Already assigned to this slot
                               </div>
                             )}
                             {isAssigningToEmptySlot && (
@@ -399,13 +537,18 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
                             )}
                           </>
                         ) : (
-                          <div className={styles.singleSlot}>
-                            <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex} size={28} /></span>
-                            <div>
-                              <p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p>
-                              <p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p>
-                            </div>
-                          </div>
+                          <>
+                            {!displacedOccupant && (
+                              <div className={styles.singleSlot}>
+                                <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex} size={28} /></span>
+                                <div>
+                                  <p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p>
+                                  <p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p>
+                                </div>
+                              </div>
+                            )}
+                            {renderOccupantAlert(t('spoolForm.printerOccupiedAlert'))}
+                          </>
                         )}
                         {trayMismatch && !selectedPrinter.hasAms && (
                           <div className={`${styles.slotNote} ${styles.slotNoteWarn}`}>

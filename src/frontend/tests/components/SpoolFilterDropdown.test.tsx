@@ -53,11 +53,11 @@ describe('SpoolFilterDropdown', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ materials: ['PLA'] }))
   })
 
-  it('calls onChange when Active only checked', () => {
+  it('calls onChange when Loaded only checked', () => {
     const onChange = vi.fn()
     renderDropdown(DEFAULT_FILTERS, onChange)
     fireEvent.click(screen.getByLabelText('Filter spools'))
-    fireEvent.click(screen.getByLabelText('Active only'))
+    fireEvent.click(screen.getByLabelText('Loaded only'))
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ activeOnly: true }))
   })
 

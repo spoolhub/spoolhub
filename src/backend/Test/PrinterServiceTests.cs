@@ -93,6 +93,72 @@ public class PrinterServiceTests
     }
 
     [Fact]
+    public async Task DeleteAsync_WhenPrinterHasAssignedSpools_DeactivatesThem()
+    {
+        var traySpoolId = Guid.NewGuid();
+        var extraSpoolId = Guid.NewGuid();
+        var printer = BuildPrinter();
+        printer.HasAms = true;
+        printer.Tray1SpoolId = traySpoolId;
+        printer.ExtraSpoolId = extraSpoolId;
+        _repo.GetByIdAsync(printer.Id).Returns(printer);
+
+        var result = await _sut.DeleteAsync(printer.Id);
+
+        Assert.True(result);
+        await _spoolRepo.Received(1).SetActiveAsync(traySpoolId, false);
+        await _spoolRepo.Received(1).SetActiveAsync(extraSpoolId, false);
+        await _repo.Received(1).DeleteAsync(printer.Id);
+    }
+
+    [Fact]
+    public async Task AssignTraySpoolAsync_WhenSlotOccupied_UnassignsPreviousAndAssignsNew()
+    {
+        var previousId = Guid.NewGuid();
+        var incomingId = Guid.NewGuid();
+        var printer = BuildPrinter();
+        printer.HasAms = true;
+        printer.Tray3SpoolId = previousId;
+        _repo.GetByIdAsync(printer.Id).Returns(printer);
+        _repo.UpdateAsync(Arg.Any<Printer>()).Returns(x => x.Arg<Printer>());
+        _repo.GetBySpoolIdAsync(incomingId).Returns((Printer?)null);
+        _spoolRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>()).Returns([
+            new Spool { Id = incomingId, Brand = "Bambu", Material = "PLA", ColorName = "Red", ColorHex = "#F00", InitialWeightG = 1000, CurrentWeightG = 1000, CreatedAt = DateTime.UtcNow },
+            new Spool { Id = previousId, Brand = "Bambu", Material = "PLA", ColorName = "Blue", ColorHex = "#00F", InitialWeightG = 1000, CurrentWeightG = 1000, CreatedAt = DateTime.UtcNow },
+        ]);
+
+        var result = await _sut.AssignTraySpoolAsync(printer.Id, 3, incomingId, "Drawer 1");
+
+        Assert.NotNull(result);
+        Assert.Equal(incomingId, printer.Tray3SpoolId);
+        await _spoolRepo.Received(1).SetActiveAsync(previousId, false, false, "Drawer 1");
+        await _spoolRepo.Received(1).SetActiveAsync(incomingId, true, true);
+    }
+
+    [Fact]
+    public async Task AssignExtraSpoolAsync_WhenOccupied_UnassignsPreviousWithStockLocation()
+    {
+        var previousId = Guid.NewGuid();
+        var incomingId = Guid.NewGuid();
+        var printer = BuildPrinter();
+        printer.ExtraSpoolId = previousId;
+        _repo.GetByIdAsync(printer.Id).Returns(printer);
+        _repo.UpdateAsync(Arg.Any<Printer>()).Returns(x => x.Arg<Printer>());
+        _repo.GetBySpoolIdAsync(incomingId).Returns((Printer?)null);
+        _spoolRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>()).Returns([
+            new Spool { Id = incomingId, Brand = "Bambu", Material = "PLA", ColorName = "Red", ColorHex = "#F00", InitialWeightG = 1000, CurrentWeightG = 1000, CreatedAt = DateTime.UtcNow },
+            new Spool { Id = previousId, Brand = "Bambu", Material = "PLA", ColorName = "Blue", ColorHex = "#00F", InitialWeightG = 1000, CurrentWeightG = 1000, CreatedAt = DateTime.UtcNow },
+        ]);
+
+        var result = await _sut.AssignExtraSpoolAsync(printer.Id, incomingId, "Shelf C");
+
+        Assert.NotNull(result);
+        Assert.Equal(incomingId, printer.ExtraSpoolId);
+        await _spoolRepo.Received(1).SetActiveAsync(previousId, false, false, "Shelf C");
+        await _spoolRepo.Received(1).SetActiveAsync(incomingId, true, true);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenNotFound_ReturnsFalse()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((Printer?)null);

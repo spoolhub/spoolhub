@@ -163,6 +163,44 @@ public class PrinterControllerTests
         Assert.Equal(expectedGcodeState, status.GcodeState);
     }
 
+    [Fact]
+    public async Task AssignTraySpool_ForwardsDisplacedStockLocation()
+    {
+        var id = Guid.NewGuid();
+        var spoolId = Guid.NewGuid();
+        var response = BuildResponse();
+        _service.AssignTraySpoolAsync(id, 2, spoolId, "Drawer 1").Returns(response);
+
+        var result = await _sut.AssignTraySpool(id, 2, new AssignTraySpoolRequest(spoolId, "Drawer 1"));
+
+        Assert.IsType<OkObjectResult>(result);
+        await _service.Received(1).AssignTraySpoolAsync(id, 2, spoolId, "Drawer 1");
+    }
+
+    [Fact]
+    public async Task AssignTraySpool_WhenSlotOutOfRange_ReturnsBadRequest()
+    {
+        var result = await _sut.AssignTraySpool(Guid.NewGuid(), 5, new AssignTraySpoolRequest(Guid.NewGuid()));
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        await _service.DidNotReceive().AssignTraySpoolAsync(
+            Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<Guid?>(), Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task AssignExtraSpool_ForwardsDisplacedStockLocation()
+    {
+        var id = Guid.NewGuid();
+        var spoolId = Guid.NewGuid();
+        var response = BuildResponse();
+        _service.AssignExtraSpoolAsync(id, spoolId, "Shelf C").Returns(response);
+
+        var result = await _sut.AssignExtraSpool(id, new AssignTraySpoolRequest(spoolId, "Shelf C"));
+
+        Assert.IsType<OkObjectResult>(result);
+        await _service.Received(1).AssignExtraSpoolAsync(id, spoolId, "Shelf C");
+    }
+
     private static PrinterResponse BuildResponse() => new(
         Guid.NewGuid(), "My Printer", "Bambu Lab", "X1 Carbon",
         "ABC123", "192.168.1.100", null, "mqtt_lan", false, DateTime.UtcNow,

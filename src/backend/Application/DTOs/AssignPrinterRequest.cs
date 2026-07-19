@@ -1,3 +1,3 @@
 namespace Application.DTOs;
 
-public record AssignPrinterRequest(Guid? PrinterId, int? AmsSlot);
+public record AssignPrinterRequest(Guid? PrinterId, int? AmsSlot, string? DisplacedStockLocation = null);

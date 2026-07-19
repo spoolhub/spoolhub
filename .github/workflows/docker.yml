@@ -42,7 +42,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.event_name == 'release' }}
 
       - name: Build image
         uses: docker/build-push-action@v6

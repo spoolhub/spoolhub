@@ -133,6 +133,34 @@ public class SpoolControllerTests
     }
 
     [Fact]
+    public async Task AssignPrinter_ForwardsDisplacedStockLocation()
+    {
+        var id = Guid.NewGuid();
+        var printerId = Guid.NewGuid();
+        var response = BuildResponse(isActive: true) with { PrinterId = printerId, PrinterName = "X1C", AmsSlot = 2 };
+        _service.AssignPrinterAsync(id, printerId, 2, "Shelf B").Returns(response);
+
+        var result = await _sut.AssignPrinter(id, new AssignPrinterRequest(printerId, 2, "Shelf B"));
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(response, ok.Value);
+        await _service.Received(1).AssignPrinterAsync(id, printerId, 2, "Shelf B");
+        await _alertService.Received(1).NotifySpoolAssignedAsync(
+            response.Brand, response.Material, response.ColorName, response.ColorHex, "X1C");
+    }
+
+    [Fact]
+    public async Task AssignPrinter_WhenNotFound_ReturnsNotFound()
+    {
+        _service.AssignPrinterAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<int?>(), Arg.Any<string?>())
+            .Returns((SpoolResponse?)null);
+
+        var result = await _sut.AssignPrinter(Guid.NewGuid(), new AssignPrinterRequest(Guid.NewGuid(), 1, null));
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
     public async Task DeleteSpool_WhenFound_ReturnsNoContent()
     {
         var id = Guid.NewGuid();

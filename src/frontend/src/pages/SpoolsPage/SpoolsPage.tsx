@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
@@ -8,12 +8,16 @@ import SpoolProfileCard from '@/components/SpoolProfileCard'
 import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
 import Pagination from '@/components/Pagination'
 import NotificationBell from '@/components/NotificationBell'
+import { useNfcHub } from '@/hooks/useNfcHub'
+import { usePrinterHub } from '@/hooks/usePrinterHub'
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse } from '@/types/printer'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import { spoolProfilesApi } from '@/api/spoolProfiles'
 import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
+import { settingsApi } from '@/api/settings'
+import { formatCurrency } from '@/utils/currency'
 import styles from './SpoolsPage.module.css'
 
 function NfcBadge({ label }: { label: string }) {
@@ -64,16 +68,43 @@ export default function SpoolsPage() {
   const [profiles, setProfiles] = useState<SpoolProfileResponse[]>([])
   const [profilesLoading, setProfilesLoading] = useState(false)
   const [editingProfile, setEditingProfile] = useState<SpoolProfileResponse | null>(null)
+  const [currency, setCurrency] = useState('USD')
 
   const isProfileView = activeFilter === 'profile'
 
-  useEffect(() => {
+  const refreshData = useCallback(() => {
     spoolsApi.getAll().then(data => {
       setSpools(data)
-      setLoading(false)
-    }).catch(() => setLoading(false))
+      setSelected(prev => (prev ? data.find(s => s.id === prev.id) ?? null : null))
+    }).catch(() => {})
     printersApi.getAll().then(setPrinters).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    spoolsApi.getAll().then(data => {
+      if (cancelled) return
+      setSpools(data)
+      setLoading(false)
+    }).catch(() => { if (!cancelled) setLoading(false) })
+    printersApi.getAll().then(data => { if (!cancelled) setPrinters(data) }).catch(() => {})
+    settingsApi.getApp().then(s => { if (!cancelled && s.currency) setCurrency(s.currency) }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  // Live updates from SignalR / other pages (NFC assign, printers, drawer elsewhere)
+  const handleSpoolUpdated = useCallback(() => { refreshData() }, [refreshData])
+  useNfcHub(() => {}, handleSpoolUpdated)
+  usePrinterHub(event => {
+    if (event.spoolsChanged) refreshData()
+    else printersApi.getAll().then(setPrinters).catch(() => {})
+  })
+
+  useEffect(() => {
+    const onSpoolsUpdated = () => refreshData()
+    window.addEventListener('spools-updated', onSpoolsUpdated)
+    return () => window.removeEventListener('spools-updated', onSpoolsUpdated)
+  }, [refreshData])
 
   // Deep link: /spools/:id opens the detail drawer for that spool
   const urlSpool = useMemo(
@@ -283,7 +314,7 @@ export default function SpoolsPage() {
                             <td className={styles.stblMat}>{s.material}</td>
                             <td className={styles.stblCur}>{s.currentWeightG}g</td>
                             <td>{s.initialWeightG}g</td>
-                            <td>{s.price !== null ? `${s.price.toFixed(2)} SEK` : '-'}</td>
+                            <td>{s.price !== null ? formatCurrency(s.price, currency) : '-'}</td>
                             <td className={styles.stblLoc}>{locationLabel(s)}</td>
                             <td className={styles.stblUsed}>{formatRelativeTime(s.lastScannedAt)}</td>
                             <td className={styles.stblTemp}>{nozzleRange}</td>
@@ -331,11 +362,13 @@ export default function SpoolsPage() {
           onUpdated={updated => {
             setSpools(prev => prev.map(s => s.id === updated.id ? updated : s))
             setSelected(updated)
+            window.dispatchEvent(new CustomEvent('spools-updated'))
           }}
           onDeleted={id => {
             setSpools(prev => prev.filter(s => s.id !== id))
             setSelected(null)
             if (spoolIdParam) navigate('/spools', { replace: true })
+            window.dispatchEvent(new CustomEvent('spools-updated'))
           }}
         />
       )}

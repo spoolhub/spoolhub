@@ -10,7 +10,7 @@ public interface ISpoolService
     Task<SpoolResponse?> ActivateAsync(Guid id);
     Task<SpoolResponse?> DeactivateAsync(Guid id);
     Task<SpoolResponse?> UpdateAsync(Guid id, UpdateSpoolRequest request);
-    Task<SpoolResponse?> AssignPrinterAsync(Guid id, Guid? printerId, int? amsSlot);
+    Task<SpoolResponse?> AssignPrinterAsync(Guid id, Guid? printerId, int? amsSlot, string? displacedStockLocation = null);
     Task<bool> DeleteAsync(Guid id);
     Task<(int Added, int Removed)> GetMonthlyStatsAsync();
 }
