@@ -186,10 +186,10 @@ describe('SpoolDetailsForm', () => {
     expect(screen.getByText('Enter a weight greater than 0')).toBeInTheDocument()
   })
 
-  it('activate toggle shows "Active" label and "Loaded spool" description', () => {
+  it('activate toggle shows loaded-in-printer label and description', () => {
     renderForm()
-    expect(screen.getByText('Active')).toBeInTheDocument()
-    expect(screen.getByText('Loaded spool')).toBeInTheDocument()
+    expect(screen.getByText('Loaded in printer')).toBeInTheDocument()
+    expect(screen.getByText('Assign this spool to a printer tray')).toBeInTheDocument()
   })
 
   it('shows the NFC tag badge in the header when a tag is present', () => {
