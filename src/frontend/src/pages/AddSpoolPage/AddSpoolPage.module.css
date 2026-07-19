@@ -1,59 +1,88 @@
-/* Add Spool Modal — redesign handoff styles */
-/* Uses global design tokens from variables.css */
+/* Add Spool — SpoolHub page shell (aligned with Spools / Scan) */
 
-/* ───── scrim & modal shell ───── */
-.scrim {
-  position: fixed; inset: 0;
-  background: oklch(0.2 0.02 60 / .5);
-  backdrop-filter: blur(3px);
-  opacity: 0; pointer-events: none;
-  transition: opacity .25s var(--ease);
-  z-index: 70;
-}
-.scrim.on { opacity: 1; pointer-events: auto; }
-
-.modal {
-  position: fixed; top: 0; right: 0; bottom: 0; left: 248px;
-  z-index: 71; display: block; padding: 0;
-  opacity: 0; pointer-events: none;
-  transition: opacity .22s var(--ease);
-}
-.modal.on { opacity: 1; pointer-events: auto; }
-@media (max-width: 900px) { .modal { left: 0; } }
-
-.card {
-  width: 100%; max-width: 100%; height: 100vh;
-  background: var(--bg); color: var(--text-primary);
-  border: 0; border-radius: 0; box-shadow: none;
-  display: flex; flex-direction: column;
-  overflow-y: auto; overflow-x: hidden;
-}
-.card::-webkit-scrollbar { width: 10px; }
-.card::-webkit-scrollbar-thumb {
-  background: var(--border); border-radius: 20px;
-  border: 3px solid var(--bg);
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: 100%;
+  overflow: hidden;
+  padding: var(--pad);
+  padding-bottom: 96px;
+  background: var(--bg);
+  color: var(--text-primary);
 }
 
-.card > .cardHeader,
-.card > .cardBody,
-.card > .cardFooter {
-  width: 100%; max-width: 1000px;
-  margin-left: auto; margin-right: auto;
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.topbarGrow { flex: 1; min-width: 0; }
+.topbarGrow h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  color: var(--text-primary);
+}
+[data-dir="b"] .topbarGrow h1 { font-weight: 600; letter-spacing: -.01em; }
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 3px;
 }
 
-/* ───── header ───── */
-.cardHeader {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 22px 24px; border-bottom: 1px solid var(--border-subtle);
+.panel {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-.cardHeaderTitle { flex: 1; min-width: 0; }
-.cardHeaderTitle h2 {
-  margin: 0; font-family: var(--font-display);
-  font-size: 20px; font-weight: 700; letter-spacing: -.02em;
+.panelFlush { padding: 0; overflow: hidden; }
+.panelPick {
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-self: stretch;
 }
-.cardHeaderTitle .sub {
-  font-size: 13px; color: var(--muted); margin-top: 3px;
+.panelBare {
+  flex: 0 1 auto;
+  overflow: visible;
 }
+
+.stickyFooter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 4px calc(-1 * var(--card-pad, 24px)) calc(-1 * 18px);
+  padding: 14px var(--card-pad, 24px) 18px;
+  border-top: 1px solid var(--border-2);
+  background: transparent;
+  flex-shrink: 0;
+}
+.stickyFooter .btn:not(.btnPrimary) { flex: none; }
+.stickyFooter .btnPrimary {
+  flex: 1;
+  justify-content: center;
+}
+
+.scanBody { padding: 18px var(--card-pad, 24px) 22px; }
+
+/* Legacy class names kept so existing JSX compiles during migration */
+.card { display: contents; }
+.cardHeader { display: none; }
+.cardBody { display: contents; }
+.cardFooter { display: contents; }
+.cardHeaderTitle { display: none; }
 
 /* NFC badge */
 .nfcBadge {
@@ -70,6 +99,265 @@
   animation: asblink 1.4s var(--ease) infinite;
 }
 
+.nfcTagsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.formBlock {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-card);
+  padding: 18px var(--card-pad, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.formBlockPick {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+.formBlockPick .filaScroll {
+  flex: none;
+  overflow: visible;
+  min-height: 0;
+  margin-right: 0;
+  padding-right: 0;
+}
+.formBlockPick > *:not(.filaScroll) {
+  flex-shrink: 0;
+}
+.nfcTagCards .nfcTagCard,
+.nfcTagCards .nfcLinkCard {
+  background: var(--surface-alt);
+}
+/* Nested sections inside the form card — no second outer chrome */
+.formBlock .selectedCard {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border-2);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 0 14px;
+}
+.formBlock .nfcTagsPanel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--border-2);
+}
+.nfcTagsHead { display: flex; flex-direction: column; gap: 2px; }
+.nfcTagsTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nfcReadyDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  flex: none;
+}
+:global([data-theme="dark"]) .nfcReadyDot { color: var(--accent); }
+.nfcTagsTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--text-primary);
+}
+.nfcTagsLead {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.nfcBothMsg {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--accent-ink);
+}
+:global([data-theme="dark"]) .nfcBothMsg { color: var(--accent); }
+
+.nfcChipRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 560px) {
+  .nfcChipRow { grid-template-columns: 1fr; }
+}
+.nfcChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.nfcChipBadge {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  flex: none;
+}
+:global([data-theme="dark"]) .nfcChipBadge { color: var(--accent); }
+.nfcChip .nfcUid {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.nfcIconBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+  transition: .15s var(--ease);
+}
+.nfcIconBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+:global([data-theme="dark"]) .nfcIconBtn:hover { color: var(--accent); }
+.nfcIconBtnDanger:hover {
+  border-color: oklch(0.62 0.17 30);
+  color: oklch(0.62 0.17 30);
+  background: color-mix(in oklch, oklch(0.62 0.17 30) 12%, transparent);
+}
+
+.nfcTagCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .nfcTagCards { grid-template-columns: 1fr; }
+}
+.nfcTagCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  min-width: 0;
+}
+.nfcTagCardMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.nfcTagCheck {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+:global([data-theme="dark"]) .nfcTagCheck { color: var(--accent); }
+.nfcTagCopy { min-width: 0; }
+.nfcTagSide {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nfcTagReady {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+:global([data-theme="dark"]) .nfcTagReady { color: var(--accent); }
+.nfcUid {
+  margin-top: 2px;
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nfcLinkCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: .15s var(--ease);
+}
+.nfcLinkCard:hover {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+}
+.nfcLinkCardTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.nfcLinkCardHint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  flex: none;
+}
+
 .headerActions {
   display: flex;
   align-items: center;
@@ -77,11 +365,10 @@
   flex: none;
 }
 
-/* close & back buttons */
 .closeBtn {
-  width: 36px; height: 36px; border-radius: var(--r-sm);
+  width: 42px; height: 42px; border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  background: var(--surface-alt); color: var(--muted);
+  background: var(--surface); color: var(--muted);
   display: grid; place-items: center;
   cursor: pointer; transition: .15s var(--ease);
   flex: none;
@@ -89,26 +376,10 @@
 .closeBtn:hover { color: var(--text-primary); border-color: var(--accent); }
 .closeBtn svg { width: 18px; height: 18px; }
 
-/* ───── body ───── */
-.cardBody {
-  flex: 1; overflow: visible;
-  padding: 22px 24px;
-  display: flex; flex-direction: column; gap: 18px;
-}
-
 .sectionLabel {
   font-size: 11px; text-transform: uppercase;
   letter-spacing: .07em; color: var(--faint); font-weight: 700;
 }
-
-/* ───── cardFooter ───── */
-.cardFooter {
-  display: flex; gap: 10px;
-  padding: 16px 24px;
-  border-top: 1px solid var(--border-subtle);
-}
-.cardFooter .btn { flex: 1; justify-content: center; }
-.cardFooter .btn.back { flex: none; }
 
 /* ───── generic buttons ───── */
 .btn {
@@ -132,8 +403,16 @@
 }
 
 /* ───── Step 1: Choose mode ───── */
-.chooseGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 560px) { .chooseGrid { grid-template-columns: 1fr; } }
+.chooseGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  width: 100%;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 560px) { .chooseGrid { grid-template-columns: 1fr; max-width: none; } }
 
 .choiceCard {
   display: flex; flex-direction: column; align-items: flex-start;
@@ -185,13 +464,17 @@
 
 /* ───── Step 3: Pick filament ───── */
 .detailPanel {
-  margin: 18px auto 0; width: 100%; max-width: 960px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-card);
-  padding: 24px 24px 22px;
-  display: flex; flex-direction: column; gap: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.detailPanelPick {
+  flex: 0 0 auto;
+  overflow: visible;
+  min-height: 0;
 }
 
 .pickGrid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -215,38 +498,116 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-/* filament grid */
-.filaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+/* filament grid — scrolls on the right */
+.filaScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-right: -6px;
+  padding-right: 6px;
+}
+.filaScroll::-webkit-scrollbar { width: 10px; }
+.filaScroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+  border: 3px solid var(--surface);
+}
+.filaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--gap);
+}
 .filaSkeleton {
-  height: 62px;
-  border-radius: var(--r-sm);
+  height: 112px;
+  border-radius: var(--radius-xl, var(--r));
   background: var(--surface-alt);
   border: 1px solid var(--border);
   animation: asblink 1.4s var(--ease) infinite;
 }
 .filaCard {
-  display: flex; align-items: center; gap: 11px;
-  padding: 11px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--surface-alt); color: var(--text-primary);
-  cursor: pointer; transition: .15s var(--ease);
+  border-radius: var(--radius-xl, var(--r));
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color .15s var(--ease), box-shadow .15s var(--ease), transform .15s var(--ease);
   text-align: left;
+  overflow: hidden;
+  font: inherit;
 }
 .filaCard:hover {
-  border-color: var(--accent);
-  box-shadow: 0 6px 18px -12px var(--accent);
+  border-color: var(--success-border, var(--accent));
+  box-shadow: var(--shadow-md, 0 6px 18px -12px var(--accent));
+  transform: translateY(-2px);
 }
-.filaDisc { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.filaTop {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 14px 12px;
+}
+.filaDisc {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.filaDisc :global(svg) { display: block; }
+.filaInfo { flex: 1; min-width: 0; }
+.filaNameRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
 .filaMeta { min-width: 0; }
 .filaName {
-  font-weight: 600; font-size: 13px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-primary);
 }
 .filaBrand {
-  font-size: 11.5px; color: var(--faint);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 13px;
+  color: var(--text-secondary, var(--muted));
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.filaMatBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+:global([data-theme="dark"]) .filaMatBadge { color: var(--accent); }
+.filaFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary, var(--muted));
+  font-family: var(--font-num);
 }
 .emptyState {
   padding: 30px; text-align: center; color: var(--faint);
@@ -257,10 +618,11 @@
 /* ───── Step 4: Details ───── */
 .selectedCard {
   display: flex; align-items: center; gap: 14px;
-  padding: 14px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--surface-alt);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
 }
 .selectedDisc { width: 56px; height: 56px; flex: none; display: grid; place-items: center; }
 .selectedInfo { flex: 1; min-width: 0; }
@@ -490,13 +852,10 @@
 .singleSlot .t { font-weight: 600; font-size: 14px; }
 .singleSlot .d { font-size: 12px; color: var(--faint); }
 
-/* detail actions */
+/* detail actions — prefer stickyFooter; keep for fallback */
 .detailActions {
-  display: flex; gap: 10px; margin-top: 6px;
-  padding-top: 20px; border-top: 1px solid var(--border-subtle);
+  display: none;
 }
-.detailActions .btn { flex: 1; justify-content: center; }
-.detailActions .btn.back { flex: none; }
 
 /* ───── Success ───── */
 .successWrap {

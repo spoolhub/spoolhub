@@ -236,7 +236,8 @@ describe('AddSpoolPage — scan step (real reader via agent)', () => {
     await waitFor(() => expect(fireTagScan).not.toBeNull())
     await act(async () => { fireTagScan!('04:AA:BB:CC') })
     await waitFor(() => expect(scanTag).toHaveBeenCalledWith('04:AA:BB:CC'))
-    expect(screen.getByText(/will be written/)).toBeInTheDocument()
+    expect(screen.getByText('Tags on this spool')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Link the other side' })).toBeInTheDocument()
   })
 
   it('navigates to the scan result when the scanned tag is already registered', async () => {
@@ -251,7 +252,214 @@ describe('AddSpoolPage — scan step (real reader via agent)', () => {
   it('moves to pick with the NFC badge when tagUid arrives via URL', async () => {
     renderPage('/spools/add/nfctag?tagUid=04:AA:BB:CC')
     await waitFor(() => expect(scanTag).toHaveBeenCalledWith('04:AA:BB:CC'))
-    await waitFor(() => expect(screen.getByText(/will be written/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Tags on this spool')).toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Link the other side' })).toBeInTheDocument()
+  })
+})
+
+describe('AddSpoolPage — link other side', () => {
+  beforeEach(mockDefaults)
+
+  async function scanFirstTag(uid = '04:AA:BB:CC') {
+    renderPage()
+    fireEvent.click(screen.getByText('Scan NFC tag'))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!(uid) })
+    await waitFor(() => screen.getByRole('button', { name: 'Link the other side' }))
+  }
+
+  it('creates with one tag when the user never scans the other side', async () => {
+    vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
+    vi.mocked(registerTag).mockResolvedValue(undefined)
+    await scanFirstTag('04:AA:BB:CC')
+    await selectFilament()
+    fireEvent.click(screen.getByRole('button', { name: /Add spool/ }))
+    await waitFor(() => expect(registerTag).toHaveBeenCalledTimes(1))
+    expect(registerTag).toHaveBeenCalledWith('04:AA:BB:CC', 'spool-999')
+  })
+
+  it('opens the second-side scan from the add form', async () => {
+    await scanFirstTag()
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(screen.getByText('Scan the other side')).toBeInTheDocument())
+    expect(screen.getByText(/Flip the spool/)).toBeInTheDocument()
+  })
+
+  it('rejects the same UID on the other side', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('04:AA:BB:CC') })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/Different side required/))
+    expect(screen.getByText('Scan the other side')).toBeInTheDocument()
+  })
+
+  it('shows both tags on the form after a distinct second-side scan', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Link the other side' })).not.toBeInTheDocument()
+    expect(screen.getByText('7C:9D:E7:E6')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescan Side A' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rescan Side B' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove Side B' })).toBeInTheDocument()
+  })
+
+  it('rescans Side A and replaces only the primary UID', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescan Side A' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Rescan Side A' })).toBeInTheDocument())
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('11:22:33:44') })
+    await waitFor(() => expect(screen.getByText('11:22:33:44')).toBeInTheDocument())
+    expect(screen.getByText('7C:9D:E7:E6')).toBeInTheDocument()
+  })
+
+  it('rescans Side B and replaces only the secondary UID', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescan Side B' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Rescan Side B' })).toBeInTheDocument())
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('AA:BB:CC:DD') })
+    await waitFor(() => expect(screen.getByText('AA:BB:CC:DD')).toBeInTheDocument())
+    expect(screen.getByText('04:AA:BB:CC')).toBeInTheDocument()
+    expect(screen.queryByText('7C:9D:E7:E6')).not.toBeInTheDocument()
+  })
+
+  it('registers both tags when the user scans the other side from the form', async () => {
+    vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
+    vi.mocked(registerTag).mockResolvedValue(undefined)
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await selectFilament()
+    fireEvent.click(screen.getByRole('button', { name: /Add spool/ }))
+    await waitFor(() => expect(registerTag).toHaveBeenCalledTimes(2))
+    expect(registerTag).toHaveBeenCalledWith('04:AA:BB:CC', 'spool-999')
+    expect(registerTag).toHaveBeenCalledWith('7C:9D:E7:E6', 'spool-999')
+  })
+
+  it('shows the one-side lead message before linking Side B', async () => {
+    await scanFirstTag()
+    expect(screen.getByText(/One side is linked/)).toBeInTheDocument()
+  })
+
+  it('removes Side B and restores the link-other-side card', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Side B' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link the other side' })).toBeInTheDocument())
+    expect(screen.queryByText('Both sides will be registered.')).not.toBeInTheDocument()
+    expect(screen.queryByText('7C:9D:E7:E6')).not.toBeInTheDocument()
+    expect(screen.getByText('04:AA:BB:CC')).toBeInTheDocument()
+  })
+
+  it('registers only the primary tag after Side B is removed', async () => {
+    vi.mocked(spoolsApi.add).mockResolvedValue(createdSpool)
+    vi.mocked(registerTag).mockResolvedValue(undefined)
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Side B' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link the other side' })).toBeInTheDocument())
+    await selectFilament()
+    fireEvent.click(screen.getByRole('button', { name: /Add spool/ }))
+    await waitFor(() => expect(registerTag).toHaveBeenCalledTimes(1))
+    expect(registerTag).toHaveBeenCalledWith('04:AA:BB:CC', 'spool-999')
+  })
+
+  it('rejects a Side B UID that is already linked to another spool', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    vi.mocked(scanTag).mockResolvedValue({
+      status: 'found',
+      tagUid: '7C:9D:E7:E6',
+      spool: createdSpool,
+      message: null,
+    })
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/already linked to another spool/))
+    expect(screen.getByText('Scan the other side')).toBeInTheDocument()
+  })
+
+  it('rejects rescan of Side A when the UID matches Side B', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescan Side A' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Rescan Side A' })).toBeInTheDocument())
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/already linked as Side B/))
+    expect(screen.getByRole('heading', { name: 'Rescan Side A' })).toBeInTheDocument()
+  })
+
+  it('rejects rescan of Side A when the tag is already linked', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescan Side A' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Rescan Side A' })).toBeInTheDocument())
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    vi.mocked(scanTag).mockResolvedValue({
+      status: 'found',
+      tagUid: '11:22:33:44',
+      spool: createdSpool,
+      message: null,
+    })
+    await act(async () => { fireTagScan!('11:22:33:44') })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/already linked to another spool/))
+    expect(screen.getByRole('heading', { name: 'Rescan Side A' })).toBeInTheDocument()
+  })
+
+  it('returns to the form when back is clicked during scan other side', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(screen.getByText('Scan the other side')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link the other side' })).toBeInTheDocument())
+    expect(screen.getByText('04:AA:BB:CC')).toBeInTheDocument()
+  })
+
+  it('keeps both tags when navigating back from Rescan Side B without a new scan', async () => {
+    await scanFirstTag('04:AA:BB:CC')
+    fireEvent.click(screen.getByRole('button', { name: 'Link the other side' }))
+    await waitFor(() => expect(fireTagScan).not.toBeNull())
+    await act(async () => { fireTagScan!('7C:9D:E7:E6') })
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rescan Side B' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Rescan Side B' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByText('Both sides will be registered.')).toBeInTheDocument())
+    expect(screen.getByText('04:AA:BB:CC')).toBeInTheDocument()
+    expect(screen.getByText('7C:9D:E7:E6')).toBeInTheDocument()
   })
 })
 
@@ -263,7 +471,9 @@ describe('AddSpoolPage — profiles and catalog', () => {
     await waitFor(() => expect(screen.getByText('Jade White', { selector: 'div' })).toBeInTheDocument())
     expect(screen.getByRole('button', { name: 'Saved profiles' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByText('Bambu Lab · PLA', { selector: 'div' })).toBeInTheDocument()
+    expect(screen.getByText('Bambu Lab', { selector: 'div' })).toBeInTheDocument()
+    expect(screen.getByText('PLA', { selector: 'span' })).toBeInTheDocument()
+    expect(screen.getByText('1000g spool')).toBeInTheDocument()
   })
 
   it('switches to catalog filaments when a material is selected', async () => {
@@ -274,7 +484,7 @@ describe('AddSpoolPage — profiles and catalog', () => {
     fireEvent.change(screen.getByDisplayValue('Select material…'), { target: { value: 'PLA' } })
     await waitFor(() => expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'true'))
     expect(screen.getByText('1 filament')).toBeInTheDocument()
-    expect(screen.queryByText('Bambu Lab · PLA', { selector: 'div' })).not.toBeInTheDocument()
+    expect(screen.queryByText('1000g spool')).not.toBeInTheDocument()
   })
 
   it('returns to saved profiles when the Saved profiles segment is clicked', async () => {
@@ -285,7 +495,7 @@ describe('AddSpoolPage — profiles and catalog', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Catalog' })).toHaveAttribute('aria-pressed', 'true'))
     fireEvent.click(screen.getByRole('button', { name: 'Saved profiles' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Saved profiles' })).toHaveAttribute('aria-pressed', 'true'))
-    expect(screen.getByText('Bambu Lab · PLA', { selector: 'div' })).toBeInTheDocument()
+    expect(screen.getByText('1000g spool')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Select material…')).toHaveValue('')
   })
 

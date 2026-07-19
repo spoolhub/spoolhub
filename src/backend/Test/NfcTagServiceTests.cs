@@ -81,6 +81,22 @@ public class NfcTagServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_WhenSecondTagForSameSpool_CreatesAdditionalTag()
+    {
+        var spoolId = Guid.NewGuid();
+        _repo.GetByTagUidAsync(Arg.Any<string>()).Returns((NfcTag?)null);
+        _repo.CreateAsync(Arg.Any<NfcTag>()).Returns(x => x.Arg<NfcTag>());
+
+        var first = await _sut.RegisterAsync(new RegisterNfcTagRequest("04:AA:BB:CC", spoolId, "NFC"));
+        var second = await _sut.RegisterAsync(new RegisterNfcTagRequest("7C:9D:E7:E6", spoolId, "NFC"));
+
+        Assert.Equal(spoolId, first.SpoolId);
+        Assert.Equal(spoolId, second.SpoolId);
+        Assert.NotEqual(first.TagUid, second.TagUid);
+        await _repo.Received(2).CreateAsync(Arg.Any<NfcTag>());
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenFound_ReturnsTrue()
     {
         var tag = BuildTag();

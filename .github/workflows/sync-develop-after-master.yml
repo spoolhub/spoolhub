@@ -22,6 +22,8 @@ jobs:
           fetch-depth: 0
 
       - name: Merge master into develop
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -e
           git config user.name "github-actions[bot]"
@@ -31,6 +33,13 @@ jobs:
             echo "develop already contains master — nothing to sync"
             exit 0
           fi
-          git checkout develop
+          SYNC_BRANCH="sync/auto-after-release-${{ github.event.pull_request.number }}"
+          git checkout -B "$SYNC_BRANCH" origin/develop
           git merge origin/master --no-edit -m "Sync develop with master after release"
-          git push origin develop
+          git push origin "$SYNC_BRANCH"
+          PR_URL=$(gh pr create --base develop --head "$SYNC_BRANCH" \
+            --title "Sync develop with master after release" \
+            --body "Automated sync after develop → master release merge (#${{ github.event.pull_request.number }})." \
+            | tail -n 1)
+          echo "Opened $PR_URL"
+          gh pr merge "$SYNC_BRANCH" --merge --admin
