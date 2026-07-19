@@ -127,181 +127,180 @@ export default function AddSpoolProfilePage() {
   }
 
   const renderPick = () => (
-    <>
-      <div className={styles.cardHeader}>
-        <button className={styles.closeBtn} onClick={close} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
-        <div className={styles.cardHeaderTitle}>
-          <h2>Add spool profile</h2>
-          <div className={styles.sub}>Pick the filament for this profile</div>
+    <div className={styles.detailPanel}>
+      <div className={styles.formBlock}>
+      <div className={styles.sectionLabel}>Filament</div>
+      <div className={styles.pickGrid3}>
+        <BrandPickerField
+          value={brand}
+          onChange={handleBrandChange}
+          filaments={filaments}
+          onFilamentsChange={setFilaments}
+        />
+        <div className={styles.field}>
+          <label>Material</label>
+          <select value={material} disabled={!brand} onChange={e => { setMaterial(e.target.value); setColorName('') }}>
+            <option value="">{brand ? 'Select material…' : '-'}</option>
+            {filteredMats.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className={styles.field}>
+          <label>Color <span style={{ color: 'var(--faint)', fontWeight: 400 }}>(optional)</span></label>
+          <select value={colorName} disabled={!material} onChange={e => setColorName(e.target.value)}>
+            <option value="">{material ? 'All colors' : '-'}</option>
+            {filteredColors.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className={styles.sectionLabel}>
+        {brand && material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Choose brand & material to see filaments'}
+      </div>
+      {brand && material ? (
+        matched.length > 0 ? (
+          <div className={styles.filaGrid}>
+            {matched.map((f, i) => (
+              <button key={i} type="button" className={styles.filaCard} onClick={() => pickFilament(f)}>
+                <div className={styles.filaTop}>
+                  <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolSvg(f.colorHex || '#888', 56, 'p' + i) }} />
+                  <div className={styles.filaInfo}>
+                    <div className={styles.filaNameRow}>
+                      <div className={styles.filaMeta}>
+                        <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
+                        <div className={styles.filaBrand}>{f.brand}</div>
+                      </div>
+                      <span className={styles.filaMatBadge}>{f.material}</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>No catalog match. Try a different material.</div>
+        )
+      ) : (
+        <div className={styles.emptyState}>Select a brand and material above.</div>
+      )}
+      </div>
+    </div>
+  )
+
+  const renderDetails = () => {
+    const f = selectedFilament!
+    return (
+      <div className={styles.detailPanel}>
+        <div className={styles.formBlock}>
+        <div className={styles.selectedCard}>
+          <div className={styles.selectedDisc} dangerouslySetInnerHTML={{ __html: spoolSvg(f.colorHex || '#888', 56, 'sel') }} />
+          <div className={styles.selectedInfo}>
+            <div className="b" style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-.01em' }}>{f.brand}</div>
+            <div className="c" style={{ fontSize: 12.5, color: 'var(--muted)' }}>{f.colorName || f.filamentName}</div>
+            <div className={styles.tags}><span className={styles.tag}>{f.material}</span></div>
+          </div>
+          <button className={`${styles.changeBtn} ${styles.changeBtnIcon}`} onClick={() => setStep('pick')} title="Change filament" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        </div>
+
+        <div className={styles.sectionLabel}>Spool stats</div>
+        <div className={styles.pickGrid3}>
+          <div className={styles.field}>
+            <label>Initial weight (g)</label>
+            <input type="number" value={initialWeightG} min="0" onChange={e => setInitialWeightG(e.target.value)} />
+          </div>
+          <div className={styles.field}>
+            <label>Empty spool weight (g)</label>
+            <input type="number" value={spoolWeightG} min="0" onChange={e => setSpoolWeightG(e.target.value)} />
+          </div>
+          <div className={styles.field}>
+            <label>Low stock threshold (g)</label>
+            <input type="number" value={lowStockG} min="0" onChange={e => setLowStockG(e.target.value)} />
+          </div>
+        </div>
+
+        <div className={styles.collapsible} data-open={openAdvanced}>
+          <div className={styles.collapsibleHeader} onClick={() => setOpenAdvanced(o => !o)} role="button" tabIndex={0}>
+            <span>Print settings &amp; Material properties</span>
+            <span className={styles.collapsibleTools}>
+              <button type="button" className={`${styles.editBtn}${unlocked ? ` ${styles.on}` : ''}`}
+                onClick={e => { e.stopPropagation(); setUnlocked(u => !u) }} title="Edit settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <svg className={styles.collapsibleChevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </div>
+          <div className={styles.collapsibleBody}>
+            <div className={styles.pickGrid2}>
+              <div>
+                <div className={styles.pickGrid2} style={{ gap: 12 }}>
+                  <div className={styles.field}>
+                    <label>Nozzle temp (°C)</label>
+                    <div className={styles.rangeRow}>
+                      <input type="number" value={extruderMin} disabled={!unlocked} onChange={e => setExtruderMin(e.target.value)} />
+                      <span>–</span>
+                      <input type="number" value={extruderMax} disabled={!unlocked} onChange={e => setExtruderMax(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label>Bed temp (°C)</label>
+                    <div className={styles.rangeRow}>
+                      <input type="number" value={bedMin} disabled={!unlocked} onChange={e => setBedMin(e.target.value)} />
+                      <span>–</span>
+                      <input type="number" value={bedMax} disabled={!unlocked} onChange={e => setBedMax(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.subColBorder}>
+                <div className={styles.pickGrid2} style={{ gap: 12 }}>
+                  <div className={styles.field}>
+                    <label>Diameter (mm)</label>
+                    <select value={diameterTolerance} disabled={!unlocked} onChange={e => setDiameterTolerance(e.target.value)}>
+                      <option value="1.75">1.75</option>
+                      <option value="2.85">2.85</option>
+                      <option value="3.00">3.00</option>
+                    </select>
+                  </div>
+                  <div className={styles.field}>
+                    <label>Density (g/cm³)</label>
+                    <input type="number" value={density} step="0.01" disabled={!unlocked} onChange={e => setDensity(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className={styles.stickyFooter}>
+          <button className={`${styles.btn} ${styles.back}`} onClick={() => setStep('pick')}>
+            <span dangerouslySetInnerHTML={{ __html: BACK_SVG }} /> Back
+          </button>
+          <button className={`${styles.btn} ${styles.btnPrimary} ${localStyles.saveBtn}`} onClick={handleSave} disabled={saving}>
+            {saving
+              ? <span className={styles.btnSpinner} />
+              : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}
+            {saving ? 'Saving…' : 'Save profile'}
+          </button>
+        </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.topbar}>
+        <button className={styles.closeBtn} onClick={step === 'details' ? () => setStep('pick') : close} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
+        <div className={styles.topbarGrow}>
+          <h1>Add spool profile</h1>
+          <div className={styles.sub}>
+            {step === 'pick' ? 'Pick the filament for this profile' : 'Confirm weight and print settings'}
+          </div>
         </div>
         <div className={styles.headerActions}>
           <NotificationBell variant="bordered" />
           <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
         </div>
       </div>
-      <div className={styles.cardBody}>
-        <div className={styles.detailPanel}>
-          <div className={styles.sectionLabel}>Filament</div>
-          <div className={styles.pickGrid3}>
-            <BrandPickerField
-              value={brand}
-              onChange={handleBrandChange}
-              filaments={filaments}
-              onFilamentsChange={setFilaments}
-            />
-            <div className={styles.field}>
-              <label>Material</label>
-              <select value={material} disabled={!brand} onChange={e => { setMaterial(e.target.value); setColorName('') }}>
-                <option value="">{brand ? 'Select material…' : '—'}</option>
-                {filteredMats.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-            <div className={styles.field}>
-              <label>Color <span style={{ color: 'var(--faint)', fontWeight: 400 }}>(optional)</span></label>
-              <select value={colorName} disabled={!material} onChange={e => setColorName(e.target.value)}>
-                <option value="">{material ? 'All colors' : '—'}</option>
-                {filteredColors.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className={styles.sectionLabel}>
-            {brand && material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Choose brand & material to see filaments'}
-          </div>
-          {brand && material ? (
-            matched.length > 0 ? (
-              <div className={styles.filaGrid}>
-                {matched.map((f, i) => (
-                  <button key={i} className={styles.filaCard} onClick={() => pickFilament(f)}>
-                    <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolSvg(f.colorHex || '#888', 40, 'p' + i) }} />
-                    <div className={styles.filaMeta}>
-                      <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
-                      <div className={styles.filaBrand}>{f.material}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>No catalog match — try a different material.</div>
-            )
-          ) : (
-            <div className={styles.emptyState}>Select a brand and material above.</div>
-          )}
-        </div>
-      </div>
-    </>
-  )
 
-  const renderDetails = () => {
-    const f = selectedFilament!
-    return (
-      <>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardHeaderTitle} />
-          <div className={styles.headerActions}>
-            <NotificationBell variant="bordered" />
-            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-          </div>
-        </div>
-        <div className={styles.cardBody}>
-          <div className={styles.detailPanel}>
-            <div className={styles.selectedCard}>
-              <div className={styles.selectedDisc} dangerouslySetInnerHTML={{ __html: spoolSvg(f.colorHex || '#888', 56, 'sel') }} />
-              <div className={styles.selectedInfo}>
-                <div className="b" style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-.01em' }}>{f.brand}</div>
-                <div className="c" style={{ fontSize: 12.5, color: 'var(--muted)' }}>{f.colorName || f.filamentName}</div>
-                <div className={styles.tags}><span className={styles.tag}>{f.material}</span></div>
-              </div>
-              <button className={`${styles.changeBtn} ${styles.changeBtnIcon}`} onClick={() => setStep('pick')} title="Change filament" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-            </div>
-
-            <div className={styles.sectionLabel}>Spool stats</div>
-            <div className={styles.pickGrid3}>
-              <div className={styles.field}>
-                <label>Initial weight (g)</label>
-                <input type="number" value={initialWeightG} min="0" onChange={e => setInitialWeightG(e.target.value)} />
-              </div>
-              <div className={styles.field}>
-                <label>Empty spool weight (g)</label>
-                <input type="number" value={spoolWeightG} min="0" onChange={e => setSpoolWeightG(e.target.value)} />
-              </div>
-              <div className={styles.field}>
-                <label>Low stock threshold (g)</label>
-                <input type="number" value={lowStockG} min="0" onChange={e => setLowStockG(e.target.value)} />
-              </div>
-            </div>
-
-            <div className={styles.collapsible} data-open={openAdvanced}>
-              <div className={styles.collapsibleHeader} onClick={() => setOpenAdvanced(o => !o)} role="button" tabIndex={0}>
-                <span>Print settings &amp; Material properties</span>
-                <span className={styles.collapsibleTools}>
-                  <button type="button" className={`${styles.editBtn}${unlocked ? ` ${styles.on}` : ''}`}
-                    onClick={e => { e.stopPropagation(); setUnlocked(u => !u) }} title="Edit settings">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                  </button>
-                  <svg className={styles.collapsibleChevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                </span>
-              </div>
-              <div className={styles.collapsibleBody}>
-                <div className={styles.pickGrid2}>
-                  <div>
-                    <div className={styles.pickGrid2} style={{ gap: 12 }}>
-                      <div className={styles.field}>
-                        <label>Nozzle temp (°C)</label>
-                        <div className={styles.rangeRow}>
-                          <input type="number" value={extruderMin} disabled={!unlocked} onChange={e => setExtruderMin(e.target.value)} />
-                          <span>–</span>
-                          <input type="number" value={extruderMax} disabled={!unlocked} onChange={e => setExtruderMax(e.target.value)} />
-                        </div>
-                      </div>
-                      <div className={styles.field}>
-                        <label>Bed temp (°C)</label>
-                        <div className={styles.rangeRow}>
-                          <input type="number" value={bedMin} disabled={!unlocked} onChange={e => setBedMin(e.target.value)} />
-                          <span>–</span>
-                          <input type="number" value={bedMax} disabled={!unlocked} onChange={e => setBedMax(e.target.value)} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.subColBorder}>
-                    <div className={styles.pickGrid2} style={{ gap: 12 }}>
-                      <div className={styles.field}>
-                        <label>Diameter (mm)</label>
-                        <select value={diameterTolerance} disabled={!unlocked} onChange={e => setDiameterTolerance(e.target.value)}>
-                          <option value="1.75">1.75</option>
-                          <option value="2.85">2.85</option>
-                          <option value="3.00">3.00</option>
-                        </select>
-                      </div>
-                      <div className={styles.field}>
-                        <label>Density (g/cm³)</label>
-                        <input type="number" value={density} step="0.01" disabled={!unlocked} onChange={e => setDensity(e.target.value)} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.detailActions}>
-              <button className={`${styles.btn} ${styles.back}`} onClick={() => setStep('pick')}
-                dangerouslySetInnerHTML={{ __html: BACK_SVG + ' Back' }} />
-              <button className={`${styles.btn} ${styles.btnPrimary} ${localStyles.saveBtn}`} onClick={handleSave} disabled={saving}>
-                {saving
-                  ? <span className={styles.btnSpinner} />
-                  : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}
-                {saving ? 'Saving…' : 'Save profile'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className={styles.card} style={{ border: 0, borderRadius: 0, flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
+      <div className={`${styles.panel} ${styles.panelBare}`}>
         {step === 'pick' ? renderPick() : renderDetails()}
       </div>
     </div>
