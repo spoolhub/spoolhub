@@ -101,6 +101,59 @@ public class NfcTagIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Register_TwoDistinctUids_SameSpool_BothPersist()
+    {
+        var spoolId = await CreateSpoolId();
+        var uidA = $"UID-A-{Guid.NewGuid():N}";
+        var uidB = $"UID-B-{Guid.NewGuid():N}";
+
+        var first = await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidA, spoolId, "NTAG215"));
+        var second = await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidB, spoolId, "NTAG215"));
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+
+        var tagA = await first.Content.ReadFromJsonAsync<NfcTagResponse>();
+        var tagB = await second.Content.ReadFromJsonAsync<NfcTagResponse>();
+        Assert.NotNull(tagA);
+        Assert.NotNull(tagB);
+        Assert.Equal(spoolId, tagA.SpoolId);
+        Assert.Equal(spoolId, tagB.SpoolId);
+        Assert.NotEqual(tagA.TagUid, tagB.TagUid);
+
+        var all = await _client.GetFromJsonAsync<NfcTagResponse[]>("/api/nfc-tags");
+        Assert.NotNull(all);
+        Assert.Contains(all, t => t.TagUid == uidA && t.SpoolId == spoolId);
+        Assert.Contains(all, t => t.TagUid == uidB && t.SpoolId == spoolId);
+    }
+
+    [Fact]
+    public async Task Scan_EitherUid_ReturnsSameSpool_WhenTwoTagsRegistered()
+    {
+        var spoolId = await CreateSpoolId();
+        var uidA = $"SCAN-A-{Guid.NewGuid():N}";
+        var uidB = $"SCAN-B-{Guid.NewGuid():N}";
+        await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidA, spoolId, "NTAG215"));
+        await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidB, spoolId, "NTAG215"));
+
+        var scanA = await _client.PostAsJsonAsync("/api/nfc-tags/scan", new ScanRequest(uidA));
+        var scanB = await _client.PostAsJsonAsync("/api/nfc-tags/scan", new ScanRequest(uidB));
+        Assert.Equal(HttpStatusCode.OK, scanA.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, scanB.StatusCode);
+
+        var resultA = await scanA.Content.ReadFromJsonAsync<NfcScanResult>();
+        var resultB = await scanB.Content.ReadFromJsonAsync<NfcScanResult>();
+        Assert.NotNull(resultA);
+        Assert.NotNull(resultB);
+        Assert.Equal("found", resultA.Status);
+        Assert.Equal("found", resultB.Status);
+        Assert.NotNull(resultA.Spool);
+        Assert.NotNull(resultB.Spool);
+        Assert.Equal(spoolId, resultA.Spool.Id);
+        Assert.Equal(spoolId, resultB.Spool.Id);
+    }
+
     // ── DELETE ────────────────────────────────────────────────────────────────
 
     [Fact]

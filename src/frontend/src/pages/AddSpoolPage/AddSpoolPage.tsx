@@ -17,7 +17,7 @@ import type { SpoolProfileResponse } from '@/types/spoolProfile'
 import type { PrinterResponse } from '@/types/printer'
 import styles from './AddSpoolPage.module.css'
 
-type AddStep = 'choose' | 'scan' | 'pick' | 'details'
+type AddStep = 'choose' | 'scan' | 'scanOtherSide' | 'pick' | 'details'
 type Mode = 'nfc' | 'manual'
 type PlaceType = 'stock' | 'printer'
 
@@ -27,6 +27,7 @@ interface AddState {
   step: AddStep
   mode: Mode
   tagUid?: string
+  tagUidSecondary?: string
   brand: string
   material: string
   colorName: string
@@ -49,6 +50,13 @@ interface AddState {
   bedMax: string
   dia: string
   density: string
+}
+
+function nfcTagUids(state: Pick<AddState, 'tagUid' | 'tagUidSecondary'>): string[] {
+  const uids = [state.tagUid, state.tagUidSecondary]
+    .map(u => u?.trim())
+    .filter((u): u is string => !!u)
+  return [...new Set(uids)]
 }
 
 // ───── 3/4 perspective spool icon ─────
@@ -109,30 +117,18 @@ const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
 
 // ───── NFC scan step (real reader via SpoolHub Agent) ─────
-interface ScanStepProps {
-  onBack: () => void
-  onClose: () => void
+function ScanStep({
+  onTagFound,
+  error = null,
+}: {
   onTagFound: (tagUid: string) => void
-}
-
-function ScanStep({ onBack, onClose, onTagFound }: ScanStepProps) {
+  error?: string | null
+}) {
   return (
-    <>
-      <div className={styles.cardHeader}>
-        <button className={styles.closeBtn} onClick={onBack} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
-        <div className={styles.cardHeaderTitle}>
-          <h2>Scan NFC tag</h2>
-          <div className={styles.sub}>Hold the spool's NFC tag against your reader</div>
-        </div>
-        <div className={styles.headerActions}>
-          <NotificationBell variant="bordered" />
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-        </div>
-      </div>
-      <div className={styles.cardBody}>
-        <ScanDesktop onTagFound={onTagFound} />
-      </div>
-    </>
+    <div className={styles.scanBody}>
+      {error && <div className={`${styles.loadedAlert} ${styles.scanError}`} role="alert">{error}</div>}
+      <ScanDesktop onTagFound={onTagFound} />
+    </div>
   )
 }
 
@@ -168,8 +164,11 @@ export default function AddSpoolPage() {
     dia: '1.75', density: '1.24',
   }))
   const [saving, setSaving] = useState(false)
+  const [otherSideError, setOtherSideError] = useState<string | null>(null)
+  const [rescanTarget, setRescanTarget] = useState<'primary' | 'secondary' | null>(null)
 
   const curWeight = Math.max(0, +state.cur || 0)
+  const linkedTagUids = nfcTagUids(state)
   const initWeight = Math.max(1, +state.init || 1)
   const pct = Math.min(100, Math.round(curWeight / initWeight * 100))
   const low = curWeight <= (+state.lowstock || 120)
@@ -226,7 +225,48 @@ export default function AddSpoolPage() {
   }, [])
 
   const goToScan = useCallback(() => {
+    setOtherSideError(null)
+    setRescanTarget(null)
+    setState(s => ({ ...s, step: 'scan', tagUid: undefined, tagUidSecondary: undefined }))
+  }, [])
+
+  const goToPickFromNfc = useCallback((tagUid: string, tagUidSecondary?: string) => {
+    setPickView('profiles')
+    setOtherSideError(null)
+    setRescanTarget(null)
+    setState(s => ({
+      ...s,
+      step: 'pick',
+      mode: 'nfc',
+      tagUid,
+      tagUidSecondary,
+      brand: '',
+      material: '',
+      colorName: '',
+      filament: null,
+    }))
+  }, [])
+
+  const startScanOtherSide = useCallback(() => {
+    setOtherSideError(null)
+    setRescanTarget('secondary')
+    setState(s => ({ ...s, step: 'scanOtherSide' }))
+  }, [])
+
+  const startRescanPrimary = useCallback(() => {
+    setOtherSideError(null)
+    setRescanTarget('primary')
     setState(s => ({ ...s, step: 'scan' }))
+  }, [])
+
+  const clearSecondaryTag = useCallback(() => {
+    setState(s => ({ ...s, tagUidSecondary: undefined }))
+  }, [])
+
+  const returnFromTagScan = useCallback(() => {
+    setOtherSideError(null)
+    setRescanTarget(null)
+    setState(s => ({ ...s, step: s.filament ? 'details' : 'pick' }))
   }, [])
 
   const selectFilament = useCallback((f: FilamentProfile) => {
@@ -288,6 +328,30 @@ export default function AddSpoolPage() {
   }, [])
 
   const handleTagFound = useCallback(async (tagUid: string) => {
+    if (rescanTarget === 'primary') {
+      const secondary = state.tagUidSecondary?.trim()
+      if (secondary && tagUid.trim().toUpperCase() === secondary.toUpperCase()) {
+        setOtherSideError('Different tag required. That UID is already linked as Side B.')
+        return
+      }
+      try {
+        const result = await scanTag(tagUid)
+        if (result.status === 'found' && result.spool) {
+          setOtherSideError('That tag is already linked to another spool. Scan a different tag.')
+          return
+        }
+      } catch { /* lookup failed — treat as a new tag */ }
+      setOtherSideError(null)
+      setRescanTarget(null)
+      setState(s => ({
+        ...s,
+        tagUid,
+        step: s.filament ? 'details' : 'pick',
+        mode: 'nfc',
+      }))
+      return
+    }
+
     try {
       const result = await scanTag(tagUid)
       if (result.status === 'found' && result.spool) {
@@ -295,26 +359,36 @@ export default function AddSpoolPage() {
         return
       }
     } catch { /* lookup failed — treat as a new tag */ }
-    setPickView('profiles')
+    goToPickFromNfc(tagUid)
+  }, [navigate, goToPickFromNfc, rescanTarget, state.tagUidSecondary])
+
+  const handleOtherSideTagFound = useCallback(async (tagUid: string) => {
+    const primary = state.tagUid?.trim()
+    if (primary && tagUid.trim().toUpperCase() === primary.toUpperCase()) {
+      setOtherSideError('Different side required. Flip the spool and scan the other tag.')
+      return
+    }
+    try {
+      const result = await scanTag(tagUid)
+      if (result.status === 'found' && result.spool) {
+        setOtherSideError('That tag is already linked to another spool. Scan a different tag, or go back and continue with one tag.')
+        return
+      }
+    } catch { /* lookup failed — treat as a new tag */ }
+    setOtherSideError(null)
+    setRescanTarget(null)
     setState(s => ({
       ...s,
-      step: 'pick',
+      step: s.filament ? 'details' : 'pick',
       mode: 'nfc',
-      tagUid,
-      brand: '',
-      material: '',
-      colorName: '',
-      filament: null,
+      tagUidSecondary: tagUid,
     }))
-  }, [navigate])
+  }, [state.tagUid])
 
   // Tag UID arriving via URL (e.g. phone scan) — same lookup as a live reader scan
   useEffect(() => {
     if (!tagUidParam) return
-    const toPick = () => setState(s => ({
-      ...s, step: 'pick', mode: 'nfc', tagUid: tagUidParam,
-      brand: '', material: '', colorName: '', filament: null,
-    }))
+    const toPick = () => goToPickFromNfc(tagUidParam)
     scanTag(tagUidParam).then(result => {
       if (result.status === 'found' && result.spool) {
         navigate(`/scan?tagUid=${encodeURIComponent(tagUidParam)}`, { replace: true })
@@ -322,7 +396,7 @@ export default function AddSpoolPage() {
         toPick()
       }
     }).catch(toPick)
-  }, [tagUidParam])
+  }, [tagUidParam, goToPickFromNfc, navigate])
 
   // Prefill from printer tray assign flow (MQTT-reported material/color)
   const trayPrefillDone = useRef(false)
@@ -423,7 +497,7 @@ export default function AddSpoolPage() {
         bedMax: +state.bedMax || undefined,
         price: +state.value || undefined,
         stockLocation: state.place === 'stock' ? state.loc : undefined,
-        tagUid: state.mode === 'nfc' && state.tagUid ? state.tagUid : undefined,
+        tagUid: state.mode === 'nfc' && linkedTagUids[0] ? linkedTagUids[0] : undefined,
       }
 
       // Manual mode can add several identical spools at once; NFC always adds one
@@ -441,8 +515,10 @@ export default function AddSpoolPage() {
         })
       }
 
-      if (state.mode === 'nfc' && state.tagUid?.trim()) {
-        await registerTag(state.tagUid.trim(), first.id)
+      if (state.mode === 'nfc') {
+        for (const uid of linkedTagUids) {
+          await registerTag(uid, first.id)
+        }
       }
 
       window.dispatchEvent(new CustomEvent('spools-updated'))
@@ -452,7 +528,7 @@ export default function AddSpoolPage() {
       console.error('Failed to add spool', err)
       setSaving(false)
     }
-  }, [state, saving, placementValid, navigate])
+  }, [state, saving, placementValid, navigate, linkedTagUids, curWeight, initWeight])
 
   const backFromPick = useCallback(() => {
     if (state.mode === 'nfc') {
@@ -465,35 +541,98 @@ export default function AddSpoolPage() {
     }
   }, [state.mode, isNfc, isManual, navigate, goToScan, goToChoose])
 
+  const renderNfcTagsPanel = () => {
+    if (state.mode !== 'nfc' || !state.tagUid) return null
+    const both = !!state.tagUidSecondary
+    const refreshIcon = (
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M21 12a9 9 0 1 1-2.6-6.3" /><path d="M21 3v6h-6" />
+      </svg>
+    )
+    const minusIcon = (
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+        <path d="M5 12h14" />
+      </svg>
+    )
+    const checkIcon = (
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    )
+
+    return (
+      <div className={styles.nfcTagsPanel}>
+        <div className={styles.nfcTagsHead}>
+          <div className={styles.nfcTagsTitleRow}>
+            {both && <span className={styles.nfcReadyDot} aria-hidden="true">{checkIcon}</span>}
+            <h3 className={styles.nfcTagsTitle}>Tags on this spool</h3>
+          </div>
+          <p className={both ? styles.nfcBothMsg : styles.nfcTagsLead}>
+            {both
+              ? 'Both sides will be registered.'
+              : 'One side is linked. Add the other only if that flange has a tag too.'}
+          </p>
+        </div>
+
+        {both ? (
+          <div className={styles.nfcChipRow}>
+            <div className={styles.nfcChip}>
+              <span className={styles.nfcChipBadge}>A</span>
+              <span className={styles.nfcUid}>{state.tagUid}</span>
+              <button type="button" className={styles.nfcIconBtn} onClick={startRescanPrimary} aria-label="Rescan Side A" title="Rescan Side A">
+                {refreshIcon}
+              </button>
+            </div>
+            <div className={styles.nfcChip}>
+              <span className={styles.nfcChipBadge}>B</span>
+              <span className={styles.nfcUid}>{state.tagUidSecondary}</span>
+              <button type="button" className={styles.nfcIconBtn} onClick={startScanOtherSide} aria-label="Rescan Side B" title="Rescan Side B">
+                {refreshIcon}
+              </button>
+              <button type="button" className={`${styles.nfcIconBtn} ${styles.nfcIconBtnDanger}`} onClick={clearSecondaryTag} aria-label="Remove Side B" title="Remove Side B">
+                {minusIcon}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.nfcTagCards}>
+            <div className={styles.nfcTagCard}>
+              <div className={styles.nfcTagCardMain}>
+                <span className={styles.nfcTagCheck} aria-hidden="true">{checkIcon}</span>
+                <div className={styles.nfcTagCopy}>
+                  <div className={styles.nfcTagSide}>Side A <span className={styles.nfcTagReady}>linked</span></div>
+                  <div className={styles.nfcUid}>{state.tagUid}</div>
+                </div>
+              </div>
+              <button type="button" className={styles.nfcIconBtn} onClick={startRescanPrimary} aria-label="Rescan Side A" title="Rescan">
+                {refreshIcon}
+              </button>
+            </div>
+            <button type="button" className={styles.nfcLinkCard} onClick={startScanOtherSide} aria-label="Link the other side">
+              <span className={styles.nfcLinkCardTitle}>Link the other side</span>
+              <span className={styles.nfcLinkCardHint}>Optional</span>
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // ───── RENDER ─────
   const renderChoose = () => (
-    <>
-      <div className={styles.cardHeader}>
-        <div className={styles.cardHeaderTitle}>
-          <h2>Add spool</h2>
-          <div className={styles.sub}>How do you want to add this spool?</div>
-        </div>
-        <div className={styles.headerActions}>
-          <NotificationBell variant="bordered" />
-          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-        </div>
-      </div>
-      <div className={styles.cardBody}>
-        <div className={styles.chooseGrid}>
-          <button className={styles.choiceCard} onClick={() => { setState(s => ({ ...s, step: 'scan', mode: 'nfc' })) }}>
-            <span className={styles.choiceBadge}><i></i>Recommended</span>
-            <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
-            <span className={styles.choiceTitle}>Scan NFC tag</span>
-            <span className={styles.choiceDesc}>Tap the spool's NFC tag — details autofill and the tag is written to your library.</span>
-          </button>
-          <button className={styles.choiceCard} onClick={() => { setPickView('profiles'); setState(s => ({ ...s, step: 'pick', mode: 'manual', brand: '', material: '', colorName: '' })) }}>
-            <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: PEN_SVG }} />
-            <span className={styles.choiceTitle}>Enter manually</span>
-            <span className={styles.choiceDesc}>Pick the filament and type in the spool details yourself. No NFC tag is written.</span>
-          </button>
-        </div>
-      </div>
-    </>
+    <div className={styles.chooseGrid}>
+      <button className={styles.choiceCard} onClick={() => { setState(s => ({ ...s, step: 'scan', mode: 'nfc' })) }}>
+        <span className={styles.choiceBadge}><i></i>Recommended</span>
+        <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: NFC_SVG }} />
+        <span className={styles.choiceTitle}>Scan NFC tag</span>
+        <span className={styles.choiceDesc}>Tap the spool's NFC tag. Details autofill and the tag is written to your library.</span>
+      </button>
+      <button className={styles.choiceCard} onClick={() => { setPickView('profiles'); setState(s => ({ ...s, step: 'pick', mode: 'manual', brand: '', material: '', colorName: '' })) }}>
+        <span className={styles.choiceIcon} dangerouslySetInnerHTML={{ __html: PEN_SVG }} />
+        <span className={styles.choiceTitle}>Enter manually</span>
+        <span className={styles.choiceDesc}>Pick the filament and type in the spool details yourself. No NFC tag is written.</span>
+      </button>
+    </div>
   )
 
   const renderPick = () => {
@@ -512,126 +651,125 @@ export default function AddSpoolPage() {
       : []
 
     return (
-      <>
-        <div className={styles.cardHeader}>
-          <button className={styles.closeBtn} onClick={backFromPick} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
-          <div className={styles.cardHeaderTitle}>
-            <h2>Add spool</h2>
-            <div className={styles.sub}>
-              {state.mode === 'nfc'
-                ? (state.filament ? 'NFC tag detected — confirm the filament below' : 'New NFC tag — set up the filament below')
-                : 'Pick the filament, then enter spool details'}
+      <div className={`${styles.detailPanel} ${styles.detailPanelPick}`}>
+        <div className={`${styles.formBlock} ${styles.formBlockPick}`}>
+          {renderNfcTagsPanel()}
+          <div className={styles.sectionLabel}>Filament</div>
+          <div className={styles.pickGrid3}>
+            <BrandPickerField
+              value={state.brand}
+              onChange={handleBrandChange}
+              filaments={filaments}
+              onFilamentsChange={setFilaments}
+            />
+            <div className={styles.field}>
+              <label>Material</label>
+              <select value={state.material} disabled={!state.brand} onChange={e => {
+                const material = e.target.value
+                setState(s => ({ ...s, material, colorName: '', filament: null }))
+                if (material) setPickView('catalog')
+                else setPickView('profiles')
+              }}>
+                <option value="">{state.brand ? 'Select material…' : '-'}</option>
+                {filteredMats.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
             </div>
-            {state.mode === 'nfc' && (
-              <span className={styles.nfcBadge}><i></i>{state.filament ? 'NFC tag' : 'New tag'} · will be written</span>
-            )}
+            <div className={styles.field}>
+              <label>Color <span style={{ color: 'var(--faint)', fontWeight: 400 }}>(optional)</span></label>
+              <select value={state.colorName} disabled={!state.material} onChange={e => setState(s => ({ ...s, colorName: e.target.value }))}>
+                <option value="">{state.material ? 'All colors' : '-'}</option>
+                {filteredColors.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
-          <div className={styles.headerActions}>
-            <NotificationBell variant="bordered" />
-            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+          <div className={styles.segGroup}>
+            <button
+              type="button"
+              className={pickView === 'profiles' ? styles.on : ''}
+              aria-pressed={pickView === 'profiles'}
+              onClick={showSavedProfiles}
+            >
+              Saved profiles
+            </button>
+            <button
+              type="button"
+              className={pickView === 'catalog' ? styles.on : ''}
+              aria-pressed={pickView === 'catalog'}
+              onClick={showCatalog}
+            >
+              Catalog
+            </button>
           </div>
-        </div>
-        <div className={styles.cardBody}>
-          <div className={styles.detailPanel}>
-            <div className={styles.sectionLabel}>Filament</div>
-            <div className={styles.pickGrid3}>
-              <BrandPickerField
-                value={state.brand}
-                onChange={handleBrandChange}
-                filaments={filaments}
-                onFilamentsChange={setFilaments}
-              />
-              <div className={styles.field}>
-                <label>Material</label>
-                <select value={state.material} disabled={!state.brand} onChange={e => {
-                  const material = e.target.value
-                  setState(s => ({ ...s, material, colorName: '', filament: null }))
-                  if (material) setPickView('catalog')
-                  else setPickView('profiles')
-                }}>
-                  <option value="">{state.brand ? 'Select material…' : '—'}</option>
-                  {filteredMats.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className={styles.field}>
-                <label>Color <span style={{ color: 'var(--faint)', fontWeight: 400 }}>(optional)</span></label>
-                <select value={state.colorName} disabled={!state.material} onChange={e => setState(s => ({ ...s, colorName: e.target.value }))}>
-                  <option value="">{state.material ? 'All colors' : '—'}</option>
-                  {filteredColors.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className={styles.segGroup}>
-              <button
-                type="button"
-                className={pickView === 'profiles' ? styles.on : ''}
-                aria-pressed={pickView === 'profiles'}
-                onClick={showSavedProfiles}
-              >
-                Saved profiles
-              </button>
-              <button
-                type="button"
-                className={pickView === 'catalog' ? styles.on : ''}
-                aria-pressed={pickView === 'catalog'}
-                onClick={showCatalog}
-              >
-                Catalog
-              </button>
-            </div>
 
-            {pickView === 'profiles' ? (
-              <>
-                <div className={styles.sectionLabel}>Spool profiles</div>
-                {profilesLoading ? (
+          {pickView === 'profiles' ? (
+            <div className={styles.filaScroll}>
+              <div className={styles.sectionLabel}>Spool profiles</div>
+              {profilesLoading ? (
+                <div className={styles.filaGrid}>
+                  {[1, 2, 3, 4].map(i => <div key={i} className={styles.filaSkeleton} />)}
+                </div>
+              ) : profiles.length > 0 ? (
+                <div className={styles.filaGrid}>
+                  {profiles.map((p, i) => (
+                    <button key={p.id} type="button" className={styles.filaCard} onClick={() => selectProfile(p)}>
+                      <div className={styles.filaTop}>
+                        <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(p.colorHex || '#888', 56, 'prof' + i) }} />
+                        <div className={styles.filaInfo}>
+                          <div className={styles.filaNameRow}>
+                            <div className={styles.filaMeta}>
+                              <div className={styles.filaName}>{p.colorName || p.name}</div>
+                              <div className={styles.filaBrand}>{p.brand}</div>
+                            </div>
+                            <span className={styles.filaMatBadge}>{p.material}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.filaFoot}>
+                        <span>{p.initialWeightG}g spool</span>
+                        {p.spoolCount > 0 && <span>{p.spoolCount} in stock</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>No saved profiles yet. Switch to Catalog and pick a brand & material.</div>
+              )}
+            </div>
+          ) : (
+            <div className={styles.filaScroll}>
+              <div className={styles.sectionLabel}>
+                {state.material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Catalog filaments'}
+              </div>
+              {state.brand && state.material ? (
+                matched.length > 0 ? (
                   <div className={styles.filaGrid}>
-                    {[1, 2, 3, 4].map(i => <div key={i} className={styles.filaSkeleton} />)}
-                  </div>
-                ) : profiles.length > 0 ? (
-                  <div className={styles.filaGrid}>
-                    {profiles.map((p, i) => (
-                      <button key={p.id} type="button" className={styles.filaCard} onClick={() => selectProfile(p)}>
-                        <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(p.colorHex || '#888', 40, 'prof' + i) }} />
-                        <div className={styles.filaMeta}>
-                          <div className={styles.filaName}>{p.colorName || p.name}</div>
-                          <div className={styles.filaBrand}>{p.brand} · {p.material}</div>
+                    {matched.map((f, i) => (
+                      <button key={i} type="button" className={styles.filaCard} onClick={() => selectFilament(f)}>
+                        <div className={styles.filaTop}>
+                          <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 56, 'p' + i) }} />
+                          <div className={styles.filaInfo}>
+                            <div className={styles.filaNameRow}>
+                              <div className={styles.filaMeta}>
+                                <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
+                                <div className={styles.filaBrand}>{f.brand}</div>
+                              </div>
+                              <span className={styles.filaMatBadge}>{f.material}</span>
+                            </div>
+                          </div>
                         </div>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <div className={styles.emptyState}>No saved profiles yet — switch to Catalog and pick a brand & material.</div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className={styles.sectionLabel}>
-                  {state.material ? `${matched.length} filament${matched.length === 1 ? '' : 's'}` : 'Catalog filaments'}
-                </div>
-                {state.brand && state.material ? (
-                  matched.length > 0 ? (
-                    <div className={styles.filaGrid}>
-                      {matched.map((f, i) => (
-                        <button key={i} className={styles.filaCard} onClick={() => selectFilament(f)}>
-                          <div className={styles.filaDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 40, 'p' + i) }} />
-                          <div className={styles.filaMeta}>
-                            <div className={styles.filaName}>{f.colorName || f.filamentName}</div>
-                            <div className={styles.filaBrand}>{f.material}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className={styles.emptyState}>No catalog match — pick a different material.</div>
-                  )
-                ) : (
-                  <div className={styles.emptyState}>Select a brand and material above to browse filaments.</div>
-                )}
-              </>
-            )}
-          </div>
+                  <div className={styles.emptyState}>No catalog match. Pick a different material.</div>
+                )
+              ) : (
+                <div className={styles.emptyState}>Select a brand and material above to browse filaments.</div>
+              )}
+            </div>
+          )}
         </div>
-      </>
+      </div>
     )
   }
 
@@ -640,16 +778,8 @@ export default function AddSpoolPage() {
     if (!f) return null
 
     return (
-      <>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardHeaderTitle} />
-          <div className={styles.headerActions}>
-            <NotificationBell variant="bordered" />
-            <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
-          </div>
-        </div>
-        <div className={styles.cardBody}>
-          <div className={styles.detailPanel}>
+      <div className={styles.detailPanel}>
+        <div className={styles.formBlock}>
             <div className={styles.selectedCard}>
               <div className={styles.selectedDisc} dangerouslySetInnerHTML={{ __html: spoolIcon(f.colorHex || '#888', 56, 'sel') }} />
               <div className={styles.selectedInfo}>
@@ -657,8 +787,10 @@ export default function AddSpoolPage() {
                 <div className="c" style={{ fontSize: 12.5, color: 'var(--muted)' }}>{f.colorName || f.filamentName}</div>
                 <div className={styles.tags}><span className={styles.tag}>{f.material}</span></div>
               </div>
-              <button className={`${styles.changeBtn} ${styles.changeBtnIcon}`} onClick={() => setState(s => ({ ...s, step: state.mode === 'nfc' ? 'scan' : 'pick' }))} title="Change filament" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+              <button className={`${styles.changeBtn} ${styles.changeBtnIcon}`} onClick={() => setState(s => ({ ...s, step: 'pick' }))} title="Change filament" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
             </div>
+
+            {renderNfcTagsPanel()}
 
             <div className={styles.sectionLabel}>Weight</div>
             <div className={styles.wbar}>
@@ -899,7 +1031,7 @@ export default function AddSpoolPage() {
                             ) : printer.extraSpool ? (
                               <div className={styles.loadedAlert} role="alert">
                                 <span className={styles.slotSpool} dangerouslySetInnerHTML={{ __html: spoolIcon(printer.extraSpool.colorHex || '#888', 20, 'extra') }} />
-                                This printer already has {printer.extraSpool.colorName || printer.extraSpool.brand} loaded — it will be replaced.
+                                This printer already has {printer.extraSpool.colorName || printer.extraSpool.brand} loaded. It will be replaced.
                               </div>
                             ) : null}
                           </div>
@@ -911,48 +1043,117 @@ export default function AddSpoolPage() {
               </>
             )}
 
-            <div className={styles.detailActions}>
-              <button className={`${styles.btn} ${styles['back']}`} onClick={() => setState(s => ({ ...s, step: state.mode === 'nfc' ? 'scan' : 'pick' }))}>
+            <div className={styles.stickyFooter}>
+              <button className={`${styles.btn} ${styles['back']}`} onClick={() => setState(s => ({ ...s, step: 'pick' }))}>
                 <span dangerouslySetInnerHTML={{ __html: BACK_SVG }} /> Back
               </button>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleSubmit} disabled={saving || !placementValid}
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={handleSubmit}
+                disabled={saving || !placementValid}
                 title={placementValid ? undefined
                   : selectedPrinter?.hasAms ? 'Choose an AMS slot first'
-                  : 'Choose a storage location or printer first'}>
+                  : 'Choose a storage location or printer first'}
+              >
                 {saving
                   ? <span className={styles.btnSpinner} />
                   : <span dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />}
                 {saving ? 'Adding…' : (state.mode === 'manual' && state.qty > 1 ? `Add ${state.qty} spools` : 'Add spool')}
               </button>
             </div>
-          </div>
         </div>
-      </>
+      </div>
     )
   }
 
-  // Render inline in the page space, not as overlay, when at /spools/add.
-  // The page will be wrapped in a full-viewport container by the route.
+  const stepSubtitle = (() => {
+    switch (state.step) {
+      case 'choose': return 'How do you want to add this spool?'
+      case 'scan':
+        return rescanTarget === 'primary'
+          ? 'Hold Side A against your reader to replace that tag'
+          : "Hold the spool's NFC tag against your reader"
+      case 'scanOtherSide':
+        return rescanTarget === 'secondary' && state.tagUidSecondary
+          ? 'Hold Side B against your reader to replace that tag'
+          : 'Flip the spool and hold the other flange against your reader'
+      case 'pick':
+        return state.mode === 'nfc'
+          ? 'New NFC tag. Set up the filament below'
+          : 'Pick the filament, then enter spool details'
+      case 'details': return 'Confirm weight, location, and save'
+      default: return ''
+    }
+  })()
+
+  const showBack = state.step !== 'choose' || isNfc || isManual
+  const backAction = () => {
+    if (state.step === 'scan') {
+      if (rescanTarget === 'primary') {
+        returnFromTagScan()
+        return
+      }
+      if (isNfc || isManual) close()
+      else goToChoose()
+      return
+    }
+    if (state.step === 'scanOtherSide') {
+      returnFromTagScan()
+      return
+    }
+    if (state.step === 'pick') {
+      backFromPick()
+      return
+    }
+    if (state.step === 'details') {
+      setState(s => ({ ...s, step: 'pick' }))
+    }
+  }
+
   const content = (() => {
     switch (state.step) {
       case 'choose': return isNfc || isManual ? null : renderChoose()
-      case 'scan': return (
-        <ScanStep
-          onBack={isNfc || isManual ? close : goToChoose}
-          onClose={close}
-          onTagFound={handleTagFound}
-        />
-      )
+      case 'scan': return <ScanStep onTagFound={handleTagFound} error={otherSideError} />
+      case 'scanOtherSide': return <ScanStep onTagFound={handleOtherSideTagFound} error={otherSideError} />
       case 'pick': return renderPick()
       case 'details': return renderDetails()
       default: return null
     }
   })()
 
+  const isScanStep = state.step === 'scan' || state.step === 'scanOtherSide'
+  const showChoose = state.step === 'choose' && !(isNfc || isManual)
+  const panelClass = [
+    styles.panel,
+    isScanStep ? styles.panelFlush : '',
+    state.step === 'pick' ? styles.panelPick : '',
+    (showChoose || isScanStep || state.step === 'details') ? styles.panelBare : '',
+  ].filter(Boolean).join(' ')
+
+  const scanTitle = state.step === 'scanOtherSide'
+    ? (state.tagUidSecondary ? 'Rescan Side B' : 'Scan the other side')
+    : rescanTarget === 'primary'
+      ? 'Rescan Side A'
+      : 'Add spool'
+
   return (
-    <div className={styles.wrap || ''} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className={styles.card || ''} style={{ border: 0, borderRadius: 0, flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
-        {content || (state.step === 'choose' ? renderChoose() : null)}
+    <div className={styles.page}>
+      <div className={styles.topbar}>
+        {showBack && (
+          <button className={styles.closeBtn} onClick={backAction} aria-label="Back" dangerouslySetInnerHTML={{ __html: BACK_SVG }} />
+        )}
+        <div className={styles.topbarGrow}>
+          <h1>{scanTitle}</h1>
+          <div className={styles.sub}>{stepSubtitle}</div>
+        </div>
+        <div className={styles.headerActions}>
+          <NotificationBell variant="bordered" />
+          <button className={styles.closeBtn} onClick={close} aria-label="Close" dangerouslySetInnerHTML={{ __html: CLOSE_SVG }} />
+        </div>
+      </div>
+
+      <div className={panelClass}>
+        {content || (showChoose ? renderChoose() : null)}
       </div>
     </div>
   )
