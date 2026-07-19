@@ -52,7 +52,7 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
               <p className={styles.brand}>{spool.brand}</p>
             </div>
             <div className={styles.rightCol}>
-              {spool.isActive && <span className={styles.badgeActive}>{t('spools.active')}</span>}
+              {spool.printerId && <span className={styles.badgeActive}>{t('spools.active')}</span>}
               <span className={styles.materialBadge}>{spool.material}</span>
             </div>
           </div>

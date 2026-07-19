@@ -248,6 +248,101 @@ public class SpoolServiceTests
     }
 
     [Fact]
+    public async Task DeleteAsync_WhenSpoolAssignedToPrinter_ClearsPrinterSlot()
+    {
+        var spool = BuildSpool(isActive: true);
+        var printer = new Domain.Models.Printer
+        {
+            Id = Guid.NewGuid(),
+            Name = "X1C",
+            Brand = "Bambu Lab",
+            Model = "X1C",
+            Protocol = "mqtt_lan",
+            Tray1SpoolId = spool.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        _repo.GetByIdAsync(spool.Id).Returns(spool);
+        _printerRepo.GetBySpoolIdAsync(spool.Id).Returns(printer);
+        _printerRepo.UpdateAsync(Arg.Any<Domain.Models.Printer>()).Returns(x => x.Arg<Domain.Models.Printer>());
+
+        var result = await _sut.DeleteAsync(spool.Id);
+
+        Assert.True(result);
+        Assert.Null(printer.Tray1SpoolId);
+        await _printerRepo.Received(1).UpdateAsync(printer);
+        await _repo.Received(1).DeleteAsync(spool.Id);
+    }
+
+    [Fact]
+    public async Task AssignPrinterAsync_WhenTargetSlotOccupied_UnassignsPreviousSpool()
+    {
+        var incoming = BuildSpool();
+        var previous = BuildSpool(isActive: true);
+        var printer = new Domain.Models.Printer
+        {
+            Id = Guid.NewGuid(),
+            Name = "X1C",
+            Brand = "Bambu Lab",
+            Model = "X1C",
+            Protocol = "mqtt_lan",
+            HasAms = true,
+            Tray2SpoolId = previous.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        _repo.GetByIdAsync(incoming.Id).Returns(incoming);
+        _repo.UpdateAsync(Arg.Any<Spool>()).Returns(x => x.Arg<Spool>());
+        _printerRepo.GetBySpoolIdAsync(incoming.Id).Returns((Domain.Models.Printer?)null);
+        _printerRepo.GetByIdAsync(printer.Id).Returns(printer);
+        _printerRepo.UpdateAsync(Arg.Any<Domain.Models.Printer>()).Returns(x => x.Arg<Domain.Models.Printer>());
+        _printJobRepo.GetActiveByPrinterIdAsync(printer.Id).Returns((PrintJob?)null);
+
+        _repo.GetByIdAsync(previous.Id).Returns(previous);
+
+        var result = await _sut.AssignPrinterAsync(incoming.Id, printer.Id, amsSlot: 2, displacedStockLocation: "Shelf B");
+
+        Assert.NotNull(result);
+        Assert.Equal(incoming.Id, printer.Tray2SpoolId);
+        await _repo.Received(1).SetActiveAsync(previous.Id, false, false, "Shelf B");
+        await _notifier.Received().SpoolUpdatedAsync(Arg.Is<SpoolResponse>(r => r.Id == previous.Id));
+        Assert.True(result.IsActive);
+        Assert.Equal(printer.Id, result.PrinterId);
+        Assert.Equal(2, result.AmsSlot);
+    }
+
+    [Fact]
+    public async Task AssignPrinterAsync_WhenExtraSlotOccupied_UnassignsPreviousWithStockLocation()
+    {
+        var incoming = BuildSpool();
+        var previous = BuildSpool(isActive: true);
+        var printer = new Domain.Models.Printer
+        {
+            Id = Guid.NewGuid(),
+            Name = "A1 mini",
+            Brand = "Bambu Lab",
+            Model = "A1 mini",
+            Protocol = "mqtt_lan",
+            HasAms = false,
+            ExtraSpoolId = previous.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        _repo.GetByIdAsync(incoming.Id).Returns(incoming);
+        _repo.GetByIdAsync(previous.Id).Returns(previous);
+        _repo.UpdateAsync(Arg.Any<Spool>()).Returns(x => x.Arg<Spool>());
+        _printerRepo.GetBySpoolIdAsync(incoming.Id).Returns((Domain.Models.Printer?)null);
+        _printerRepo.GetByIdAsync(printer.Id).Returns(printer);
+        _printerRepo.UpdateAsync(Arg.Any<Domain.Models.Printer>()).Returns(x => x.Arg<Domain.Models.Printer>());
+        _printJobRepo.GetActiveByPrinterIdAsync(printer.Id).Returns((PrintJob?)null);
+
+        var result = await _sut.AssignPrinterAsync(incoming.Id, printer.Id, amsSlot: null, displacedStockLocation: "Shelf C");
+
+        Assert.NotNull(result);
+        Assert.Equal(incoming.Id, printer.ExtraSpoolId);
+        await _repo.Received(1).SetActiveAsync(previous.Id, false, false, "Shelf C");
+        await _notifier.Received().SpoolUpdatedAsync(Arg.Is<SpoolResponse>(r => r.Id == previous.Id));
+        Assert.Null(result.AmsSlot);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenNotFound_ReturnsFalse()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((Spool?)null);

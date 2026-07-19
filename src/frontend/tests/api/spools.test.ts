@@ -144,5 +144,19 @@ describe('spoolsApi', () => {
         amsSlot: 2,
       })
     })
+
+    it('includes displacedStockLocation when provided', async () => {
+      mockPatch.mockResolvedValue({ data: mockSpool() })
+      await spoolsApi.assignPrinter('spool-1', {
+        printerId: 'printer-1',
+        amsSlot: 4,
+        displacedStockLocation: 'Shelf B',
+      })
+      expect(mockPatch).toHaveBeenCalledWith('/api/spools/spool-1/assign-printer', {
+        printerId: 'printer-1',
+        amsSlot: 4,
+        displacedStockLocation: 'Shelf B',
+      })
+    })
   })
 })

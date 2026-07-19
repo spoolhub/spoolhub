@@ -65,14 +65,14 @@ describe('SpoolCard', () => {
     expect(screen.getByText('100%')).toBeInTheDocument()
   })
 
-  it('shows ACTIVE badge when isActive is true', () => {
-    render_({ ...baseSpool, isActive: true })
-    expect(screen.getByText('ACTIVE')).toBeInTheDocument()
+  it('shows LOADED badge when assigned to a printer', () => {
+    render_({ ...baseSpool, isActive: true, printerId: 'p1', printerName: 'X1C' })
+    expect(screen.getByText('LOADED')).toBeInTheDocument()
   })
 
-  it('does not show ACTIVE badge when isActive is false', () => {
+  it('does not show LOADED badge when not assigned to a printer', () => {
     render_(baseSpool)
-    expect(screen.queryByText('ACTIVE')).not.toBeInTheDocument()
+    expect(screen.queryByText('LOADED')).not.toBeInTheDocument()
   })
 
   it('shows NFC icon when hasNfcTag is true', () => {

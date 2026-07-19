@@ -12,9 +12,11 @@ import ScanDesktop from '@/components/scan/ScanDesktop'
 import NotificationBell from '@/components/NotificationBell'
 import { getPrinterImage } from '@/utils/printerImages'
 import { getMaterialDefaults } from '@/utils/materialDefaults'
+import { getSlotOccupant } from '@/utils/slotOccupant'
+import AmsConflictModal from '@/components/AmsConflictModal/AmsConflictModal'
 import type { FilamentProfile } from '@/types/filament'
 import type { SpoolProfileResponse } from '@/types/spoolProfile'
-import type { PrinterResponse } from '@/types/printer'
+import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './AddSpoolPage.module.css'
 
 type AddStep = 'choose' | 'scan' | 'scanOtherSide' | 'pick' | 'details'
@@ -164,6 +166,8 @@ export default function AddSpoolPage() {
     dia: '1.75', density: '1.24',
   }))
   const [saving, setSaving] = useState(false)
+  const [pendingDisplace, setPendingDisplace] = useState<TraySpoolSummary | null>(null)
+  const [displacedStockLocation, setDisplacedStockLocation] = useState<string | null>(null)
   const [otherSideError, setOtherSideError] = useState<string | null>(null)
   const [rescanTarget, setRescanTarget] = useState<'primary' | 'secondary' | null>(null)
 
@@ -471,9 +475,21 @@ export default function AddSpoolPage() {
     }))
   }, [isManual, searchParams, filaments])
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (locationOverride?: string) => {
     const f = state.filament
     if (!f || !state.brand || !state.material || !placementValid || saving) return
+
+    const locForDisplaced = locationOverride ?? displacedStockLocation
+    if (state.place === 'printer' && selectedPrinter) {
+      const slot = selectedPrinter.hasAms ? state.slot : null
+      if (!selectedPrinter.hasAms || slot != null) {
+        const occupant = getSlotOccupant(selectedPrinter, slot)
+        if (occupant && !locForDisplaced) {
+          setPendingDisplace(occupant)
+          return
+        }
+      }
+    }
 
     setSaving(true)
     // Keep the button spinner visible even when the API responds instantly
@@ -512,6 +528,7 @@ export default function AddSpoolPage() {
         await spoolsApi.assignPrinter(first.id, {
           printerId: state.printer,
           amsSlot: state.slot ?? undefined,
+          displacedStockLocation: locForDisplaced || undefined,
         })
       }
 
@@ -528,7 +545,12 @@ export default function AddSpoolPage() {
       console.error('Failed to add spool', err)
       setSaving(false)
     }
-  }, [state, saving, placementValid, navigate, linkedTagUids, curWeight, initWeight])
+  }, [state, saving, placementValid, navigate, linkedTagUids, curWeight, initWeight, selectedPrinter, displacedStockLocation])
+
+  function clearDisplace() {
+    setPendingDisplace(null)
+    setDisplacedStockLocation(null)
+  }
 
   const backFromPick = useCallback(() => {
     if (state.mode === 'nfc') {
@@ -913,9 +935,9 @@ export default function AddSpoolPage() {
             <div className={styles.sectionLabel}>Placement</div>
             <div className={styles.segGroup}>
               <button className={state.place === 'stock' ? styles.on : ''} data-t="stock"
-                onClick={() => setState(s => ({ ...s, place: 'stock' }))}>In stock</button>
+                onClick={() => { clearDisplace(); setState(s => ({ ...s, place: 'stock' })) }}>In stock</button>
               <button className={state.place === 'printer' ? styles.on : ''} data-t="printer"
-                onClick={() => setState(s => ({ ...s, place: 'printer' }))}>Loaded in printer</button>
+                onClick={() => { clearDisplace(); setState(s => ({ ...s, place: 'printer' })) }}>Loaded in printer</button>
             </div>
 
             {state.place === 'stock' && (
@@ -982,7 +1004,7 @@ export default function AddSpoolPage() {
               <>
                 <div className={styles.field}>
                   <label>Printer</label>
-                  <select value={state.printer} onChange={e => setState(s => ({ ...s, printer: e.target.value, slot: null }))}>
+                  <select value={state.printer} onChange={e => { clearDisplace(); setState(s => ({ ...s, printer: e.target.value, slot: null })) }}>
                     <option value="">Select printer…</option>
                     {printers.map(p => (
                       <option key={p.id} value={p.id}>{p.name || p.model || p.id}</option>
@@ -1018,7 +1040,7 @@ export default function AddSpoolPage() {
                                     }
                                     return (
                                       <div key={i} className={`${styles.slotTile} ${styles.empty}${sel ? ` ${styles['on']}` : ''}`}
-                                        onClick={() => setState(s => ({ ...s, slot: n }))}>
+                                        onClick={() => { clearDisplace(); setState(s => ({ ...s, slot: n })) }}>
                                         {sel && <span className={styles.slotHere}>Goes here</span>}
                                         <span className={styles.slotNum}>{n}</span>
                                         <div className={styles.slotIcon} dangerouslySetInnerHTML={{ __html: PLUS_SVG }} />
@@ -1049,7 +1071,7 @@ export default function AddSpoolPage() {
               </button>
               <button
                 className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={handleSubmit}
+                onClick={() => void handleSubmit()}
                 disabled={saving || !placementValid}
                 title={placementValid ? undefined
                   : selectedPrinter?.hasAms ? 'Choose an AMS slot first'
@@ -1137,6 +1159,7 @@ export default function AddSpoolPage() {
       : 'Add spool'
 
   return (
+    <>
     <div className={styles.page}>
       <div className={styles.topbar}>
         {showBack && (
@@ -1156,5 +1179,21 @@ export default function AddSpoolPage() {
         {content || (showChoose ? renderChoose() : null)}
       </div>
     </div>
+    {pendingDisplace && selectedPrinter && (
+      <AmsConflictModal
+        printerImgSrc={getPrinterImage(selectedPrinter.brand, selectedPrinter.model)}
+        printerBrand={selectedPrinter.brand}
+        printerModel={selectedPrinter.model}
+        traySlot={selectedPrinter.hasAms ? (state.slot ?? undefined) : undefined}
+        occupantSpool={pendingDisplace}
+        onCancel={() => setPendingDisplace(null)}
+        onConfirm={(loc) => {
+          setDisplacedStockLocation(loc)
+          setPendingDisplace(null)
+          void handleSubmit(loc)
+        }}
+      />
+    )}
+    </>
   )
 }

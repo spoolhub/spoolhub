@@ -79,6 +79,11 @@ public class PrinterService(
         var printer = await printerRepository.GetByIdAsync(id);
         if (printer is null) return false;
 
+        // Unassign every spool linked to this printer before deleting it
+        var assigned = TrayIds(printer).Distinct().ToList();
+        foreach (var spoolId in assigned)
+            await DeactivateSpoolAsync(spoolId);
+
         var name = printer.Name;
         await printerRepository.DeleteAsync(id);
         await activityService.LogAsync(
@@ -87,8 +92,10 @@ public class PrinterService(
         return true;
     }
 
-    public async Task<PrinterResponse?> AssignTraySpoolAsync(Guid printerId, int slot, Guid? spoolId)
+    public async Task<PrinterResponse?> AssignTraySpoolAsync(Guid printerId, int slot, Guid? spoolId, string? displacedStockLocation = null)
     {
+        if (slot is < 1 or > 4) return null;
+
         var printer = await printerRepository.GetByIdAsync(printerId);
         if (printer is null) return null;
 
@@ -101,19 +108,29 @@ public class PrinterService(
             _ => null
         };
 
+        // Incoming spool: drop any prior printer/slot link so it only lives here
+        if (spoolId.HasValue)
+        {
+            await ClearSpoolFromAnyPrinterAsync(spoolId.Value, exceptPrinterId: printerId);
+            ClearSpoolFromPrinter(printer, spoolId.Value);
+        }
+
+        // Previous occupant of this slot → unassign (inactive / back in stock)
+        if (oldSpoolId.HasValue && oldSpoolId != spoolId)
+        {
+            ClearSpoolFromPrinter(printer, oldSpoolId.Value);
+            await DeactivateSpoolAsync(oldSpoolId.Value, displacedStockLocation);
+        }
+
         switch (slot)
         {
             case 1: printer.Tray1SpoolId = spoolId; break;
             case 2: printer.Tray2SpoolId = spoolId; break;
             case 3: printer.Tray3SpoolId = spoolId; break;
             case 4: printer.Tray4SpoolId = spoolId; break;
-            default: return null;
         }
 
         var updated = await printerRepository.UpdateAsync(printer);
-
-        if (oldSpoolId.HasValue && oldSpoolId != spoolId)
-            await DeactivateSpoolAsync(oldSpoolId.Value);
 
         if (spoolId.HasValue)
             await ActivateSpoolAsync(spoolId.Value);
@@ -121,10 +138,10 @@ public class PrinterService(
         Guid[] extra = oldSpoolId.HasValue ? [oldSpoolId.Value] : [];
         var spools = await LoadTraySpoolsAsync(TrayIds(updated).Concat(extra));
 
-        if (spoolId.HasValue && spools.TryGetValue(spoolId.Value, out var assigned))
+        if (spoolId.HasValue && spools.TryGetValue(spoolId.Value, out var assignedSpool))
             await activityService.LogAsync(
-                "SpoolAssigned", "Assigned", "Spool", $"{assigned.Brand} {assigned.ColorName}", spoolId,
-                $"to {printer.Name} (Tray {slot})", "ti-printer", TraySpoolSnapshot(assigned));
+                "SpoolAssigned", "Assigned", "Spool", $"{assignedSpool.Brand} {assignedSpool.ColorName}", spoolId,
+                $"to {printer.Name} (Tray {slot})", "ti-printer", TraySpoolSnapshot(assignedSpool));
         else if (!spoolId.HasValue && oldSpoolId.HasValue && spools.TryGetValue(oldSpoolId.Value, out var removed))
             await activityService.LogAsync(
                 "SpoolUnassigned", "Unassigned", "Spool", $"{removed.Brand} {removed.ColorName}", oldSpoolId,
@@ -134,17 +151,27 @@ public class PrinterService(
         return ToResponse(updated, spools);
     }
 
-    public async Task<PrinterResponse?> AssignExtraSpoolAsync(Guid printerId, Guid? spoolId)
+    public async Task<PrinterResponse?> AssignExtraSpoolAsync(Guid printerId, Guid? spoolId, string? displacedStockLocation = null)
     {
         var printer = await printerRepository.GetByIdAsync(printerId);
         if (printer is null) return null;
 
         var oldSpoolId = printer.ExtraSpoolId;
-        printer.ExtraSpoolId = spoolId;
-        var updated = await printerRepository.UpdateAsync(printer);
+
+        if (spoolId.HasValue)
+        {
+            await ClearSpoolFromAnyPrinterAsync(spoolId.Value, exceptPrinterId: printerId);
+            ClearSpoolFromPrinter(printer, spoolId.Value);
+        }
 
         if (oldSpoolId.HasValue && oldSpoolId != spoolId)
-            await DeactivateSpoolAsync(oldSpoolId.Value);
+        {
+            ClearSpoolFromPrinter(printer, oldSpoolId.Value);
+            await DeactivateSpoolAsync(oldSpoolId.Value, displacedStockLocation);
+        }
+
+        printer.ExtraSpoolId = spoolId;
+        var updated = await printerRepository.UpdateAsync(printer);
 
         if (spoolId.HasValue)
             await ActivateSpoolAsync(spoolId.Value);
@@ -152,10 +179,10 @@ public class PrinterService(
         Guid[] extra = oldSpoolId.HasValue ? [oldSpoolId.Value] : [];
         var spools = await LoadTraySpoolsAsync(TrayIds(updated).Concat(extra));
 
-        if (spoolId.HasValue && spools.TryGetValue(spoolId.Value, out var assigned))
+        if (spoolId.HasValue && spools.TryGetValue(spoolId.Value, out var assignedSpool))
             await activityService.LogAsync(
-                "SpoolAssigned", "Assigned", "Spool", $"{assigned.Brand} {assigned.ColorName}", spoolId,
-                $"to {printer.Name}", "ti-printer", TraySpoolSnapshot(assigned));
+                "SpoolAssigned", "Assigned", "Spool", $"{assignedSpool.Brand} {assignedSpool.ColorName}", spoolId,
+                $"to {printer.Name}", "ti-printer", TraySpoolSnapshot(assignedSpool));
         else if (!spoolId.HasValue && oldSpoolId.HasValue && spools.TryGetValue(oldSpoolId.Value, out var removed))
             await activityService.LogAsync(
                 "SpoolUnassigned", "Unassigned", "Spool", $"{removed.Brand} {removed.ColorName}", oldSpoolId,
@@ -165,11 +192,28 @@ public class PrinterService(
         return ToResponse(updated, spools);
     }
 
+    private async Task ClearSpoolFromAnyPrinterAsync(Guid spoolId, Guid exceptPrinterId)
+    {
+        var other = await printerRepository.GetBySpoolIdAsync(spoolId);
+        if (other is null || other.Id == exceptPrinterId) return;
+        ClearSpoolFromPrinter(other, spoolId);
+        await printerRepository.UpdateAsync(other);
+    }
+
+    private static void ClearSpoolFromPrinter(PrinterEntity p, Guid spoolId)
+    {
+        if (p.Tray1SpoolId == spoolId) p.Tray1SpoolId = null;
+        if (p.Tray2SpoolId == spoolId) p.Tray2SpoolId = null;
+        if (p.Tray3SpoolId == spoolId) p.Tray3SpoolId = null;
+        if (p.Tray4SpoolId == spoolId) p.Tray4SpoolId = null;
+        if (p.ExtraSpoolId == spoolId) p.ExtraSpoolId = null;
+    }
+
     private Task ActivateSpoolAsync(Guid spoolId) =>
         spoolRepository.SetActiveAsync(spoolId, true, clearStockLocation: true);
 
-    private Task DeactivateSpoolAsync(Guid spoolId) =>
-        spoolRepository.SetActiveAsync(spoolId, false);
+    private Task DeactivateSpoolAsync(Guid spoolId, string? stockLocation = null) =>
+        spoolRepository.SetActiveAsync(spoolId, false, stockLocation: stockLocation);
 
     private static string TraySpoolSnapshot(TraySpoolSummary s) =>
         System.Text.Json.JsonSerializer.Serialize(new

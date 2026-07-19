@@ -11,7 +11,7 @@ public interface ISpoolRepository
     Task<Spool?> GetActiveAsync();
     Task<Spool> CreateAsync(Spool spool);
     Task<Spool> UpdateAsync(Spool spool);
-    Task SetActiveAsync(Guid spoolId, bool isActive, bool clearStockLocation = false);
+    Task SetActiveAsync(Guid spoolId, bool isActive, bool clearStockLocation = false, string? stockLocation = null);
     Task ArchiveAsync(Guid id);
     Task DeleteAsync(Guid id);
     Task<(int Added, int Removed)> GetMonthlyStatsAsync();

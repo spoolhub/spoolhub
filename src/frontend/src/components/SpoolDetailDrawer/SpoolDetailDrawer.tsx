@@ -1,12 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
+import {
+  selectTrayHintLabel,
+  spoolMismatchesTrayReport,
+  trayContextForSlot,
+} from '@/utils/selectSpoolFilter'
+import { isTrayEmptyMqtt } from '@/utils/printerAms'
+import { getSlotOccupant } from '@/utils/slotOccupant'
 import { spoolsApi } from '@/api/spools'
 import { printJobsApi } from '@/api/printJobs'
 import { locationsApi } from '@/api/locations'
+import { settingsApi } from '@/api/settings'
+import { getCurrencySymbol, formatCurrency } from '@/utils/currency'
 import type { SpoolResponse, UpdateSpoolRequest } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import type { PrintJobResponse } from '@/types/printJob'
@@ -50,10 +59,65 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
   const [dbLocations, setDbLocations] = useState<string[]>([])
   const [pendingDelete, setPendingDelete] = useState(false)
   const [printJobs, setPrintJobs] = useState<PrintJobResponse[]>([])
+  const [showMismatchConfirm, setShowMismatchConfirm] = useState(false)
+  const [displacedStockLocation, setDisplacedStockLocation] = useState('')
+  const [displacedLocationError, setDisplacedLocationError] = useState(false)
+  const [displacedLocationShakeKey, setDisplacedLocationShakeKey] = useState(0)
+  const [showAddDisplacedLocation, setShowAddDisplacedLocation] = useState(false)
+  const [newDisplacedLocation, setNewDisplacedLocation] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [currency, setCurrency] = useState('USD')
+
+  const editPrinter = useMemo(
+    () => printers.find(p => p.id === editForm.printerId),
+    [printers, editForm.printerId],
+  )
+
+  const trayMismatch = useMemo(() => {
+    if (!editMode || !editForm.isLoadedInPrinter || !editPrinter) return null
+    const slot = editPrinter.hasAms ? (editForm.amsSlot ?? null) : null
+    if (editPrinter.hasAms && slot == null) return null
+    const { trayHint, traySpool } = trayContextForSlot(editPrinter, slot)
+    if (!spoolMismatchesTrayReport(spool, trayHint)) return null
+    return {
+      reportedLabel: selectTrayHintLabel(trayHint!, editPrinter.brand, [spool], traySpool),
+    }
+  }, [editMode, editForm.isLoadedInPrinter, editForm.amsSlot, editPrinter, spool])
+
+  const isAssigningToEmptySlot = useMemo(() => {
+    if (!editMode || !editForm.isLoadedInPrinter || !editPrinter?.hasAms || editForm.amsSlot == null) return false
+    const occupied = editForm.amsSlot === 1 ? editPrinter.tray1Occupied
+      : editForm.amsSlot === 2 ? editPrinter.tray2Occupied
+      : editForm.amsSlot === 3 ? editPrinter.tray3Occupied
+      : editPrinter.tray4Occupied
+    const assignee = editForm.amsSlot === 1 ? editPrinter.tray1Spool
+      : editForm.amsSlot === 2 ? editPrinter.tray2Spool
+      : editForm.amsSlot === 3 ? editPrinter.tray3Spool
+      : editPrinter.tray4Spool
+    return isTrayEmptyMqtt(occupied) && !assignee
+  }, [editMode, editForm.isLoadedInPrinter, editForm.amsSlot, editPrinter])
+
+  const displacedOccupant = useMemo(() => {
+    if (!editMode || !editForm.isLoadedInPrinter || !editPrinter) return null
+    const slot = editPrinter.hasAms ? (editForm.amsSlot ?? null) : null
+    if (editPrinter.hasAms && slot == null) return null
+    return getSlotOccupant(editPrinter, slot, spool.id)
+  }, [editMode, editForm.isLoadedInPrinter, editForm.amsSlot, editPrinter, spool.id])
+
+  function resetDisplaceUi() {
+    setShowMismatchConfirm(false)
+    setDisplacedStockLocation('')
+    setDisplacedLocationError(false)
+    setShowAddDisplacedLocation(false)
+    setNewDisplacedLocation('')
+  }
 
   useEffect(() => {
     locationsApi.getAll()
       .then(data => setDbLocations(data.map(l => l.name).sort((a, b) => a.localeCompare(b))))
+      .catch(() => {})
+    settingsApi.getApp()
+      .then(s => { if (s.currency) setCurrency(s.currency) })
       .catch(() => {})
   }, [])
 
@@ -79,12 +143,18 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
     if (s.stockLocation && !dbLocations.includes(s.stockLocation)) {
       setCustomLocations(prev => prev.includes(s.stockLocation!) ? prev : [...prev, s.stockLocation!])
     }
+    setShowMismatchConfirm(false)
+    setDisplacedStockLocation('')
+    setDisplacedLocationError(false)
+    setShowAddDisplacedLocation(false)
+    setNewDisplacedLocation('')
     setEditMode(true)
   }
 
-  const saveEdit = async () => {
+  const executeSave = async () => {
     const s = spool
     if (!editForm) return
+    setSaving(true)
     try {
       const body: UpdateSpoolRequest = {}
       if (editForm.currentWeightG != null) body.currentWeightG = Number(editForm.currentWeightG)
@@ -98,12 +168,42 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       // Non-AMS printers hold the spool as extraSpool (no slot); only AMS printers take a tray slot
       const targetPrinter = printers.find(p => p.id === editForm.printerId)
       const updated = editForm.isLoadedInPrinter
-        ? await spoolsApi.assignPrinter(s.id, { printerId: editForm.printerId ?? null, amsSlot: targetPrinter?.hasAms ? (editForm.amsSlot ?? 1) : null })
+        ? await spoolsApi.assignPrinter(s.id, {
+            printerId: editForm.printerId ?? null,
+            amsSlot: targetPrinter?.hasAms ? (editForm.amsSlot ?? 1) : null,
+            displacedStockLocation: displacedStockLocation.trim() || undefined,
+          })
         : await spoolsApi.assignPrinter(s.id, { printerId: null, amsSlot: null })
       onUpdated?.(updated)
+      setShowMismatchConfirm(false)
+      setDisplacedStockLocation('')
+      setDisplacedLocationError(false)
       setEditForm({})
       setEditMode(false)
     } catch { /* ignore */ }
+    finally { setSaving(false) }
+  }
+
+  const handleSave = async () => {
+    if (displacedOccupant && !displacedStockLocation.trim()) {
+      setDisplacedLocationError(true)
+      setDisplacedLocationShakeKey(k => k + 1)
+      return
+    }
+    if (trayMismatch && !showMismatchConfirm) {
+      setShowMismatchConfirm(true)
+      return
+    }
+    await executeSave()
+  }
+
+  const cancelEdit = () => {
+    setShowMismatchConfirm(false)
+    setDisplacedStockLocation('')
+    setDisplacedLocationError(false)
+    setShowAddDisplacedLocation(false)
+    setNewDisplacedLocation('')
+    setEditMode(false)
   }
 
   const handleDelete = async () => {
@@ -123,6 +223,88 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
       </aside>
     </>
   )
+
+  function renderOccupantAlert(alertMessage: string) {
+    if (!displacedOccupant) return null
+    return (
+      <div className={styles.occupantAlert} role="alert">
+        <div className={styles.occupantAlertHead}>
+          <InfoCircleIcon className={styles.slotNoteIcon} />
+          <span>{alertMessage}</span>
+        </div>
+        <div className={styles.occupantPreview}>
+          <SpoolIcon color={displacedOccupant.colorHex} size={36} />
+          <div>
+            <p className={styles.occupantLabel}>{t('spoolForm.currentlyLoaded')}</p>
+            <p className={styles.occupantName}>{displacedOccupant.colorName}</p>
+            <p className={styles.occupantMeta}>{displacedOccupant.brand} · {displacedOccupant.material}</p>
+          </div>
+        </div>
+        <div
+          key={displacedLocationShakeKey}
+          className={`${styles.ff}${displacedLocationError ? ` ${styles.locationFieldError} ${styles.shake}` : ''}`}
+          style={{ margin: 0 }}
+          onAnimationEnd={() => setDisplacedLocationError(false)}
+        >
+          <label>{t('amsConflict.storeWhere')}</label>
+          <select
+            className={displacedLocationError ? styles.locationErrorSelect : undefined}
+            value={showAddDisplacedLocation ? '__add_new' : displacedStockLocation}
+            onChange={e => {
+              if (e.target.value === '__add_new') {
+                setShowAddDisplacedLocation(true)
+                setDisplacedLocationError(false)
+              } else {
+                setShowAddDisplacedLocation(false)
+                setDisplacedStockLocation(e.target.value)
+                setDisplacedLocationError(false)
+              }
+            }}
+          >
+            <option value="">{t('amsConflict.selectLocation')}</option>
+            {dbLocations.map(l => <option key={l} value={l}>{l}</option>)}
+            {customLocations.filter(l => !dbLocations.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
+            <option value="__add_new">{t('amsConflict.addNewLocation')}</option>
+          </select>
+          {showAddDisplacedLocation && (
+            <div className={styles.addWrap}>
+              <input
+                type="text"
+                placeholder={t('amsConflict.enterNewLocation')}
+                value={newDisplacedLocation}
+                onChange={e => setNewDisplacedLocation(e.target.value)}
+                autoFocus
+              />
+              <button type="button" className={styles.btnCancel} onClick={() => { setShowAddDisplacedLocation(false); setNewDisplacedLocation('') }}>x</button>
+            </div>
+          )}
+          {showAddDisplacedLocation && (
+            <button
+              type="button"
+              className={styles.btnAdd}
+              disabled={!newDisplacedLocation.trim()}
+              onClick={() => {
+                const loc = newDisplacedLocation.trim()
+                if (!loc) return
+                if (!customLocations.includes(loc) && !dbLocations.includes(loc)) {
+                  setCustomLocations(prev => [...prev, loc])
+                }
+                setDisplacedStockLocation(loc)
+                setDisplacedLocationError(false)
+                setShowAddDisplacedLocation(false)
+                setNewDisplacedLocation('')
+              }}
+            >
+              Add &quot;{newDisplacedLocation.trim()}&quot;
+            </button>
+          )}
+          {displacedLocationError && (
+            <p className={styles.occupantHint}>{t('amsConflict.locationRequired')}</p>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   function renderDetail() {
     const s = spool
@@ -147,7 +329,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                 <div className={styles.b}>{s.brand}</div>
               </div>
               <div className={styles.tags}>
-                {s.isActive && <span className={styles.tag} style={{ background: 'oklch(0.6 0.13 150/.15)', color: 'oklch(0.5 0.12 150)' }}>ACTIVE</span>}
                 <span className={styles.tag}>{s.material}</span>
               </div>
             </div>
@@ -162,7 +343,7 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
         </div>
         <div className={styles.dwgrid}>
           <div className={styles.dwstat}><div className={styles.k}>Est. length left</div><div className={styles.v}>{Math.round(s.currentWeightG / 2.98)} m</div></div>
-          <div className={styles.dwstat}><div className={styles.k}>Spool value</div><div className={styles.v}>${((s.initialWeightG / 1000) * (s.material === 'TPU' ? 32 : s.material === 'ABS' ? 22 : 24)).toFixed(2)}</div></div>
+          <div className={styles.dwstat}><div className={styles.k}>Spool value</div><div className={styles.v}>{s.price != null ? formatCurrency(s.price, currency) : '—'}</div></div>
           <div className={styles.dwstat}><div className={styles.k}>Low stock</div><div className={styles.v}>{s.lowStockThresholdG} g</div></div>
           <div className={styles.dwstat}><div className={styles.k}>Spool weight</div><div className={styles.v}>{s.spoolWeightG ?? 200} g</div></div>
         </div>
@@ -225,7 +406,6 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           })() : (
             <div className={styles.dwline}><span className={styles.lk}>Stored at</span><span className={styles.lv}>{s.stockLocation ?? 'Unassigned'}</span></div>
           )}
-          <div className={styles.dwline}><span className={styles.lk}>Status</span><span className={styles.lv} style={{ color: s.isActive ? 'oklch(0.55 0.13 150)' : low ? 'oklch(0.62 0.16 30)' : 'var(--text-primary)' }}>{s.isActive ? 'Loaded' : low ? 'Low - reorder soon' : 'In stock'}</span></div>
         </div>
         <div className={styles.dwsec}>
           <h3>Inventory</h3>
@@ -338,18 +518,18 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
             <div className={styles.ff}><label>Low stock (g)</label><input type="number" value={f.lowStockThresholdG ?? 0} onChange={e => setEditForm(p => ({ ...p, lowStockThresholdG: +e.target.value }))} /></div>
           </div>
           <div className={styles.ff2}>
-            <div className={styles.ff}><label>Spool value ($)</label><input type="number" step="0.01" value={f.price ?? 0} onChange={e => setEditForm(p => ({ ...p, price: e.target.value === '' ? null : +e.target.value }))} /></div>
+            <div className={styles.ff}><label>Spool value ({getCurrencySymbol(currency)})</label><input type="number" step="0.01" value={f.price ?? ''} onChange={e => setEditForm(p => ({ ...p, price: e.target.value === '' ? null : +e.target.value }))} /></div>
             <div className={styles.ff}><label>Density (g/cm³)</label><input type="number" step="0.01" value={f.density ?? 1.24} onChange={e => setEditForm(p => ({ ...p, density: +e.target.value }))} /></div>
           </div>
           <div className={styles.placementSection}>
             <div className={styles.fsec}>Placement</div>
             <div className={styles.placementToggle}>
-              <button className={!f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setEditForm(p => ({ ...p, isLoadedInPrinter: false, printerId: null, amsSlot: null }))}>In stock</button>
-              <button className={f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => setEditForm(p => ({ ...p, isLoadedInPrinter: true, amsSlot: null }))}>Loaded in printer</button>
+              <button className={!f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, isLoadedInPrinter: false, printerId: null, amsSlot: null })) }}>In stock</button>
+              <button className={f.isLoadedInPrinter ? styles.placementBtn + ' ' + styles.placementBtnOn : styles.placementBtn} onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, isLoadedInPrinter: true, amsSlot: null })) }}>Loaded in printer</button>
             </div>
             {f.isLoadedInPrinter && (<>
               <div className={styles.ff}><label>Printer</label>
-                <select value={f.printerId ?? ''} onChange={e => setEditForm(p => ({ ...p, printerId: e.target.value || null }))}>
+                <select value={f.printerId ?? ''} onChange={e => { resetDisplaceUi(); setEditForm(p => ({ ...p, printerId: e.target.value || null, amsSlot: null })) }}>
                   <option value="">Select printer</option>
                   {printers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.model})</option>)}
                 </select>
@@ -366,11 +546,31 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                         <p className={styles.slotLabel}>{t('spoolForm.chooseAmsSlot')}</p>
                         <div className={styles.slotPick}>
                           {[1, 2, 3, 4].map(slot => {
-                            const occupant = traySlotMap[slot]; const isSel = f.amsSlot === slot
+                            const rawOccupant = traySlotMap[slot]
+                            // Moving this spool to another slot → show its current slot as vacated/empty
+                            const isVacating = !!rawOccupant && rawOccupant.id === spool.id
+                              && f.amsSlot != null && f.amsSlot !== slot
+                            const occupant = isVacating ? null : rawOccupant
+                            const isSel = f.amsSlot === slot
+                            const isOtherOccupant = !!occupant && occupant.id !== spool.id
+                            const mqttOccupied = slot === 1 ? printer.tray1Occupied
+                              : slot === 2 ? printer.tray2Occupied
+                              : slot === 3 ? printer.tray3Occupied
+                              : printer.tray4Occupied
+                            const isEmptyReported = !isSel && !occupant && isTrayEmptyMqtt(mqttOccupied)
+                            // Selected slot always shows this spool; other occupant is in the alert below
                             const colorHex = isSel ? spool.colorHex : occupant?.colorHex
-                            const name = isSel ? spool.colorName : occupant?.colorName ?? t('spoolForm.slotEmpty')
+                            const name = isSel
+                              ? spool.colorName
+                              : (occupant?.colorName ?? t('spoolForm.slotEmpty'))
                             return (
-                              <button key={slot} type="button" className={`${styles.slotTile}${isSel ? ' ' + styles.slotTileSel : ''}${!occupant && !isSel ? ' ' + styles.slotTileEmpty : ''}`} onClick={() => setEditForm(p => ({ ...p, amsSlot: isSel ? null : slot }))}>
+                              <button
+                                key={slot}
+                                type="button"
+                                title={isOtherOccupant ? `${occupant!.colorName} — ${occupant!.brand} ${occupant!.material}` : undefined}
+                                className={`${styles.slotTile}${isSel && !isAssigningToEmptySlot ? ' ' + styles.slotTileSel : ''}${!occupant && !isSel ? ' ' + styles.slotTileEmpty : ''}${isOtherOccupant && !isSel ? ' ' + styles.slotTileBusy : ''}${isEmptyReported ? ' ' + styles.slotTileEmptyReport : ''}${isSel && trayMismatch ? ' ' + styles.slotTileMismatch : ''}${isSel && isAssigningToEmptySlot ? ' ' + styles.slotTileReserve : ''}`}
+                                onClick={() => { resetDisplaceUi(); setEditForm(p => ({ ...p, amsSlot: isSel ? null : slot })) }}
+                              >
                                 {isSel && <span className={styles.slotHere}>{t('spoolForm.goesHere')}</span>}
                                 <span className={styles.slotNum}>{slot}</span>
                                 <span className={styles.slotIc}>{colorHex ? <SpoolIcon color={colorHex} size={22} /> : <PlusIcon className={styles.slotPlus} />}</span>
@@ -379,11 +579,45 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
                             )
                           })}
                         </div>
-                        {f.amsSlot != null && traySlotMap[f.amsSlot] && (<div className={styles.slotNote}><InfoCircleIcon className={styles.slotNoteIcon} />{t('spoolForm.slotOccupied')}</div>)}
+                        {renderOccupantAlert(t('spoolForm.slotOccupiedAlert'))}
+                        {f.amsSlot != null && traySlotMap[f.amsSlot]?.id === spool.id && (
+                          <div className={styles.slotNote}>
+                            <InfoCircleIcon className={styles.slotNoteIcon} />
+                            Already assigned to this slot
+                          </div>
+                        )}
+                        {isAssigningToEmptySlot && (
+                          <div className={styles.slotNote}>
+                            <InfoCircleIcon className={styles.slotNoteIcon} />
+                            {t('scan.assignToEmptySlotHint')}
+                          </div>
+                        )}
+                        {trayMismatch && (
+                          <div className={`${styles.slotNote} ${styles.slotNoteWarn}`}>
+                            <InfoCircleIcon className={styles.slotNoteIcon} />
+                            {t('scan.trayReportMismatch', { filament: trayMismatch.reportedLabel })}
+                          </div>
+                        )}
                       </>) : (
-                        <div className={styles.singleSlot}>
-                          <span className={styles.singleSlotIc}><SpoolIcon color={spool.colorHex ?? '#888'} size={28} /></span>
-                          <div><p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p><p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p></div>
+                        <>
+                          {!displacedOccupant && (
+                            <div className={styles.singleSlot}>
+                              <span className={styles.singleSlotIc}>
+                                <SpoolIcon color={spool.colorHex ?? '#888'} size={28} />
+                              </span>
+                              <div>
+                                <p className={styles.singleSlotTitle}>{t('spoolForm.directSpool')}</p>
+                                <p className={styles.singleSlotDesc}>{t('spoolForm.noAmsSlots')}</p>
+                              </div>
+                            </div>
+                          )}
+                          {renderOccupantAlert(t('spoolForm.printerOccupiedAlert'))}
+                        </>
+                      )}
+                      {trayMismatch && !printer.hasAms && (
+                        <div className={`${styles.slotNote} ${styles.slotNoteWarn}`}>
+                          <InfoCircleIcon className={styles.slotNoteIcon} />
+                          {t('scan.trayReportMismatch', { filament: trayMismatch.reportedLabel })}
                         </div>
                       )}
                     </div>
@@ -406,10 +640,29 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           </div>
         </div>
         <div className={styles.dwact}>
-          <button className={styles.btn} onClick={() => setEditMode(false)}>Cancel</button>
-          <button className={`${styles.btn} ${styles.primary}`} onClick={saveEdit}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>Save changes
-          </button>
+          {showMismatchConfirm && trayMismatch ? (
+            <>
+              <div className={styles.askBox}>
+                <p className={styles.askQuestion}>
+                  {t('scan.trayReportMismatchConfirm', { filament: trayMismatch.reportedLabel })}
+                </p>
+              </div>
+              <button className={styles.btn} onClick={() => setShowMismatchConfirm(false)} disabled={saving}>
+                {t('common.cancel')}
+              </button>
+              <button className={`${styles.btn} ${styles.primary}`} onClick={() => void executeSave()} disabled={saving}>
+                {saving ? '…' : t('scan.assignAnyway')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button className={styles.btn} onClick={cancelEdit} disabled={saving}>Cancel</button>
+              <button className={`${styles.btn} ${styles.primary}`} onClick={() => void handleSave()} disabled={saving}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                {saving ? '…' : 'Save changes'}
+              </button>
+            </>
+          )}
         </div>
       </>
     )

@@ -74,6 +74,8 @@ export interface AddSpoolRequest {
 export interface AssignPrinterRequest {
   printerId: string | null
   amsSlot?: number | null
+  /** Storage location for the spool currently in the target slot (if any). */
+  displacedStockLocation?: string | null
 }
 
 export interface SpoolMonthlyStats {

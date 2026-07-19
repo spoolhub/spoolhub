@@ -182,7 +182,7 @@ describe('PrinterDrawer', () => {
     expect(screen.getByText('Select a Spool — Slot 1')).toBeInTheDocument()
     expect(screen.getByText('White')).toBeInTheDocument()
     fireEvent.click(screen.getByText('White'))
-    await waitFor(() => expect(printersApi.assignTraySpool).toHaveBeenCalledWith('p1', 1, 's1'))
+    await waitFor(() => expect(printersApi.assignTraySpool).toHaveBeenCalledWith('p1', 1, 's1', undefined))
     expect(onTrayAssigned).toHaveBeenCalled()
   })
 })

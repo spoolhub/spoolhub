@@ -42,11 +42,17 @@ export const printersApi = {
     nozzleTempC: number; bedTempC: number
   }) => apiClient.post(`/api/printers/${id}/status/mock`, req),
 
-  assignTraySpool: (id: string, slot: number, spoolId: string | null) =>
-    apiClient.put<PrinterResponse>(`/api/printers/${id}/trays/${slot}`, { spoolId }).then(r => r.data),
+  assignTraySpool: (id: string, slot: number, spoolId: string | null, displacedStockLocation?: string | null) =>
+    apiClient.put<PrinterResponse>(`/api/printers/${id}/trays/${slot}`, {
+      spoolId,
+      displacedStockLocation: displacedStockLocation ?? null,
+    }).then(r => r.data),
 
-  assignExtraSpool: (id: string, spoolId: string | null) =>
-    apiClient.put<PrinterResponse>(`/api/printers/${id}/extra-spool`, { spoolId }).then(r => r.data),
+  assignExtraSpool: (id: string, spoolId: string | null, displacedStockLocation?: string | null) =>
+    apiClient.put<PrinterResponse>(`/api/printers/${id}/extra-spool`, {
+      spoolId,
+      displacedStockLocation: displacedStockLocation ?? null,
+    }).then(r => r.data),
 
   previewCloud: (serialNumber: string) =>
     apiClient

@@ -67,13 +67,17 @@ public class SpoolRepository(FilamentDbContext db) : ISpoolRepository
             .FirstAsync(s => s.Id == spool.Id);
     }
 
-    public async Task SetActiveAsync(Guid spoolId, bool isActive, bool clearStockLocation = false)
+    public async Task SetActiveAsync(Guid spoolId, bool isActive, bool clearStockLocation = false, string? stockLocation = null)
     {
         var query = db.Spools.Where(s => s.Id == spoolId);
         if (clearStockLocation)
             await query.ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.IsActive, isActive)
                 .SetProperty(x => x.StockLocation, (string?)null));
+        else if (!string.IsNullOrWhiteSpace(stockLocation))
+            await query.ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsActive, isActive)
+                .SetProperty(x => x.StockLocation, stockLocation.Trim()));
         else
             await query.ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, isActive));
     }
