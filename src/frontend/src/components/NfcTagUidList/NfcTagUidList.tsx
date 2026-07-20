@@ -33,17 +33,20 @@ export default function NfcTagUidList({ spool, scannedTagUid }: ListProps) {
   )
 }
 
+interface RowProps extends ListProps {
+  labelClassName: string
+  valueClassName: string
+  rowClassName: string
+  singleLabel?: string
+}
+
 export function NfcTagUidRows({
   spool,
   labelClassName,
   valueClassName,
   rowClassName,
   singleLabel = 'Tag ID',
-}: ListProps & {
-  labelClassName: string
-  valueClassName: string
-  rowClassName: string
-}) {
+}: RowProps) {
   const tagUids = getNfcTagUids(spool)
 
   if (tagUids.length === 0) {

@@ -19,6 +19,24 @@
   border: 2px solid var(--surface);
 }
 
+.badgeIcon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.badgeXs {
+  width: 10px;
+  height: 10px;
+  bottom: 1px;
+  border-width: 1.5px;
+}
+
+.badgeXs .badgeIcon {
+  width: 6px;
+  height: 6px;
+}
+
 .badgeSm {
   width: 13px;
   height: 13px;
@@ -26,7 +44,7 @@
   border-width: 2px;
 }
 
-.badgeSm svg {
+.badgeSm .badgeIcon {
   width: 8px;
   height: 8px;
 }
@@ -37,6 +55,14 @@
 
 .badgeLeft {
   left: -4px;
+}
+
+.badgeXs.badgeRight {
+  right: 0;
+}
+
+.badgeXs.badgeLeft {
+  left: 0;
 }
 
 .badgeSm.badgeRight {

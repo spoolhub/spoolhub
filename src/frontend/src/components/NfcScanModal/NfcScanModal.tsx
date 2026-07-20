@@ -8,6 +8,7 @@ import { SpoolIcon } from '@/components/icons'
 import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
 import NfcTagUidList from '@/components/NfcTagUidList/NfcTagUidList'
 import { getNfcTagUids } from '@/utils/nfcTags'
+import NfcIcon from '@/components/icons/NfcIcon'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
@@ -21,16 +22,6 @@ import {
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
-
-const NFC_UID_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-    <rect x="4" y="3" width="16" height="18" rx="3" />
-    <path d="M9.2 9.2a4 4 0 0 1 0 5.6" />
-    <path d="M12.2 6.8a7.5 7.5 0 0 1 0 10.4" />
-    <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
-  </svg>
-)
 
 const ASSIGN_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
@@ -314,7 +305,7 @@ export default function NfcScanModal({ spool, scannedTagUid, onClose, onViewDeta
           {/* UID card */}
           {getNfcTagUids(spool).length > 0 && (
             <div className={styles.uidCard}>
-              <span className={styles.uidIcon}>{NFC_UID_ICON}</span>
+              <span className={styles.uidIcon}><NfcIcon className={styles.uidNfcIcon} /></span>
               <div className={styles.uidBody}>
                 <NfcTagUidList spool={spool} scannedTagUid={scannedTagUid} />
                 <div className={styles.uidLabel}>

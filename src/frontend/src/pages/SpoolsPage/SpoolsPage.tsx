@@ -300,7 +300,6 @@ export default function SpoolsPage() {
                                 color={s.colorHex}
                                 size={30}
                                 spool={s}
-                                badgeSize="sm"
                                 linkedLabel="NFC tag linked"
                               />
                             </td>

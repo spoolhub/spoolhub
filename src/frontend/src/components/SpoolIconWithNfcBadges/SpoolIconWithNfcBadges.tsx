@@ -1,23 +1,22 @@
 import { SpoolIcon } from '@/components/icons'
+import NfcIcon from '@/components/icons/NfcIcon'
 import { getNfcTagUids, hasDualNfcTags } from '@/utils/nfcTags'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './SpoolIconWithNfcBadges.module.css'
 
-const NFC_BADGE_ICON = (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <line x1="5" y1="7" x2="5" y2="17" />
-    <path d="M8 9.5a4 4 0 0 1 0 5" />
-    <path d="M11 8a7 7 0 0 1 0 8" />
-    <path d="M14 6.5a9.5 9.5 0 0 1 0 11" />
-  </svg>
-)
+function badgeSizeForSpool(size: number, badgeSize: 'xs' | 'sm' | 'md' | 'auto'): 'xs' | 'sm' | 'md' {
+  if (badgeSize !== 'auto') return badgeSize
+  if (size <= 42) return 'xs'
+  if (size <= 56) return 'sm'
+  return 'md'
+}
 
 interface Props {
   color: string
   size: number
   spool: Pick<SpoolResponse, 'hasNfcTag' | 'nfcTagUid' | 'nfcTagUids'>
   badgeClassName?: string
-  badgeSize?: 'sm' | 'md'
+  badgeSize?: 'xs' | 'sm' | 'md' | 'auto'
   linkedLabel?: string
 }
 
@@ -26,14 +25,16 @@ export default function SpoolIconWithNfcBadges({
   size,
   spool,
   badgeClassName,
-  badgeSize = 'md',
+  badgeSize = 'auto',
   linkedLabel = 'NFC tag linked',
 }: Props) {
   const tagUids = getNfcTagUids(spool)
   const dual = hasDualNfcTags(spool)
+  const resolvedBadgeSize = badgeSizeForSpool(size, badgeSize)
   const badgeClass = [
     styles.badge,
-    badgeSize === 'sm' ? styles.badgeSm : '',
+    resolvedBadgeSize === 'xs' ? styles.badgeXs : '',
+    resolvedBadgeSize === 'sm' ? styles.badgeSm : '',
     badgeClassName,
   ].filter(Boolean).join(' ')
 
@@ -44,11 +45,11 @@ export default function SpoolIconWithNfcBadges({
         <>
           {dual && (
             <span className={`${badgeClass} ${styles.badgeLeft}`} aria-label={linkedLabel}>
-              {NFC_BADGE_ICON}
+              <NfcIcon className={styles.badgeIcon} />
             </span>
           )}
           <span className={`${badgeClass} ${styles.badgeRight}`} aria-label={linkedLabel}>
-            {NFC_BADGE_ICON}
+            <NfcIcon className={styles.badgeIcon} />
           </span>
         </>
       )}
