@@ -20,7 +20,7 @@ Submitting a Contribution does **not** transfer copyright ownership to SpoolHub 
 
 ## 3. License Grant
 
-By submitting a Contribution, you grant SpoolHub and all recipients of the Project a perpetual, worldwide, non exclusive, royalty free, irrevocable license to use, reproduce, modify, distribute, publicly display, publicly perform, and sublicense your Contribution under the terms of the Project's license, currently the GNU Affero General Public License v3.0 (AGPL 3.0).
+By submitting a Contribution, you grant SpoolHub, its maintainers, and all recipients of the Project a perpetual, worldwide, non exclusive, royalty free, irrevocable license to use, reproduce, modify, distribute, publicly display, publicly perform, and sublicense your Contribution under the terms of the Project's license, currently the GNU Affero General Public License v3.0 (AGPL 3.0).
 
 ## 4. Your Representations
 
