@@ -53,6 +53,7 @@ const spool: SpoolResponse = {
   bedMax: null,
   hasNfcTag: false,
   nfcTagUid: null,
+  nfcTagUids: [],
   printerId: null,
   printerName: null,
   amsSlot: null,
@@ -187,5 +188,25 @@ describe('SpoolDetailDrawer', () => {
       })
     })
     expect(onUpdated).toHaveBeenCalled()
+  })
+
+  it('shows Side A and Side B tag IDs when two NFC tags are linked', () => {
+    render(
+      <SpoolDetailDrawer
+        spool={{
+          ...spool,
+          hasNfcTag: true,
+          nfcTagUid: 'UID-A',
+          nfcTagUids: ['UID-A', 'UID-B'],
+        }}
+        printers={[]}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Side A')).toBeInTheDocument()
+    expect(screen.getByText('Side B')).toBeInTheDocument()
+    expect(screen.getByText('UID-A')).toBeInTheDocument()
+    expect(screen.getByText('UID-B')).toBeInTheDocument()
   })
 })

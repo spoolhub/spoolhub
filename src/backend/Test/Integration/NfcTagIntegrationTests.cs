@@ -180,6 +180,24 @@ public class NfcTagIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetSpoolById_ReturnsAllNfcTagUids_WhenTwoTagsRegistered()
+    {
+        var spoolId = await CreateSpoolId();
+        var uidA = $"UID-A-{Guid.NewGuid():N}";
+        var uidB = $"UID-B-{Guid.NewGuid():N}";
+        await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidA, spoolId, "NTAG215"));
+        await _client.PostAsJsonAsync("/api/nfc-tags", new RegisterNfcTagRequest(uidB, spoolId, "NTAG215"));
+
+        var spool = await _client.GetFromJsonAsync<SpoolResponse>($"/api/spools/{spoolId}");
+
+        Assert.NotNull(spool);
+        Assert.True(spool.HasNfcTag);
+        Assert.Equal(2, spool.NfcTagUids.Count);
+        Assert.Contains(uidA, spool.NfcTagUids);
+        Assert.Contains(uidB, spool.NfcTagUids);
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<Guid> CreateSpoolId()

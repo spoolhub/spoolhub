@@ -23,6 +23,7 @@ public record SpoolResponse(
     int? BedMax,
     bool HasNfcTag,
     string? NfcTagUid,
+    IReadOnlyList<string> NfcTagUids,
     Guid? PrinterId,
     string? PrinterName,
     int? AmsSlot,

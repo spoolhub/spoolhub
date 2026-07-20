@@ -48,6 +48,7 @@ const spool: SpoolResponse = {
   bedMax: null,
   hasNfcTag: true,
   nfcTagUid: 'AABBCCDD',
+  nfcTagUids: ['AABBCCDD'],
   printerId: null,
   printerName: null,
   amsSlot: null,

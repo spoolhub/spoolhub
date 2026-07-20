@@ -45,7 +45,7 @@ function makeSpool(overrides: Partial<SpoolResponse> = {}): SpoolResponse {
     lowStockThresholdG: 100, isActive: false, isArchived: false,
     createdAt: new Date().toISOString(), lastScannedAt: null, notes: null,
     density: null, extruderMin: null, extruderMax: null, bedMin: null, bedMax: null,
-    hasNfcTag: false, nfcTagUid: null, printerId: null, printerName: null, amsSlot: null,
+    hasNfcTag: false, nfcTagUid: null, nfcTagUids: [], printerId: null, printerName: null, amsSlot: null,
     ...overrides,
   }
 }

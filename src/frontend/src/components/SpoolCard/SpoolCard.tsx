@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { SpoolIcon } from '@/components/icons'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
 import PrinterIcon from '@/components/icons/PrinterIcon'
 import type { SpoolResponse } from '@/types/spool'
 import styles from './SpoolCard.module.css'
@@ -33,17 +33,12 @@ export default function SpoolCard({ spool, onClick }: SpoolCardProps) {
     <Link to={`/spools/${spool.id}`} className={styles.card} onClick={handleClick}>
       <div className={styles.top}>
         <div className={styles.iconWrap}>
-          <SpoolIcon color={spool.colorHex} size={56} />
-          {spool.hasNfcTag && (
-            <span className={styles.nfcBadge} aria-label={t('spools.nfcTagLinked')}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="7" x2="5" y2="17" />
-                <path d="M8 9.5a4 4 0 0 1 0 5" />
-                <path d="M11 8a7 7 0 0 1 0 8" />
-                <path d="M14 6.5a9.5 9.5 0 0 1 0 11" />
-              </svg>
-            </span>
-          )}
+          <SpoolIconWithNfcBadges
+            color={spool.colorHex}
+            size={56}
+            spool={spool}
+            linkedLabel={t('spools.nfcTagLinked')}
+          />
         </div>
         <div className={styles.info}>
           <div className={styles.nameRow}>

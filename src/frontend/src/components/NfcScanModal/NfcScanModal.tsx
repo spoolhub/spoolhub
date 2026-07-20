@@ -5,6 +5,9 @@ import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import { locationsApi } from '@/api/locations'
 import { SpoolIcon } from '@/components/icons'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
+import NfcTagUidList from '@/components/NfcTagUidList/NfcTagUidList'
+import { getNfcTagUids } from '@/utils/nfcTags'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
@@ -45,13 +48,14 @@ const CLOSE_ICON = (
 
 interface Props {
   spool: SpoolResponse
+  scannedTagUid?: string | null
   onClose: () => void
   onViewDetails?: (spool: SpoolResponse) => void
 }
 
 type Step = 'info' | 'assign' | 'done'
 
-export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
+export default function NfcScanModal({ spool, scannedTagUid, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
   const [step, setStep] = useState<Step>('info')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
@@ -293,7 +297,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
         {/* ── Hero band ── */}
         <div className={styles.heroBand}>
                   <div className={styles.heroIcon}>
-            <SpoolIcon color={spool.colorHex} size={96} />
+            <SpoolIconWithNfcBadges color={spool.colorHex} size={96} spool={spool} />
           </div>
                   <div className={styles.heroText}>
                     <div className={styles.heroBrand}>{spool.brand}</div>
@@ -308,12 +312,14 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
         <div className={styles.drawerBody}>
 
           {/* UID card */}
-          {spool.nfcTagUid && (
+          {getNfcTagUids(spool).length > 0 && (
             <div className={styles.uidCard}>
               <span className={styles.uidIcon}>{NFC_UID_ICON}</span>
-              <div>
-                <div className={styles.uidValue}>{spool.nfcTagUid}</div>
-                <div className={styles.uidLabel}>Tag UID</div>
+              <div className={styles.uidBody}>
+                <NfcTagUidList spool={spool} scannedTagUid={scannedTagUid} />
+                <div className={styles.uidLabel}>
+                  {getNfcTagUids(spool).length > 1 ? 'Tag UIDs' : 'Tag UID'}
+                </div>
               </div>
             </div>
           )}

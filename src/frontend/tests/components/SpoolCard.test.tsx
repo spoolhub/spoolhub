@@ -27,6 +27,7 @@ const baseSpool: SpoolResponse = {
   bedMax: null,
   hasNfcTag: false,
   nfcTagUid: null,
+  nfcTagUids: [],
   printerId: null,
   printerName: null,
   amsSlot: null,
@@ -75,9 +76,19 @@ describe('SpoolCard', () => {
     expect(screen.queryByText('LOADED')).not.toBeInTheDocument()
   })
 
-  it('shows NFC icon when hasNfcTag is true', () => {
-    const { container } = render_({ ...baseSpool, hasNfcTag: true })
-    expect(container.querySelector('[aria-label="NFC tag linked"]')).toBeInTheDocument()
+  it('shows one NFC badge when a single tag is linked', () => {
+    const { container } = render_({ ...baseSpool, hasNfcTag: true, nfcTagUid: 'UID-A', nfcTagUids: ['UID-A'] })
+    expect(container.querySelectorAll('[aria-label="NFC tag linked"]')).toHaveLength(1)
+  })
+
+  it('shows NFC badges on both sides when two tags are linked', () => {
+    const { container } = render_({
+      ...baseSpool,
+      hasNfcTag: true,
+      nfcTagUid: 'UID-A',
+      nfcTagUids: ['UID-A', 'UID-B'],
+    })
+    expect(container.querySelectorAll('[aria-label="NFC tag linked"]')).toHaveLength(2)
   })
 
   it('does not show NFC icon when hasNfcTag is false', () => {

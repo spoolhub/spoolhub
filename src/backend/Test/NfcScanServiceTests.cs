@@ -78,5 +78,5 @@ public class NfcScanServiceTests
         1000, 800, 200, 100,
         true, false, DateTime.UtcNow, null, null,
         null, null, null, null, null, null,
-        false, null, null, null, null, null, null);
+        false, null, [], null, null, null, null, null);
 }

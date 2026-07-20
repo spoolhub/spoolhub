@@ -97,6 +97,10 @@
   display: grid; place-items: center;
   background: var(--accent-soft); color: var(--accent-ink);
 }
+.uidBody {
+  flex: 1;
+  min-width: 0;
+}
 .uidValue {
   font-family: monospace; font-weight: 700;
   font-size: 14.5px; letter-spacing: 0.03em;

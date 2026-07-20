@@ -1,0 +1,48 @@
+.empty {
+  color: var(--faint);
+}
+
+.mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  word-break: break-all;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-2);
+}
+
+.chipScanned {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.side {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-ink);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .side {
+  color: var(--accent);
+}
+
+.uid {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  word-break: break-all;
+}

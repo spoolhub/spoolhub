@@ -1,0 +1,48 @@
+.wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.badge {
+  position: absolute;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}
+
+.badgeSm {
+  width: 13px;
+  height: 13px;
+  bottom: 4px;
+  border-width: 2px;
+}
+
+.badgeSm svg {
+  width: 8px;
+  height: 8px;
+}
+
+.badgeRight {
+  right: -4px;
+}
+
+.badgeLeft {
+  left: -4px;
+}
+
+.badgeSm.badgeRight {
+  right: 2px;
+}
+
+.badgeSm.badgeLeft {
+  left: 2px;
+}

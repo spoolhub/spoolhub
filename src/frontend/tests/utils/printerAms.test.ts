@@ -36,6 +36,7 @@ const spool = (pct: number): SpoolResponse => ({
   bedMax: null,
   hasNfcTag: false,
   nfcTagUid: null,
+  nfcTagUids: [],
   printerId: null,
   printerName: null,
   amsSlot: null,

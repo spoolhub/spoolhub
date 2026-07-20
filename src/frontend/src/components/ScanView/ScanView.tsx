@@ -114,6 +114,7 @@ export default function ScanView({ onUnknownTag }: Props = {}) {
       {foundSpool && (
         <NfcScanModal
           spool={foundSpool}
+          scannedTagUid={tagUidParam}
           onClose={() => {
             setFoundSpool(null)
             if (platform === 'ios') navigate('/scan', { replace: true })
