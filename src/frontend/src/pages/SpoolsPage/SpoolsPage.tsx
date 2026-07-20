@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SpoolIcon } from '@/components/icons'
 import SpoolCard from '@/components/SpoolCard'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import SpoolProfileCard from '@/components/SpoolProfileCard'
 import SpoolProfileDrawer from '@/components/SpoolProfileDrawer'
@@ -20,18 +21,7 @@ import { settingsApi } from '@/api/settings'
 import { formatCurrency } from '@/utils/currency'
 import styles from './SpoolsPage.module.css'
 
-function NfcBadge({ label }: { label: string }) {
-  return (
-    <svg aria-label={label} width="14" height="14" className={styles.nfcIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="7" x2="5" y2="17" />
-      <path d="M8 9.5a4 4 0 0 1 0 5" />
-      <path d="M11 8a7 7 0 0 1 0 8" />
-      <path d="M14 6.5a9.5 9.5 0 0 1 0 11" />
-    </svg>
-  )
-}
-
-const formatRelativeTime = (dateStr: string | null): string => {
+function formatRelativeTime(dateStr: string | null): string {
   if (!dateStr) return 'Never'
   const date = new Date(dateStr)
   const now = new Date()
@@ -306,8 +296,12 @@ export default function SpoolsPage() {
                         return (
                           <tr key={s.id} onClick={() => setSelected(s)}>
                             <td className={styles.stblIc}>
-                              <SpoolIcon color={s.colorHex} size={30} />
-                              {s.hasNfcTag && (<span className={styles.stblNfcBadge}><NfcBadge label="NFC tag linked" /></span>)}
+                              <SpoolIconWithNfcBadges
+                                color={s.colorHex}
+                                size={30}
+                                spool={s}
+                                linkedLabel="NFC tag linked"
+                              />
                             </td>
                             <td className={styles.stblCname}>{s.colorName}</td>
                             <td className={styles.stblBrand}>{s.brand}</td>

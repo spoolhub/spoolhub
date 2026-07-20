@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
 import { SpoolIcon } from '@/components/icons'
+import { NfcTagUidRows } from '@/components/NfcTagUidList/NfcTagUidList'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
@@ -322,7 +324,9 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
             </button>
           </div>
           <div className={styles.dwhero}>
-            <div className={styles.dwdisc}><SpoolIcon color={s.colorHex} size={96} /></div>
+            <div className={styles.dwdisc}>
+              <SpoolIconWithNfcBadges color={s.colorHex} size={96} spool={s} linkedLabel={t('spools.nfcTagLinked')} />
+            </div>
             <div className={styles.dwid}>
               <div className={styles.dwtext}>
                 <div className={styles.c}>{s.colorName}</div>
@@ -410,7 +414,13 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
         <div className={styles.dwsec}>
           <h3>Inventory</h3>
           <div className={styles.dwline}><span className={styles.lk}>Last scanned</span><span className={styles.lv}>{formatRelativeTime(s.lastScannedAt)}</span></div>
-          <div className={styles.dwline}><span className={styles.lk}>Tag ID</span><span className={styles.lv}>{s.nfcTagUid ?? '—'}</span></div>
+          <NfcTagUidRows
+            spool={s}
+            rowClassName={styles.dwline}
+            labelClassName={styles.lk}
+            valueClassName={styles.lv}
+            singleLabel="Tag ID"
+          />
         </div>
         <div className={styles.dwsec}>
           <h3>{t('home.recentActivity')}</h3>
@@ -489,7 +499,9 @@ export default function SpoolDetailDrawer({ spool, printers, onClose, onUpdated,
           </button>
         </div>
         <div className={styles.dwhero}>
-          <div className={styles.dwdisc}><SpoolIcon color={f.colorHex ?? '#888'} size={80} /></div>
+          <div className={styles.dwdisc}>
+            <SpoolIconWithNfcBadges color={f.colorHex ?? '#888'} size={80} spool={spool} linkedLabel={t('spools.nfcTagLinked')} />
+          </div>
           <div className={styles.dwid}>
             <div className={styles.dwtext}>
               <div className={styles.c}>{f.colorName}</div>

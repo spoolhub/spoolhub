@@ -108,6 +108,7 @@ const createdSpool = {
   bedMax: 60,
   hasNfcTag: false,
   nfcTagUid: null,
+  nfcTagUids: [],
   printerId: null,
   printerName: null,
   amsSlot: null,

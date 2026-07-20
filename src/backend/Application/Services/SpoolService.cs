@@ -361,12 +361,21 @@ public class SpoolService(
             stockLocation = s.StockLocation,
         });
 
-    private static SpoolResponse ToResponse(Spool s, (Guid? Id, string? Name, int? Slot) printer = default) => new(
-        s.Id, s.Brand, s.Material, s.ColorName, s.ColorHex,
-        s.InitialWeightG, s.CurrentWeightG, s.SpoolWeightG, s.LowStockThresholdG,
-        s.IsActive, s.IsArchived, s.CreatedAt, s.LastScannedAt,
-        s.Notes, s.Density, s.DiameterTolerance, s.ExtruderMin, s.ExtruderMax, s.BedMin, s.BedMax,
-        s.NfcTags.Any(), s.NfcTags.FirstOrDefault()?.TagUid,
-        printer.Id, printer.Name, printer.Slot,
-        s.Price, s.StockLocation);
+    private static SpoolResponse ToResponse(Spool s, (Guid? Id, string? Name, int? Slot) printer = default)
+    {
+        var nfcTagUids = s.NfcTags
+            .OrderBy(t => t.CreatedAt)
+            .ThenBy(t => t.TagUid, StringComparer.Ordinal)
+            .Select(t => t.TagUid)
+            .ToList();
+
+        return new(
+            s.Id, s.Brand, s.Material, s.ColorName, s.ColorHex,
+            s.InitialWeightG, s.CurrentWeightG, s.SpoolWeightG, s.LowStockThresholdG,
+            s.IsActive, s.IsArchived, s.CreatedAt, s.LastScannedAt,
+            s.Notes, s.Density, s.DiameterTolerance, s.ExtruderMin, s.ExtruderMax, s.BedMin, s.BedMax,
+            nfcTagUids.Count > 0, nfcTagUids.FirstOrDefault(), nfcTagUids,
+            printer.Id, printer.Name, printer.Slot,
+            s.Price, s.StockLocation);
+    }
 }

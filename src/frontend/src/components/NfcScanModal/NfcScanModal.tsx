@@ -5,6 +5,10 @@ import { spoolsApi } from '@/api/spools'
 import { printersApi } from '@/api/printers'
 import { locationsApi } from '@/api/locations'
 import { SpoolIcon } from '@/components/icons'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
+import NfcTagUidList from '@/components/NfcTagUidList/NfcTagUidList'
+import { getNfcTagUids } from '@/utils/nfcTags'
+import NfcIcon from '@/components/icons/NfcIcon'
 import PlusIcon from '@/components/icons/PlusIcon'
 import InfoCircleIcon from '@/components/icons/InfoCircleIcon'
 import { getPrinterImage } from '@/utils/printerImages'
@@ -18,16 +22,6 @@ import {
 import type { SpoolResponse } from '@/types/spool'
 import type { PrinterResponse, TraySpoolSummary } from '@/types/printer'
 import styles from './NfcScanModal.module.css'
-
-const NFC_UID_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-    <rect x="4" y="3" width="16" height="18" rx="3" />
-    <path d="M9.2 9.2a4 4 0 0 1 0 5.6" />
-    <path d="M12.2 6.8a7.5 7.5 0 0 1 0 10.4" />
-    <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
-  </svg>
-)
 
 const ASSIGN_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
@@ -45,13 +39,14 @@ const CLOSE_ICON = (
 
 interface Props {
   spool: SpoolResponse
+  scannedTagUid?: string | null
   onClose: () => void
   onViewDetails?: (spool: SpoolResponse) => void
 }
 
 type Step = 'info' | 'assign' | 'done'
 
-export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
+export default function NfcScanModal({ spool, scannedTagUid, onClose, onViewDetails }: Props) {
   const { t } = useTranslation()
   const [step, setStep] = useState<Step>('info')
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
@@ -293,7 +288,7 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
         {/* ── Hero band ── */}
         <div className={styles.heroBand}>
                   <div className={styles.heroIcon}>
-            <SpoolIcon color={spool.colorHex} size={96} />
+            <SpoolIconWithNfcBadges color={spool.colorHex} size={96} spool={spool} />
           </div>
                   <div className={styles.heroText}>
                     <div className={styles.heroBrand}>{spool.brand}</div>
@@ -308,12 +303,14 @@ export default function NfcScanModal({ spool, onClose, onViewDetails }: Props) {
         <div className={styles.drawerBody}>
 
           {/* UID card */}
-          {spool.nfcTagUid && (
+          {getNfcTagUids(spool).length > 0 && (
             <div className={styles.uidCard}>
-              <span className={styles.uidIcon}>{NFC_UID_ICON}</span>
-              <div>
-                <div className={styles.uidValue}>{spool.nfcTagUid}</div>
-                <div className={styles.uidLabel}>Tag UID</div>
+              <span className={styles.uidIcon}><NfcIcon className={styles.uidNfcIcon} /></span>
+              <div className={styles.uidBody}>
+                <NfcTagUidList spool={spool} scannedTagUid={scannedTagUid} />
+                <div className={styles.uidLabel}>
+                  {getNfcTagUids(spool).length > 1 ? 'Tag UIDs' : 'Tag UID'}
+                </div>
               </div>
             </div>
           )}

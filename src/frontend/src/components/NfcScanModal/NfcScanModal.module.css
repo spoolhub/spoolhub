@@ -92,10 +92,19 @@
   background: var(--surface-alt); padding: 13px 15px;
 }
 .uidIcon {
-  width: 36px; height: 36px; flex: none;
-  border-radius: var(--r-xs);
+  width: 32px; height: 32px; flex: none;
+  border-radius: 50%;
   display: grid; place-items: center;
-  background: var(--accent-soft); color: var(--accent-ink);
+  background: var(--accent); color: #fff;
+  border: 2px solid var(--surface-alt);
+}
+.uidNfcIcon {
+  width: 16px;
+  height: 16px;
+}
+.uidBody {
+  flex: 1;
+  min-width: 0;
 }
 .uidValue {
   font-family: monospace; font-weight: 700;

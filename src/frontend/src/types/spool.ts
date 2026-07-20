@@ -21,6 +21,7 @@ export interface SpoolResponse {
   bedMax: number | null
   hasNfcTag: boolean
   nfcTagUid: string | null
+  nfcTagUids?: string[]
   printerId: string | null
   printerName: string | null
   amsSlot: number | null

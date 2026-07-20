@@ -186,5 +186,5 @@ public class SpoolControllerTests
         1000, 800, 200, 100, isActive, false,
         DateTime.UtcNow, null, null,
         null, null, null, null, null, null,
-        false, null, null, null, null, null, null);
+        false, null, [], null, null, null, null, null);
 }

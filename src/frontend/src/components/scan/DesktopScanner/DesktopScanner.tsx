@@ -7,7 +7,7 @@ import { printersApi } from '@/api/printers'
 import { writeAgentTagUrl, appBaseUrl } from '@/hooks/useAgentNfc'
 import ScanDesktop from '../ScanDesktop'
 import NfcIcon from '@/components/icons/NfcIcon'
-import { SpoolIcon } from '@/components/icons'
+import SpoolIconWithNfcBadges from '@/components/SpoolIconWithNfcBadges/SpoolIconWithNfcBadges'
 import NfcScanModal from '@/components/NfcScanModal'
 import SpoolDetailDrawer from '@/components/SpoolDetailDrawer'
 import type { SpoolResponse } from '@/types/spool'
@@ -80,7 +80,7 @@ function RecentItem({ scan, onRemove, t }: { scan: RecentScan; onRemove: () => v
     <div className={`${styles.recentItem} ${styles.recentItemStatic}`}>
       <div className={styles.recentIcon}>
         {scan.spool
-          ? <SpoolIcon color={scan.spool.colorHex} size={36} />
+          ? <SpoolIconWithNfcBadges color={scan.spool.colorHex} size={36} spool={scan.spool} />
           : scan.deleted
             ? <span className={styles.recentDeletedIcon}>{ICONS.trash}</span>
             : <span className={styles.recentUnknownIcon}>{ICONS.plus}</span>}
@@ -91,7 +91,7 @@ function RecentItem({ scan, onRemove, t }: { scan: RecentScan; onRemove: () => v
         </div>
         <div className={styles.recentUidRow}>
           <NfcIcon className={styles.recentUidIcon} />
-          <span className={styles.recentUid}>{scan.spool?.nfcTagUid ?? scan.uid}</span>
+          <span className={styles.recentUid}>{scan.uid}</span>
         </div>
       </div>
       <div className={styles.recentTime}>{label}</div>
@@ -126,6 +126,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
   const [scanError,   setScanError]   = useState<string | null>(null)
   const [recentScans, setRecentScans] = useState<RecentScan[]>(loadRecentScans)
   const [drawerSpool, setDrawerSpool] = useState<SpoolResponse | null>(null)
+  const [drawerScannedUid, setDrawerScannedUid] = useState<string | null>(null)
   const [detailSpool, setDetailSpool] = useState<SpoolResponse | null>(null)
   const [printers, setPrinters] = useState<PrinterResponse[]>([])
   useEffect(() => { saveRecentScans(recentScans) }, [recentScans])
@@ -149,6 +150,7 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
         const spool = result.spool
         setRecentScans(prev => [{ uid, spool, scannedAt: new Date() }, ...prev].slice(0, 20))
         setScanPhase('polling')
+        setDrawerScannedUid(uid)
         setDrawerSpool(spool)
       }
     } catch {
@@ -207,8 +209,9 @@ export default function DesktopScanner({ onUnknownTag }: Props) {
       {drawerSpool && (
         <NfcScanModal
           spool={drawerSpool}
-          onClose={() => { setDrawerSpool(null); setSearchParams({}, { replace: true }) }}
-          onViewDetails={s => { setDrawerSpool(null); setDetailSpool(s); setSearchParams({}, { replace: true }) }}
+          scannedTagUid={drawerScannedUid}
+          onClose={() => { setDrawerSpool(null); setDrawerScannedUid(null); setSearchParams({}, { replace: true }) }}
+          onViewDetails={s => { setDrawerSpool(null); setDrawerScannedUid(null); setDetailSpool(s); setSearchParams({}, { replace: true }) }}
         />
       )}
       {detailSpool && (

@@ -36,7 +36,7 @@ describe('spoolsApi', () => {
     spoolWeightG: 200, lowStockThresholdG: 100,
     createdAt: new Date().toISOString(), lastScannedAt: null, notes: null,
     density: null, extruderMin: null, extruderMax: null, bedMin: null, bedMax: null,
-    hasNfcTag: false, nfcTagUid: null, printerId: null, printerName: null, amsSlot: null,
+    hasNfcTag: false, nfcTagUid: null, nfcTagUids: [], printerId: null, printerName: null, amsSlot: null,
   })
 
   describe('getAll', () => {

@@ -61,6 +61,7 @@ const activeSpool: SpoolResponse = {
   bedMax: null,
   hasNfcTag: false,
   nfcTagUid: null,
+  nfcTagUids: [],
   printerId: 'printer-1',
   printerName: 'My P1S',
   amsSlot: 1,
