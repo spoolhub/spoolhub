@@ -1,89 +1,57 @@
-# Contributor License Agreement
+# SpoolHub Contributor License Agreement (CLA)
 
-## SpoolHub — Individual Contributor License Agreement
+Thank you for contributing to SpoolHub.
 
-Thank you for your interest in contributing to SpoolHub ("the Project"). This Contributor License Agreement ("Agreement") documents the rights granted by contributors to the Project maintainer.
-
-By submitting a pull request or any other form of contribution to SpoolHub, you agree to the terms of this Agreement.
-
----
+This agreement is intended to ensure that SpoolHub can legally accept and distribute contributions while preserving the open source nature of the project.
 
 ## 1. Definitions
 
-**"You"** or **"Your"** means the individual or entity submitting a contribution to the Project.
+**Project** means the SpoolHub software and its associated repositories, documentation, and related materials.
 
-**"Contribution"** means any original work of authorship, including modifications, additions, or deletions, that You submit to the Project.
+**Contribution** means any code, documentation, design, configuration, test, issue content, or other material intentionally submitted to the Project.
 
-**"Project"** means SpoolHub, including all source code, documentation, and related materials.
+**Contributor** means the individual or legal entity submitting a Contribution.
 
-**"Project Maintainer"** means the individual or entity that manages and maintains the Project repository.
+## 2. Ownership of Contributions
 
-**"Competing Product"** means any software application, service, or product that replicates the core functionality of SpoolHub as a self-hosted filament spool management system, including but not limited to web-based dashboards, mobile applications, or desktop applications designed to manage 3D printer filament inventory.
+You retain ownership of your Contributions.
 
----
+Submitting a Contribution does **not** transfer copyright ownership to SpoolHub or its maintainers.
 
-## 2. Grant of Copyright License
+## 3. License Grant
 
-You hereby grant to the Project Maintainer and to recipients of the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your Contributions and such derivative works.
+By submitting a Contribution, you grant SpoolHub and all recipients of the Project a perpetual, worldwide, non exclusive, royalty free, irrevocable license to use, reproduce, modify, distribute, publicly display, publicly perform, and sublicense your Contribution under the terms of the Project's license, currently the GNU Affero General Public License v3.0 (AGPL 3.0).
 
-## 3. Grant of Patent License
-
-You hereby grant to the Project Maintainer and to recipients of the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Project, where such license applies only to those patent claims licensable by You that are necessarily infringed by Your Contribution(s) alone or by combination of Your Contribution(s) with the Project.
-
-## 4. Original Work Representation
+## 4. Your Representations
 
 You represent that:
 
-a) Each Contribution is Your original creation.
+1. You created the Contribution yourself, or you have sufficient rights to submit it.
+2. The Contribution does not knowingly infringe the intellectual property rights of any third party.
+3. You are legally entitled to grant the license described in this agreement.
 
-b) You are legally entitled to grant the licenses set forth in this Agreement.
+## 5. Employer or Third Party Rights
 
-c) You have the legal right to submit Your Contributions. If Your employer or school has rights over Your work, You have obtained their written permission to contribute under this Agreement.
+If your employer or another party may have rights to your Contribution, you represent that you have obtained any necessary permissions to submit it to the Project.
 
-d) Your Contributions do not violate any third party's intellectual property rights, including but not limited to copyrights, patents, and trademarks.
+## 6. Patent License
 
-## 5. No Warranty
+To the extent you own or control patent claims that are necessarily infringed by your Contribution, you grant a perpetual, worldwide, non exclusive, royalty free patent license for recipients to make, use, sell, offer for sale, import, and otherwise distribute the Project and your Contribution under the Project license.
 
-You provide Your Contributions on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including without limitation any warranties of MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, or NON-INFRINGEMENT.
+## 7. No Warranty
 
-## 6. Non-Compete Restriction
+Contributions are provided **as is**, without warranties or conditions of any kind, whether express or implied, including warranties of merchantability, fitness for a particular purpose, and non infringement.
 
-You agree that You will not use any Contribution made to the Project, or any knowledge derived from the Project's source code, to create, develop, market, sell, license, or distribute a Competing Product.
+## 8. Open Source Principles
 
-This restriction applies during the term of this Agreement and for a period of **five (5) years** after Your last Contribution to the Project.
+SpoolHub welcomes contributions from the community. Contributors remain free to work on other projects, including projects that may provide similar functionality. Nothing in this agreement restricts a Contributor from participating in, creating, or contributing to other software projects.
 
-This restriction does **not** apply to:
+## 9. Acceptance
 
-a) Contributions made exclusively in the form of bug fixes or security patches that do not introduce new features.
-
-b) Use of the Project's public API to build integrations, plugins, or extensions that do not replicate the core functionality of the Project.
-
-c) Personal use of the Project for managing Your own 3D printing filament inventory.
-
-## 7. Authorized Use
-
-You acknowledge that the Project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This Agreement does not replace or supersede the AGPL-3.0 license. In the event of a conflict between this Agreement and the AGPL-3.0 license, the AGPL-3.0 license shall prevail with respect to the rights of third-party recipients of the Project.
-
-## 8. Notification Obligation
-
-You agree to notify the Project Maintainer promptly of any facts or circumstances that would make any representation under this Agreement inaccurate.
-
-## 9. Term and Termination
-
-This Agreement is effective upon Your first Contribution to the Project.
-
-Sections 5, 6, and 8 shall survive termination of this Agreement for their respective specified periods.
-
-If You breach Section 6 (Non-Compete Restriction), the Project Maintainer may terminate all rights granted to You under this Agreement immediately upon written notice.
-
-## 10. Governing Law
-
-This Agreement shall be governed by and construed in accordance with the laws of Sweden, without regard to its conflict of law provisions.
-
-## 11. Entire Agreement
-
-This Agreement constitutes the entire agreement between You and the Project Maintainer with respect to the subject matter hereof.
+By submitting a pull request, commit, or other Contribution to the SpoolHub repository, you acknowledge that you have read and agree to the terms of this Contributor License Agreement.
 
 ---
 
-By submitting a pull request to the SpoolHub repository, You acknowledge that You have read, understood, and agree to be bound by the terms of this Contributor License Agreement.
+**Project:** SpoolHub
+**Repository:** https://github.com/spoolhub/spoolhub
+**License:** GNU AGPL v3.0
